@@ -1,4 +1,5 @@
-import { Column, CreateDateColumn, Entity, PrimaryColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, OneToMany, PrimaryColumn } from "typeorm";
+import { Knowledge } from "@core/entity/knowledge.entity";
 
 @Entity('intent')
 export class Intent {
@@ -11,9 +12,12 @@ export class Intent {
   @Column({nullable: true})
   main_question?: string;
 
-  @Column({nullable: true})
-  status?: string;
+  @Column({default: 'active'})
+  status: string;
 
   @CreateDateColumn({type: "timestamp"})
   created_at: number;
+
+  @OneToMany(type => Knowledge, knowledge => knowledge.intent)
+  knowledges: Knowledge[];
 }
