@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
 import { KnowledgeService } from "./knowledge.service";
-import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
+import { ApiBearerAuth, ApiOperation, ApiTags } from "@nestjs/swagger";
 import { JwtAuthGuard } from "../auth/jwt-auth.guard";
 import { KnowledgeDto } from "@core/dto/knowledge.dto";
 
@@ -13,11 +13,13 @@ export class KnowledgeController {
   constructor(private readonly _knowledgeService: KnowledgeService) {}
 
   @Get('')
-  async getIntents(): Promise<KnowledgeDto[]> {
+  @ApiOperation({ summary: 'Return all knowledges' })
+  async getKnowledges(): Promise<KnowledgeDto[]> {
     return this._knowledgeService.findAll();
   }
 
   @Post('')
+  @ApiOperation({ summary: 'Create a knowledge' })
   async createKnowledge(@Body() knowledge: KnowledgeDto): Promise<KnowledgeDto> {
     return this._knowledgeService.create(knowledge);
   }
