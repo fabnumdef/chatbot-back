@@ -1,5 +1,5 @@
 import { Controller, Post, UseGuards, Request, Get, Body } from '@nestjs/common';
-import { ApiBearerAuth, ApiBody, ApiTags } from "@nestjs/swagger";
+import { ApiBearerAuth, ApiOperation, ApiTags } from "@nestjs/swagger";
 import { AuthService } from "./auth.service";
 import { JwtAuthGuard } from "./jwt-auth.guard";
 import { LoginUserDto } from "../core/dto/login-user.dto";
@@ -10,7 +10,7 @@ export class AuthController {
   constructor(private readonly _authService: AuthService) {}
 
   @Post('login')
-  @ApiBody({ type: LoginUserDto })
+  @ApiOperation({ summary: 'Return jwt token' })
   async login(@Body() user: LoginUserDto) {
     return this._authService.login(user);
   }
