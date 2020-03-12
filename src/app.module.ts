@@ -5,8 +5,8 @@ import { UserModule } from './user/user.module';
 import { IntentModule } from './intent/intent.module';
 import { AuthModule } from './auth/auth.module';
 import { TypeOrmModule } from "@nestjs/typeorm";
-import { User } from "./user/user.entity";
 import { ConfigModule } from "@nestjs/config";
+import { User } from "./core/entity/user.entity";
 
 @Module({
   imports: [
@@ -21,9 +21,9 @@ import { ConfigModule } from "@nestjs/config";
       "entities": [User],
       "synchronize": true
     }),
+    AuthModule,
     UserModule,
     IntentModule,
-    AuthModule
   ],
   controllers: [AppController],
   providers: [AppService],

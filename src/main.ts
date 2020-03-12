@@ -6,6 +6,7 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   const options = new DocumentBuilder()
+    .addBearerAuth()
     .setTitle('Backoffice Chatbot')
     .setDescription('The backoffice chatbot factory API description')
     .setVersion('0.1')
