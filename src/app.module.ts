@@ -1,6 +1,4 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { UserModule } from './user/user.module';
 import { IntentModule } from './intent/intent.module';
 import { AuthModule } from './auth/auth.module';
@@ -29,7 +27,7 @@ import { Knowledge } from "@core/entity/knowledge.entity";
     IntentModule,
     KnowledgeModule,
   ],
-  controllers: [AppController],
-  providers: [AppService],
+  controllers: [],
+  providers: [],
 })
 export class AppModule {}
