@@ -8,6 +8,8 @@ import { User } from "@core/entity/user.entity";
 import { Intent } from "@core/entity/intent.entity";
 import { KnowledgeModule } from './knowledge/knowledge.module';
 import { Knowledge } from "@core/entity/knowledge.entity";
+import { ResponseModule } from './response/response.module';
+import { Response } from "@core/entity/response.entity";
 
 @Module({
   imports: [
@@ -19,13 +21,14 @@ import { Knowledge } from "@core/entity/knowledge.entity";
       username: process.env.DATABASE_USER,
       password: process.env.DATABASE_PASSWORD,
       database: process.env.DATABASE_NAME,
-      "entities": [User, Intent, Knowledge],
+      "entities": [User, Intent, Knowledge, Response],
       "synchronize": true
     }),
     AuthModule,
     UserModule,
     IntentModule,
     KnowledgeModule,
+    ResponseModule,
   ],
   controllers: [],
   providers: [],

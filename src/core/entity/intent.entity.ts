@@ -1,5 +1,6 @@
 import { Column, CreateDateColumn, Entity, OneToMany, PrimaryColumn } from "typeorm";
 import { Knowledge } from "@core/entity/knowledge.entity";
+import { Response } from "@core/entity/response.entity";
 
 @Entity('intent')
 export class Intent {
@@ -20,4 +21,7 @@ export class Intent {
 
   @OneToMany(type => Knowledge, knowledge => knowledge.intent)
   knowledges: Knowledge[];
+
+  @OneToMany(type => Response, response => response.intent)
+  responses: Response[];
 }
