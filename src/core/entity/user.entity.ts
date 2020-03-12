@@ -1,7 +1,7 @@
 import { Entity, Column, PrimaryColumn } from 'typeorm';
 import { UserRole } from "./user-role.enum";
 
-@Entity()
+@Entity('user')
 export class User {
   @PrimaryColumn()
   email: string;
