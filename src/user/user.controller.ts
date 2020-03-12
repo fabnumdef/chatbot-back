@@ -1,4 +1,4 @@
-import { Controller, Get, UseGuards } from '@nestjs/common';
+import { Controller, Get, Req, UseGuards } from '@nestjs/common';
 import { UserService } from "./user.service";
 import { UserDto } from "@core/dto/user.dto";
 import { ApiBearerAuth, ApiOperation, ApiTags } from "@nestjs/swagger";
@@ -13,7 +13,7 @@ export class UserController {
 
   @Get('whoami')
   @ApiOperation({ summary: 'Return the user associated with the JWT token' })
-  async getIntents(): Promise<UserDto> {
-    return this._userService.findOne('');
+  async getIntents(@Req() req): Promise<UserDto> {
+    return this._userService.findOne(req.user.email);
   }
 }

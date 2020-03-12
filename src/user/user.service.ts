@@ -13,8 +13,11 @@ export class UserService {
     return this._usersRepository.find();
   }
 
-  async findOne(email: string): Promise<User> {
-    return this._usersRepository.findOne(email);
+  async findOne(email: string, password?: string): Promise<User> {
+    if (!!password) {
+      return this._usersRepository.findOne({where: {email: email, password: password}});
+    }
+    return this._usersRepository.findOne({where: {email: email}});
   }
 
   async remove(email: string): Promise<void> {
