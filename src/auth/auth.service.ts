@@ -2,6 +2,7 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { UserService } from "../user/user.service";
 import { JwtService } from "@nestjs/jwt";
 import { LoginUserDto } from "../core/dto/login-user.dto";
+import { AuthResponseDto } from "@core/dto/auth-response.dto";
 
 @Injectable()
 export class AuthService {
@@ -20,11 +21,12 @@ export class AuthService {
       HttpStatus.UNAUTHORIZED);
   }
 
-  async login(user: LoginUserDto) {
+  async login(user: LoginUserDto): Promise<AuthResponseDto> {
     const userToReturn = await this.validateUser(user);
     if (userToReturn) {
       return {
-        chatbot_factory_token: this._jwtService.sign(JSON.parse(JSON.stringify(userToReturn))),
+        chatbotFactoryToken: this._jwtService.sign(JSON.parse(JSON.stringify(userToReturn))),
+        user: userToReturn
       };
     }
     return null;

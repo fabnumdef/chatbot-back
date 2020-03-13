@@ -6,10 +6,10 @@ export class UserDto {
   email: string;
 
   @IsString()
-  first_name: string;
+  firstName: string;
 
   @IsString()
-  last_name: string;
+  lastName: string;
 
   @IsString()
   function: string;

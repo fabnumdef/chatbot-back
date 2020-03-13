@@ -10,7 +10,7 @@ export class ResponseDto {
   intent: string;
 
   @IsString()
-  response_type: ResponseType;
+  responseType: ResponseType;
 
   @IsString()
   response: string;

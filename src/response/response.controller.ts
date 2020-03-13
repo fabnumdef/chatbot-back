@@ -3,6 +3,9 @@ import { ResponseService } from "./response.service";
 import { ApiBearerAuth, ApiOperation, ApiTags } from "@nestjs/swagger";
 import { JwtAuthGuard } from "../auth/jwt-auth.guard";
 import { ResponseDto } from "@core/dto/response.dto";
+import { plainToClass } from "class-transformer";
+import { Response } from "@core/entity/response.entity";
+import camelcaseKeys = require("camelcase-keys");
 
 @ApiTags('response')
 @Controller('response')
@@ -15,12 +18,14 @@ export class ResponseController {
   @Get('')
   @ApiOperation({ summary: 'Return all responses' })
   async getReponses(): Promise<ResponseDto[]> {
-    return this._responseService.findAll();
+    const responses: Response[] = await this._responseService.findAll();
+    return plainToClass(ResponseDto, camelcaseKeys(responses, {deep: true}));
   }
 
   @Post('')
   @ApiOperation({ summary: 'Create a response' })
   async createResponse(@Body() response: ResponseDto): Promise<ResponseDto> {
-    return this._responseService.create(response);
+    const responseToReturn: Response = await this._responseService.create(response);
+    return plainToClass(ResponseDto, camelcaseKeys(responseToReturn, {deep: true}));
   }
 }

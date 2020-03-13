@@ -11,7 +11,7 @@ export class IntentDto {
 
   @IsString()
   @IsOptional()
-  main_question?: string;
+  mainQuestion?: string;
 
   @IsString()
   @IsOptional()
@@ -19,5 +19,5 @@ export class IntentDto {
 
   @IsNumber()
   @IsOptional()
-  created_at?: number;
+  createdAt?: number;
 }

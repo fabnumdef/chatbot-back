@@ -3,6 +3,9 @@ import { KnowledgeService } from "./knowledge.service";
 import { ApiBearerAuth, ApiOperation, ApiTags } from "@nestjs/swagger";
 import { JwtAuthGuard } from "../auth/jwt-auth.guard";
 import { KnowledgeDto } from "@core/dto/knowledge.dto";
+import { plainToClass } from "class-transformer";
+import { Knowledge } from "@core/entity/knowledge.entity";
+import camelcaseKeys = require("camelcase-keys");
 
 @ApiTags('knowledge')
 @Controller('knowledge')
@@ -15,12 +18,14 @@ export class KnowledgeController {
   @Get('')
   @ApiOperation({ summary: 'Return all knowledges' })
   async getKnowledges(): Promise<KnowledgeDto[]> {
-    return this._knowledgeService.findAll();
+    const knowledges: Knowledge[] = await this._knowledgeService.findAll();
+    return plainToClass(KnowledgeDto, camelcaseKeys(knowledges, {deep: true}));
   }
 
   @Post('')
   @ApiOperation({ summary: 'Create a knowledge' })
   async createKnowledge(@Body() knowledge: KnowledgeDto): Promise<KnowledgeDto> {
-    return this._knowledgeService.create(knowledge);
+    knowledge = await this._knowledgeService.create(knowledge);
+    return plainToClass(KnowledgeDto, camelcaseKeys(knowledge, {deep: true}));
   }
 }
