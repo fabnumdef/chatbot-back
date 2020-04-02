@@ -1,6 +1,6 @@
 import { Column, CreateDateColumn, Entity, OneToMany, PrimaryColumn } from "typeorm";
-import { Knowledge } from "@core/entity/knowledge.entity";
-import { Response } from "@core/entity/response.entity";
+import { Knowledge } from "@core/entities/knowledge.entity";
+import { Response } from "@core/entities/response.entity";
 
 @Entity('intent')
 export class Intent {

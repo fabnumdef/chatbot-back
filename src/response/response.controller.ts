@@ -1,16 +1,16 @@
 import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
 import { ResponseService } from "./response.service";
 import { ApiBearerAuth, ApiOperation, ApiTags } from "@nestjs/swagger";
-import { JwtAuthGuard } from "../auth/jwt-auth.guard";
+import { JwtGuard } from "@core/guards/jwt.guard";
 import { ResponseDto } from "@core/dto/response.dto";
 import { plainToClass } from "class-transformer";
-import { Response } from "@core/entity/response.entity";
+import { Response } from "@core/entities/response.entity";
 import camelcaseKeys = require("camelcase-keys");
 
 @ApiTags('response')
 @Controller('response')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtGuard)
 export class ResponseController {
 
   constructor(private readonly _responseService: ResponseService) {}

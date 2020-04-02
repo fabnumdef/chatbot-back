@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
-import { Intent } from "@core/entity/intent.entity";
+import { Intent } from "@core/entities/intent.entity";
 import { IntentDto } from "@core/dto/intent.dto";
 
 @Injectable()

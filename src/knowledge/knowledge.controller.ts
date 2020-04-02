@@ -1,16 +1,16 @@
 import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
 import { KnowledgeService } from "./knowledge.service";
 import { ApiBearerAuth, ApiOperation, ApiTags } from "@nestjs/swagger";
-import { JwtAuthGuard } from "../auth/jwt-auth.guard";
+import { JwtGuard } from "@core/guards/jwt.guard";
 import { KnowledgeDto } from "@core/dto/knowledge.dto";
 import { plainToClass } from "class-transformer";
-import { Knowledge } from "@core/entity/knowledge.entity";
+import { Knowledge } from "@core/entities/knowledge.entity";
 import camelcaseKeys = require("camelcase-keys");
 
 @ApiTags('knowledge')
 @Controller('knowledge')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtGuard)
 export class KnowledgeController {
 
   constructor(private readonly _knowledgeService: KnowledgeService) {}

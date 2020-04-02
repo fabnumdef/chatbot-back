@@ -1,23 +1,36 @@
-import { Controller, Get, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Req, UseGuards } from '@nestjs/common';
 import { UserService } from "./user.service";
 import { UserDto } from "@core/dto/user.dto";
-import { ApiBearerAuth, ApiOperation, ApiTags } from "@nestjs/swagger";
-import { JwtAuthGuard } from "../auth/jwt-auth.guard";
+import { ApiBearerAuth, ApiBody, ApiOperation, ApiTags } from "@nestjs/swagger";
 import { plainToClass } from "class-transformer";
 import camelcaseKeys = require("camelcase-keys");
-import { User } from "@core/entity/user.entity";
+import { User } from "@core/entities/user.entity";
+import { CreateUserDto } from "@core/dto/create-user.dto";
+import snakecaseKeys = require("snakecase-keys");
+import { UserModel } from "@core/models/user.model";
+import { JwtGuard } from "@core/guards/jwt.guard";
 
 @Controller('user')
 @ApiTags('user')
-@ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
 export class UserController {
   constructor(private readonly _userService: UserService) {}
 
-  @Get('whoami')
-  @ApiOperation({ summary: 'Return the user associated with the JWT token' })
-  async getIntents(@Req() req): Promise<UserDto> {
-    const user: User = await this._userService.findOne(req.user.email);
-    return plainToClass(UserDto, camelcaseKeys(user, {deep: true}));
+  @Post('')
+  @ApiOperation({ summary: 'Create user' })
+  @ApiBody({
+    description: 'User',
+    type: CreateUserDto,
+  })
+  async create(@Body() user: CreateUserDto): Promise<UserDto> {
+    const userModel = await this._userService.create(plainToClass(UserModel, snakecaseKeys(user)));
+    return plainToClass(UserDto, camelcaseKeys(userModel, {deep: true}));
+  }
+
+  @Delete(':email')
+  @ApiOperation({ summary: 'Delete user' })
+  @ApiBearerAuth()
+  @UseGuards(JwtGuard)
+  async delete(@Param('email') email: string): Promise<void> {
+    return this._userService.delete(email);
   }
 }

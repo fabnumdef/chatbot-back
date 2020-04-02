@@ -1,16 +1,16 @@
 import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from "@nestjs/swagger";
-import { JwtAuthGuard } from "../auth/jwt-auth.guard";
+import { JwtGuard } from "@core/guards/jwt.guard";
 import { IntentService } from "./intent.service";
 import { IntentDto } from "@core/dto/intent.dto";
 import { plainToClass } from "class-transformer";
-import { Intent } from "@core/entity/intent.entity";
+import { Intent } from "@core/entities/intent.entity";
 import camelcaseKeys = require("camelcase-keys");
 
 @ApiTags('intent')
 @Controller('intent')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtGuard)
 export class IntentController {
   constructor(private readonly _intentService: IntentService) {}
 

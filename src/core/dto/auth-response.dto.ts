@@ -4,7 +4,7 @@ import { UserDto } from "@core/dto/user.dto";
 export class AuthResponseDto {
   @IsString()
   @IsNotEmpty()
-  chatbotFactoryToken: string;
+  chatbotToken: string;
 
   @IsNotEmpty()
   @IsObject()
