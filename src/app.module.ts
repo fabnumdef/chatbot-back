@@ -10,6 +10,8 @@ import { KnowledgeModule } from './knowledge/knowledge.module';
 import { Knowledge } from "@core/entities/knowledge.entity";
 import { ResponseModule } from './response/response.module';
 import { Response } from "@core/entities/response.entity";
+import { APP_INTERCEPTOR } from "@nestjs/core";
+import { LoggerInterceptor } from "@core/interceptors/logger.interceptor";
 
 @Module({
   imports: [
@@ -33,6 +35,11 @@ import { Response } from "@core/entities/response.entity";
     ResponseModule,
   ],
   controllers: [],
-  providers: [],
+  providers: [
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: LoggerInterceptor,
+    },
+  ],
 })
 export class AppModule {}

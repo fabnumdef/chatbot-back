@@ -3,6 +3,9 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { User } from "@core/entities/user.entity";
 import { UserModel } from "@core/models/user.model";
+import { UserRole } from "@core/enums/user-role.enum";
+
+const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 
 @Injectable()
@@ -52,6 +55,26 @@ export class UserService {
 
   async delete(email: string): Promise<void> {
     await this._usersRepository.delete(email);
+  }
+
+  async generateAdminUser(password: string): Promise<UserModel> {
+    const adminExists = await this.findOneWithParam({
+      role: UserRole.admin
+    });
+    if(!!adminExists) {
+      throw new HttpException('Un administrateur existe déjà.', HttpStatus.FORBIDDEN);
+    }
+    const user: UserModel = {
+      email: 'admin@fabnum.fr',
+      first_name: 'Admin',
+      last_name: 'Istrateur',
+      role: UserRole.admin,
+      function: 'Administrateur'
+    };
+
+    const userCreated = await this._usersRepository.save(user);
+    const hashPassword = bcrypt.hashSync(password, 10);
+    return this.findAndUpdate(userCreated.email, {password: hashPassword})
   }
 
   async sendEmailPasswordToken(user: User) {
