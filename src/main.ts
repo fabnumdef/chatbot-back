@@ -15,9 +15,10 @@ async function bootstrap() {
     }),
   );
   if(process.env.NODE_ENV === 'prod') {
-    app.enableCors({
-      origin: process.env.HOST_URL
-    });
+    // app.enableCors({
+    //   origin: process.env.HOST_URL
+    // });
+    app.enableCors();
   } else {
     app.enableCors();
   }
@@ -37,7 +38,6 @@ async function bootstrap() {
     customSiteTitle: 'API - Chatbot'
   });
 
-  app.useGlobalPipes(new ValidationPipe());
   await app.listen(3000);
 }
 bootstrap();
