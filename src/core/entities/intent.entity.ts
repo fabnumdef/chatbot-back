@@ -1,6 +1,7 @@
 import { Column, CreateDateColumn, Entity, OneToMany, PrimaryColumn } from "typeorm";
 import { Knowledge } from "@core/entities/knowledge.entity";
 import { Response } from "@core/entities/response.entity";
+import { IntentStatus } from "@core/enums/intent-status.enum";
 
 @Entity('intent')
 export class Intent {
@@ -14,7 +15,7 @@ export class Intent {
   main_question?: string;
 
   @Column({default: 'active'})
-  status: string;
+  status: IntentStatus;
 
   @CreateDateColumn({type: "timestamp"})
   created_at: number;

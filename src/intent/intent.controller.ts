@@ -6,6 +6,8 @@ import { IntentDto } from "@core/dto/intent.dto";
 import { plainToClass } from "class-transformer";
 import { Intent } from "@core/entities/intent.entity";
 import camelcaseKeys = require("camelcase-keys");
+import { IntentModel } from "@core/models/intent.model";
+import snakecaseKeys = require("snakecase-keys");
 
 @ApiTags('intent')
 @Controller('intent')
@@ -24,7 +26,7 @@ export class IntentController {
   @Post('')
   @ApiOperation({ summary: 'Create an intent' })
   async createIntent(@Body() intent: IntentDto): Promise<IntentDto> {
-    intent = await this._intentService.create(intent);
+    intent = await this._intentService.create(plainToClass(IntentModel, snakecaseKeys(intent)));
     return plainToClass(IntentDto, camelcaseKeys(intent, {deep: true}));
   }
 }

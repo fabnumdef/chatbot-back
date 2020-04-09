@@ -3,6 +3,11 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { Response } from "@core/entities/response.entity";
 import { ResponseDto } from "@core/dto/response.dto";
+import { Knowledge } from "@core/entities/knowledge.entity";
+import { ResponseModule } from "./response.module";
+import { ResponseModel } from "@core/models/response.model";
+import { IntentModel } from "@core/models/intent.model";
+import { Intent } from "@core/entities/intent.entity";
 
 @Injectable()
 export class ResponseService {
@@ -15,8 +20,18 @@ export class ResponseService {
     return this._responsesRepository.find();
   }
 
-  create(response: ResponseDto): Promise<Response> {
+  create(response: ResponseModel): Promise<Response> {
     return this._responsesRepository.save(response);
+  }
+
+  saveMany(responses: Response[]): Promise<Response[]> {
+    return this._responsesRepository.save(responses);
+  }
+
+  async deleteByIntent(intent: Intent): Promise<void> {
+    await this._responsesRepository.delete({
+      intent: intent
+    });
   }
 
   async remove(id: string): Promise<void> {

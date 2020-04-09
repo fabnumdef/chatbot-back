@@ -6,6 +6,9 @@ import { KnowledgeDto } from "@core/dto/knowledge.dto";
 import { plainToClass } from "class-transformer";
 import { Knowledge } from "@core/entities/knowledge.entity";
 import camelcaseKeys = require("camelcase-keys");
+import { IntentModel } from "@core/models/intent.model";
+import snakecaseKeys = require("snakecase-keys");
+import { KnowledgeModel } from "@core/models/knowledge.model";
 
 @ApiTags('knowledge')
 @Controller('knowledge')
@@ -25,7 +28,7 @@ export class KnowledgeController {
   @Post('')
   @ApiOperation({ summary: 'Create a knowledge' })
   async createKnowledge(@Body() knowledge: KnowledgeDto): Promise<KnowledgeDto> {
-    knowledge = await this._knowledgeService.create(knowledge);
-    return plainToClass(KnowledgeDto, camelcaseKeys(knowledge, {deep: true}));
+    const knowledgeEntity = await this._knowledgeService.create(plainToClass(KnowledgeModel, snakecaseKeys(knowledge)));
+    return plainToClass(KnowledgeDto, camelcaseKeys(knowledgeEntity, {deep: true}));
   }
 }

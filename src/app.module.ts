@@ -12,6 +12,7 @@ import { ResponseModule } from './response/response.module';
 import { Response } from "@core/entities/response.entity";
 import { APP_INTERCEPTOR } from "@nestjs/core";
 import { LoggerInterceptor } from "@core/interceptors/logger.interceptor";
+import { FileModule } from './file/file.module';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { LoggerInterceptor } from "@core/interceptors/logger.interceptor";
     IntentModule,
     KnowledgeModule,
     ResponseModule,
+    FileModule,
   ],
   controllers: [],
   providers: [

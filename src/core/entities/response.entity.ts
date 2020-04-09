@@ -7,9 +7,8 @@ export class Response {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
   @ManyToOne(type => Intent, intent => intent.responses)
-  intent: string;
+  intent: Intent;
 
   @Column('enum', { name: 'type', enum: ResponseType, nullable: false})
   response_type: ResponseType;

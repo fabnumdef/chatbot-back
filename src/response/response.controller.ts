@@ -6,6 +6,8 @@ import { ResponseDto } from "@core/dto/response.dto";
 import { plainToClass } from "class-transformer";
 import { Response } from "@core/entities/response.entity";
 import camelcaseKeys = require("camelcase-keys");
+import { ResponseModel } from "@core/models/response.model";
+import snakecaseKeys = require("snakecase-keys");
 
 @ApiTags('response')
 @Controller('response')
@@ -25,7 +27,7 @@ export class ResponseController {
   @Post('')
   @ApiOperation({ summary: 'Create a response' })
   async createResponse(@Body() response: ResponseDto): Promise<ResponseDto> {
-    const responseToReturn: Response = await this._responseService.create(response);
+    const responseToReturn: Response = await this._responseService.create(plainToClass(ResponseModel, snakecaseKeys(response)));
     return plainToClass(ResponseDto, camelcaseKeys(responseToReturn, {deep: true}));
   }
 }

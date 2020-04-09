@@ -7,6 +7,7 @@ import { Response } from "@core/entities/response.entity";
 @Module({
   imports: [TypeOrmModule.forFeature([Response])],
   controllers: [ResponseController],
-  providers: [ResponseService]
+  providers: [ResponseService],
+  exports: [ResponseService]
 })
 export class ResponseModule {}

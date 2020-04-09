@@ -1,14 +1,14 @@
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn, Unique } from "typeorm";
 import { Intent } from "@core/entities/intent.entity";
 
 @Entity('knowledge')
+@Unique(['intent', 'question'])
 export class Knowledge {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
   @ManyToOne(type => Intent, intent => intent.knowledges)
-  intent: string;
+  intent: Intent;
 
   @Column({ nullable: false })
   question: string;

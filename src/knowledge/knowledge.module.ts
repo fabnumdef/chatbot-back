@@ -8,5 +8,6 @@ import { KnowledgeService } from './knowledge.service';
   imports: [TypeOrmModule.forFeature([Knowledge])],
   controllers: [KnowledgeController],
   providers: [KnowledgeService],
+  exports: [KnowledgeService]
 })
 export class KnowledgeModule {}

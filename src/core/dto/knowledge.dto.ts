@@ -6,7 +6,7 @@ export class KnowledgeDto {
   id: number;
 
   @IsString()
-  intent: string;
+  intentId: string;
 
   @IsString()
   question: string;

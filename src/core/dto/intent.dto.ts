@@ -1,4 +1,5 @@
 import { IsNotEmpty, IsNumber, IsOptional, IsString } from "class-validator";
+import { IntentStatus } from "@core/enums/intent-status.enum";
 
 export class IntentDto {
   @IsString()
@@ -15,7 +16,7 @@ export class IntentDto {
 
   @IsString()
   @IsOptional()
-  status?: string;
+  status?: IntentStatus;
 
   @IsNumber()
   @IsOptional()
