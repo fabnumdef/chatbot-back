@@ -18,7 +18,6 @@ import { ImportResponseDto } from "@core/dto/import-response.dto";
 import * as fs from "fs";
 import { In, Not } from "typeorm";
 
-const path = require("path");
 const XLSX = require('xlsx');
 const uuid = require('uuid');
 
@@ -284,7 +283,7 @@ export class FileService {
 
   static excelFileFilter = (req, file, callback) => {
     if (!file.originalname.match(/\.(xls|xlsx)$/)) {
-      return callback(new Error('Seul les fichiers en .xls et .xlsx sont acceptés.'), false);
+      return callback(new HttpException('Seul les fichiers en .xls et .xlsx sont acceptés.', HttpStatus.BAD_REQUEST), false);
     }
     return callback(null, true);
   };

@@ -13,6 +13,8 @@ import { Response } from "@core/entities/response.entity";
 import { APP_INTERCEPTOR } from "@nestjs/core";
 import { LoggerInterceptor } from "@core/interceptors/logger.interceptor";
 import { FileModule } from './file/file.module';
+import { MediaModule } from './media/media.module';
+import { Media } from "@core/entities/media.entity";
 
 @Module({
   imports: [
@@ -26,8 +28,8 @@ import { FileModule } from './file/file.module';
       username: process.env.DATABASE_USER,
       password: process.env.DATABASE_PASSWORD,
       database: process.env.DATABASE_NAME,
-      "entities": [User, Intent, Knowledge, Response],
-      "synchronize": true
+      entities: [User, Intent, Knowledge, Response, Media],
+      synchronize: true
     }),
     AuthModule,
     UserModule,
@@ -35,6 +37,7 @@ import { FileModule } from './file/file.module';
     KnowledgeModule,
     ResponseModule,
     FileModule,
+    MediaModule,
   ],
   controllers: [],
   providers: [
