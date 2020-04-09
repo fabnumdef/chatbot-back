@@ -35,7 +35,7 @@ export class MediaService {
     if (fileExists) {
       throw new HttpException('Un média avec le même nom existe déjà.', HttpStatus.INTERNAL_SERVER_ERROR);
     }
-    fs.writeFileSync(path.resolve(this._filesDirectory, fileName), file);
+    fs.writeFileSync(path.resolve(this._filesDirectory, fileName), file.buffer);
     return this._mediasRepository.save({file: fileName});
   }
 
