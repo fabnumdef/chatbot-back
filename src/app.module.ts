@@ -15,6 +15,10 @@ import { LoggerInterceptor } from "@core/interceptors/logger.interceptor";
 import { FileModule } from './file/file.module';
 import { MediaModule } from './media/media.module';
 import { Media } from "@core/entities/media.entity";
+import { Events } from "@core/entities/events.entity";
+import { InboxModule } from './inbox/inbox.module';
+import { ScheduleModule } from "@nestjs/schedule";
+import { Inbox } from "@core/entities/inbox.entity";
 
 @Module({
   imports: [
@@ -28,7 +32,15 @@ import { Media } from "@core/entities/media.entity";
       username: process.env.DATABASE_USER,
       password: process.env.DATABASE_PASSWORD,
       database: process.env.DATABASE_NAME,
-      entities: [User, Intent, Knowledge, Response, Media],
+      entities: [
+        User,
+        Intent,
+        Knowledge,
+        Response,
+        Media,
+        Events,
+        Inbox
+      ],
       synchronize: true
     }),
     AuthModule,
@@ -38,13 +50,16 @@ import { Media } from "@core/entities/media.entity";
     ResponseModule,
     FileModule,
     MediaModule,
+    InboxModule,
+    ScheduleModule.forRoot()
   ],
   controllers: [],
   providers: [
     {
       provide: APP_INTERCEPTOR,
       useClass: LoggerInterceptor,
-    },
+    }
   ],
 })
-export class AppModule {}
+export class AppModule {
+}

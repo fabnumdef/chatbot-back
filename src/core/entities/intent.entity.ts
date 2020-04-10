@@ -2,6 +2,7 @@ import { Column, CreateDateColumn, Entity, OneToMany, PrimaryColumn } from "type
 import { Knowledge } from "@core/entities/knowledge.entity";
 import { Response } from "@core/entities/response.entity";
 import { IntentStatus } from "@core/enums/intent-status.enum";
+import { Inbox } from "@core/entities/inbox.entity";
 
 @Entity('intent')
 export class Intent {
@@ -25,4 +26,12 @@ export class Intent {
 
   @OneToMany(type => Response, response => response.intent)
   responses: Response[];
+
+  @OneToMany(type => Inbox, inbox => inbox.intent)
+  inboxes: Inbox[];
+
+  constructor(id) {
+    this.id = id;
+  }
+
 }
