@@ -8,4 +8,8 @@ export class MediaDto {
   @IsString()
   @IsNotEmpty()
   file: string;
+
+  @IsString()
+  @IsNotEmpty()
+  createdAt: string;
 }
