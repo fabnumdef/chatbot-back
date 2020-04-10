@@ -11,4 +11,8 @@ export class Media {
 
   @CreateDateColumn({type: "timestamp"})
   created_at: number;
+
+  static getAttributesToSearch() {
+    return ['file'];
+  }
 }

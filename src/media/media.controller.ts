@@ -1,4 +1,4 @@
-import { Controller, Delete, Get, Param, Post, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Controller, Delete, Get, Param, Post, Query, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
 import { ApiBearerAuth, ApiBody, ApiConsumes, ApiOperation, ApiTags } from "@nestjs/swagger";
 import { JwtGuard } from "@core/guards/jwt.guard";
 import { MediaService } from "./media.service";
@@ -7,21 +7,23 @@ import { MediaDto } from "@core/dto/media.dto";
 import { plainToClass } from "class-transformer";
 import camelcaseKeys = require("camelcase-keys");
 import { FileInterceptor } from "@nestjs/platform-express";
-import { FileService } from "../file/file.service";
 import { FileUploadDto } from "@core/dto/file-upload.dto";
-import { TemplateFileCheckResumeDto } from "@core/dto/template-file-check-resume.dto";
+import { PaginationQueryDto } from "@core/dto/pagination-query.dto";
+import { PaginationUtils } from "@core/pagination-utils";
 
 @ApiTags('media')
 @Controller('media')
 @ApiBearerAuth()
 @UseGuards(JwtGuard)
 export class MediaController {
-  constructor(private readonly _mediaService: MediaService) {}
+
+  constructor(private readonly _mediaService: MediaService) {
+  }
 
   @Get('')
   @ApiOperation({ summary: 'Return all medias' })
-  async getMedias(): Promise<MediaDto[]> {
-    const medias: Media[] = await this._mediaService.findAll();
+  async getMedias(@Query() query: PaginationQueryDto): Promise<MediaDto[]> {
+    const medias: Media[] = await this._mediaService.findAll(PaginationUtils.setPaginationOptions(query, Media.getAttributesToSearch()));
     return plainToClass(MediaDto, camelcaseKeys(medias, {deep: true}));
   }
 
