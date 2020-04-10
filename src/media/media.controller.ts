@@ -23,7 +23,9 @@ export class MediaController {
   @Get('')
   @ApiOperation({ summary: 'Return all medias' })
   async getMedias(@Query() query: PaginationQueryDto): Promise<MediaDto[]> {
-    const medias: Media[] = await this._mediaService.findAll(PaginationUtils.setPaginationOptions(query, Media.getAttributesToSearch()));
+    const medias: Media[] = await this._mediaService.findAll(
+      PaginationUtils.setPaginationOptions(query, Media.getAttributesToSearch())
+    );
     return plainToClass(MediaDto, camelcaseKeys(medias, {deep: true}));
   }
 

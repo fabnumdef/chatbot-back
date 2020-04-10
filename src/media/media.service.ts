@@ -30,7 +30,7 @@ export class MediaService {
   }
 
   async create(file: any): Promise<Media> {
-    const fileName = file.originalname;
+    const fileName = escape(file.originalname.trim());
     const fileExists = await this.findOneWithParam({file: fileName});
     if (fileExists) {
       throw new HttpException('Un média avec le même nom existe déjà.', HttpStatus.INTERNAL_SERVER_ERROR);
