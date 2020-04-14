@@ -6,7 +6,6 @@ import { KnowledgeDto } from "@core/dto/knowledge.dto";
 import { plainToClass } from "class-transformer";
 import { Knowledge } from "@core/entities/knowledge.entity";
 import camelcaseKeys = require("camelcase-keys");
-import { IntentModel } from "@core/models/intent.model";
 import snakecaseKeys = require("snakecase-keys");
 import { KnowledgeModel } from "@core/models/knowledge.model";
 

@@ -9,7 +9,6 @@ import { CreateUserDto } from "@core/dto/create-user.dto";
 import snakecaseKeys = require("snakecase-keys");
 import { UserModel } from "@core/models/user.model";
 import { JwtGuard } from "@core/guards/jwt.guard";
-import { GenerateAdminDto } from "@core/dto/generate-admin.dto";
 
 @Controller('user')
 @ApiTags('user')
@@ -20,11 +19,11 @@ export class UserController {
   @Post('admin')
   @ApiOperation({ summary: 'Generate admin user' })
   @ApiBody({
-    description: 'Password',
-    type: GenerateAdminDto,
+    description: 'User',
+    type: CreateUserDto,
   })
-  async generateAdminUser(@Body() body: GenerateAdminDto): Promise<UserDto> {
-    const userModel = await this._userService.generateAdminUser(body.password);
+  async generateAdminUser(@Body() user: CreateUserDto): Promise<UserDto> {
+    const userModel = await this._userService.generateAdminUser(plainToClass(UserModel, snakecaseKeys(user)));
     return plainToClass(UserDto, camelcaseKeys(userModel, {deep: true}));
   }
 

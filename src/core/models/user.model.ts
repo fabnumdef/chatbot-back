@@ -21,4 +21,8 @@ export class UserModel {
   @IsString()
   @IsOptional()
   role: UserRole;
+
+  @IsString()
+  @IsOptional()
+  password: string;
 }

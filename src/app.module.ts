@@ -19,6 +19,7 @@ import { Events } from "@core/entities/events.entity";
 import { InboxModule } from './inbox/inbox.module';
 import { ScheduleModule } from "@nestjs/schedule";
 import { Inbox } from "@core/entities/inbox.entity";
+import { RasaModule } from './rasa/rasa.module';
 
 @Module({
   imports: [
@@ -41,7 +42,8 @@ import { Inbox } from "@core/entities/inbox.entity";
         Events,
         Inbox
       ],
-      synchronize: true
+      synchronize: !(process.env.NODE_ENV === 'prod'),
+      migrations: ["migration/*.ts"]
     }),
     AuthModule,
     UserModule,
@@ -51,7 +53,8 @@ import { Inbox } from "@core/entities/inbox.entity";
     FileModule,
     MediaModule,
     InboxModule,
-    ScheduleModule.forRoot()
+    ScheduleModule.forRoot(),
+    RasaModule
   ],
   controllers: [],
   providers: [

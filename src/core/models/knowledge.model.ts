@@ -1,5 +1,4 @@
-import { IsNotEmpty, IsNumber, IsOptional, IsString } from "class-validator";
-import { IntentStatus } from "@core/enums/intent-status.enum";
+import { IsNotEmpty, IsNumber, IsString } from "class-validator";
 
 export class KnowledgeModel {
   @IsNumber()
