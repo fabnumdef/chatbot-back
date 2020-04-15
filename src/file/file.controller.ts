@@ -57,7 +57,7 @@ export class FileController {
   @ApiConsumes('multipart/form-data')
   @ApiBody({
     description: 'Base de connaissance (excel)',
-    type: FileUploadDto,
+    type: ImportFileDto,
   })
   @ApiOperation({summary: 'Upload de la base de connaissance'})
   async importFile(@UploadedFile() file,
