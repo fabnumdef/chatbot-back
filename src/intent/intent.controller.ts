@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from "@nestjs/swagger";
 import { JwtGuard } from "@core/guards/jwt.guard";
 import { IntentService } from "./intent.service";
@@ -8,6 +8,7 @@ import { Intent } from "@core/entities/intent.entity";
 import camelcaseKeys = require("camelcase-keys");
 import { IntentModel } from "@core/models/intent.model";
 import snakecaseKeys = require("snakecase-keys");
+import { UpdateResult } from "typeorm/query-builder/result/UpdateResult";
 
 @ApiTags('intent')
 @Controller('intent')
@@ -28,5 +29,11 @@ export class IntentController {
   async createIntent(@Body() intent: IntentDto): Promise<IntentDto> {
     intent = await this._intentService.create(plainToClass(IntentModel, snakecaseKeys(intent)));
     return plainToClass(IntentDto, camelcaseKeys(intent, {deep: true}));
+  }
+
+  @Delete(':intentId')
+  @ApiOperation({ summary: 'Archive an intent' })
+  async deleteIntent(@Param('intentId') intentId: string): Promise<UpdateResult> {
+    return this._intentService.delete(intentId);
   }
 }

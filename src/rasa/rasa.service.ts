@@ -20,12 +20,15 @@ export class RasaService {
   }
 
   async generateFiles() {
-    const intents: Intent[] = await this._intentService.findAll();
+    const intents: Intent[] = await this._intentService.findFullIntents();
     this._intentsToRasa(intents);
   }
 
   async trainRasa() {
-    await execShellCommand(`rasa train`, this._chatbotTemplateDir).then();
+    await execShellCommand(`rasa train`, this._chatbotTemplateDir).then(res => {
+      console.log('TRAINING RASA');
+      console.log(res);
+    });
   }
 
   /**
@@ -42,11 +45,14 @@ export class RasaService {
     const domain = new RasaDomainModel();
     let stories: string = '';
 
+    domain.intents = intents.map(i => i.id);
     intents.forEach(intent => {
       // Fill NLU
       const commonExamples = nlu.rasa_nlu_data.common_examples;
       commonExamples.push({intent: intent.id, text: intent.id});
-      commonExamples.push({intent: intent.id, text: intent.main_question});
+      if (intent.main_question) {
+        commonExamples.push({intent: intent.id, text: intent.main_question});
+      }
       intent.knowledges.forEach(knowledge => {
         commonExamples.push({intent: intent.id, text: knowledge.question});
       });
@@ -71,24 +77,24 @@ export class RasaService {
     intent.responses.forEach((response: Response, index: number) => {
       switch (response.response_type) {
         case ResponseType.text:
-          responses[`utter_${intent}_${index}`] = [{text: response.response}];
+          responses[`utter_${intent.id}_${index}`] = [{text: response.response}];
           break;
         case ResponseType.image:
-          responses[`utter_${intent}_${index - 1}`][0].image = response.response;
+          responses[`utter_${intent.id}_${index - 1}`][0].image = response.response;
           break;
         case ResponseType.button:
           const buttons: string[] = response.response.split(';');
-          responses[`utter_${intent}_${index - 1}`][0].buttons = [];
-          let utter_buttons = responses[`utter_${intent}_${index - 1}`][0].buttons;
+          responses[`utter_${intent.id}_${index - 1}`][0].buttons = [];
+          let utter_buttons = responses[`utter_${intent.id}_${index - 1}`][0].buttons;
           buttons.forEach(button => {
             utter_buttons.push(new RasaButtonModel(button));
           });
-          responses[`utter_${intent}_${index - 1}`][0].buttons = [new RasaButtonModel(response.response)];
+          responses[`utter_${intent.id}_${index - 1}`][0].buttons = [new RasaButtonModel(response.response)];
           break;
         case ResponseType.quick_reply:
           const quick_replies: string[] = response.response.split(';');
-          responses[`utter_${intent}_${index - 1}`][0].buttons = [];
-          let utter_buttons_bis = responses[`utter_${intent}_${index - 1}`][0].buttons;
+          responses[`utter_${intent.id}_${index - 1}`][0].buttons = [];
+          let utter_buttons_bis = responses[`utter_${intent.id}_${index - 1}`][0].buttons;
           quick_replies.forEach(quick_reply => {
             utter_buttons_bis.push(new RasaButtonModel(quick_reply));
           });

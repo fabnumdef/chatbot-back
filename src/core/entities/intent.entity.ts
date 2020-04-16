@@ -18,9 +18,6 @@ export class Intent {
   @Column({default: 'active'})
   status: IntentStatus;
 
-  @CreateDateColumn({type: "timestamp"})
-  created_at: number;
-
   @OneToMany(type => Knowledge, knowledge => knowledge.intent)
   knowledges: Knowledge[];
 
@@ -29,6 +26,12 @@ export class Intent {
 
   @OneToMany(type => Inbox, inbox => inbox.intent)
   inboxes: Inbox[];
+
+  @Column({type: "timestamp", nullable: true})
+  expires_at: number;
+
+  @CreateDateColumn({type: "timestamp"})
+  created_at: number;
 
   constructor(id) {
     this.id = id;

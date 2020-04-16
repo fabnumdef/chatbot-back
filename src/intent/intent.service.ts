@@ -13,8 +13,21 @@ export class IntentService {
               private readonly _intentsRepository: Repository<Intent>) {
   }
 
-  findAll(params = {status: IntentStatus.active}): Promise<Intent[]> {
+  findAll(params: any = {status: IntentStatus.active}): Promise<Intent[]> {
     return this._intentsRepository.find(params);
+  }
+
+  findFullIntents(): Promise<Intent[]> {
+    return this._intentsRepository.createQueryBuilder('intent')
+      .leftJoinAndSelect('intent.responses', 'responses')
+      .leftJoinAndSelect('intent.knowledges', 'knowledges')
+      .where("intent.status IN (:...status)", {status: [IntentStatus.to_deploy, IntentStatus.active]})
+      .orderBy({
+        'intent.id': 'ASC',
+        'knowledges.id': 'ASC',
+        'responses.id': 'ASC'
+      })
+      .getMany();
   }
 
   findOne(id: string): Promise<Intent> {
@@ -23,6 +36,10 @@ export class IntentService {
 
   create(intent: IntentModel): Promise<Intent> {
     return this._intentsRepository.save(intent);
+  }
+
+  delete(intentId): Promise<UpdateResult> {
+    return this._intentsRepository.update({id: intentId}, {status: IntentStatus.archived});
   }
 
   saveMany(intents: IntentModel[]): Promise<Intent[]> {
