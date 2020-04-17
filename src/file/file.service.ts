@@ -16,7 +16,11 @@ import { ResponseType, ResponseType_Fr, ResponseType_ReverseFr } from "@core/enu
 import snakecaseKeys = require("snakecase-keys");
 import { ImportResponseDto } from "@core/dto/import-response.dto";
 import * as fs from "fs";
-import { In, Not } from "typeorm";
+import { In, Not, Repository } from "typeorm";
+import * as path from "path";
+import { InjectRepository } from "@nestjs/typeorm";
+import { FileHistoric } from "@core/entities/file.entity";
+import * as mkdirp from "mkdirp";
 
 const XLSX = require('xlsx');
 const uuid = require('uuid');
@@ -24,10 +28,15 @@ const uuid = require('uuid');
 @Injectable()
 export class FileService {
   private _xlsx = XLSX;
+  private _historicDir = path.resolve(__dirname, '../../historic')
 
   constructor(private readonly _intentService: IntentService,
               private readonly _knowledgeService: KnowledgeService,
-              private readonly _responseService: ResponseService) {
+              private readonly _responseService: ResponseService,
+              @InjectRepository(FileHistoric)
+              private readonly _fileHistoricRepository: Repository<FileHistoric>) {
+    // Create folder if it does not exists
+    mkdirp(this._historicDir);
   }
 
   checkFile(file): TemplateFileCheckResumeDto {
@@ -57,11 +66,7 @@ export class FileService {
 
   exportXls(): Promise<fs.ReadStream> {
     return new Promise<fs.ReadStream>(async (resolve, reject) => {
-      const workbook = XLSX.utils.book_new();
-      const worksheet_data = await this._generateXls();
-      const worksheet = XLSX.utils.aoa_to_sheet(worksheet_data);
-      this._setPropertiesOnXls(worksheet);
-      XLSX.utils.book_append_sheet(workbook, worksheet);
+      const workbook = await this._generateWorkbook();
 
       const guidForClient = uuid.v1();
       let pathNameWithGuid = `${guidForClient}_result.xlsx`;
@@ -77,6 +82,20 @@ export class FileService {
       resolve(stream);
       return;
     });
+  }
+
+  async storeFile() {
+    const workbook = await this._generateWorkbook();
+
+    const timestamp = Date.now();
+    let pathNameWithGuid = `base_connaissance-${timestamp}.xlsx`;
+    XLSX.writeFile(workbook, path.resolve(this._historicDir, pathNameWithGuid));
+
+    await this._fileHistoricRepository.save({name: pathNameWithGuid});
+  }
+
+  async findAll() {
+    return this._fileHistoricRepository.find();
   }
 
   /************************************************************************************ PRIVATE FUNCTIONS ************************************************************************************/
@@ -225,7 +244,16 @@ export class FileService {
     return response;
   }
 
-  private async _generateXls() {
+  private async _generateWorkbook(): Promise<WorkBook> {
+    const workbook = XLSX.utils.book_new();
+    const worksheet_data = await this._generateWorksheet();
+    const worksheet = XLSX.utils.aoa_to_sheet(worksheet_data);
+    this._setPropertiesOnXls(worksheet);
+    XLSX.utils.book_append_sheet(workbook, worksheet);
+    return workbook;
+  }
+
+  private async _generateWorksheet() {
     const intents = await this._intentService.getRepository()
       .createQueryBuilder('intent')
       .leftJoinAndSelect('intent.responses', 'response')

@@ -20,6 +20,7 @@ import { InboxModule } from './inbox/inbox.module';
 import { ScheduleModule } from "@nestjs/schedule";
 import { Inbox } from "@core/entities/inbox.entity";
 import { RasaModule } from './rasa/rasa.module';
+import { FileHistoric } from "@core/entities/file.entity";
 
 @Module({
   imports: [
@@ -40,7 +41,8 @@ import { RasaModule } from './rasa/rasa.module';
         Response,
         Media,
         Events,
-        Inbox
+        Inbox,
+        FileHistoric
       ],
       synchronize: !(process.env.NODE_ENV === 'prod'),
       migrations: ["migration/*.ts"]

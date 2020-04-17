@@ -16,6 +16,11 @@ import { FileUploadDto } from "@core/dto/file-upload.dto";
 import { ImportFileDto } from "@core/dto/import-file.dto";
 import { ImportResponseDto } from "@core/dto/import-response.dto";
 import { TemplateFileCheckResumeDto } from "@core/dto/template-file-check-resume.dto";
+import { plainToClass } from "class-transformer";
+import { FileHistoric } from "@core/entities/file.entity";
+import { FileHistoricDto } from "@core/dto/file-historic.dto";
+import camelcaseKeys = require("camelcase-keys");
+
 
 @ApiTags('file')
 @Controller('file')
@@ -81,5 +86,12 @@ export class FileController {
       console.error(err);
       throw new HttpException(`Une erreur est survenue durant l'export de la base de connaissance`, HttpStatus.INTERNAL_SERVER_ERROR);
     }
+  }
+
+  @Get('historic')
+  @ApiOperation({ summary: 'Return history' })
+  async getHistory(): Promise<FileHistoricDto[]> {
+    const files: FileHistoric[] = await this._fileService.findAll();
+    return plainToClass(FileHistoricDto, camelcaseKeys(files, {deep: true}));
   }
 }

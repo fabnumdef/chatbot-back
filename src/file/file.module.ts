@@ -4,6 +4,8 @@ import { FileService } from './file.service';
 import { IntentModule } from "../intent/intent.module";
 import { KnowledgeModule } from "../knowledge/knowledge.module";
 import { ResponseModule } from "../response/response.module";
+import { TypeOrmModule } from "@nestjs/typeorm";
+import { FileHistoric } from "@core/entities/file.entity";
 
 @Module({
   controllers: [FileController],
@@ -11,7 +13,12 @@ import { ResponseModule } from "../response/response.module";
   imports: [
     IntentModule,
     KnowledgeModule,
-    ResponseModule
+    ResponseModule,
+    TypeOrmModule.forFeature([FileHistoric])
+  ],
+  exports: [
+    FileService
   ]
 })
-export class FileModule {}
+export class FileModule {
+}
