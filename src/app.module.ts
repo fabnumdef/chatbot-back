@@ -44,7 +44,8 @@ import { FileHistoric } from "@core/entities/file.entity";
         Inbox,
         FileHistoric
       ],
-      synchronize: !(process.env.NODE_ENV === 'prod'),
+      // synchronize: !(process.env.NODE_ENV === 'prod'),
+      synchronize: true,
       migrations: ["migration/*.ts"]
     }),
     AuthModule,
