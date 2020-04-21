@@ -18,10 +18,10 @@ export class Intent {
   @Column({default: 'active'})
   status: IntentStatus;
 
-  @OneToMany(type => Knowledge, knowledge => knowledge.intent)
+  @OneToMany(type => Knowledge, knowledge => knowledge.intent, {cascade: true})
   knowledges: Knowledge[];
 
-  @OneToMany(type => Response, response => response.intent)
+  @OneToMany(type => Response, response => response.intent, {cascade: true})
   responses: Response[];
 
   @OneToMany(type => Inbox, inbox => inbox.intent)

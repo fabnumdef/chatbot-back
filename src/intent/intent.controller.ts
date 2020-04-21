@@ -20,14 +20,21 @@ export class IntentController {
   @Get('')
   @ApiOperation({ summary: 'Return all intents' })
   async getIntents(): Promise<IntentDto[]> {
-    const intents: Intent[] = await this._intentService.findAll();
+    const intents: Intent[] = await this._intentService.findFullIntents();
     return plainToClass(IntentDto, camelcaseKeys(intents, {deep: true}));
   }
 
   @Post('')
   @ApiOperation({ summary: 'Create an intent' })
-  async createIntent(@Body() intent: IntentDto): Promise<IntentDto> {
-    intent = await this._intentService.create(plainToClass(IntentModel, snakecaseKeys(intent)));
+  async createIntent(@Body() intentDto: IntentDto): Promise<IntentDto> {
+    let intent: Intent = plainToClass(Intent, snakecaseKeys(intentDto));
+    intent.responses.map(r => {
+      r.intent = <Intent> {id: intent.id}
+    });
+    intent.knowledges.map(k => {
+      k.intent = <Intent> {id: intent.id}
+    });
+    intent = await this._intentService.create(intent);
     return plainToClass(IntentDto, camelcaseKeys(intent, {deep: true}));
   }
 

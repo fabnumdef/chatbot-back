@@ -43,7 +43,7 @@ export class IntentService {
     return this._intentsRepository.findOne(id);
   }
 
-  create(intent: IntentModel): Promise<Intent> {
+  create(intent: Intent): Promise<Intent> {
     return this._intentsRepository.save(intent);
   }
 

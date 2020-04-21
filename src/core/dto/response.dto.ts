@@ -7,7 +7,7 @@ export class ResponseDto {
   id: number;
 
   @IsString()
-  intent: string;
+  intentId: string;
 
   @IsString()
   responseType: ResponseType;
