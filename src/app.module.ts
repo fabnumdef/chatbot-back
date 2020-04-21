@@ -21,6 +21,7 @@ import { ScheduleModule } from "@nestjs/schedule";
 import { Inbox } from "@core/entities/inbox.entity";
 import { RasaModule } from './rasa/rasa.module';
 import { FileHistoric } from "@core/entities/file.entity";
+import { RefDataController } from './ref-data/ref-data.controller';
 
 @Module({
   imports: [
@@ -59,7 +60,7 @@ import { FileHistoric } from "@core/entities/file.entity";
     ScheduleModule.forRoot(),
     RasaModule
   ],
-  controllers: [],
+  controllers: [RefDataController],
   providers: [
     {
       provide: APP_INTERCEPTOR,

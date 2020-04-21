@@ -30,6 +30,15 @@ export class IntentService {
       .getMany();
   }
 
+  async findAllCategories(): Promise<string[]> {
+    const intents: Intent[] = await this._intentsRepository.createQueryBuilder('intent')
+      .select('DISTINCT category', 'category')
+      .orderBy('category', 'ASC')
+      .getRawMany();
+
+    return intents.filter(i => !!i.category).map(i => i.category);
+  }
+
   findOne(id: string): Promise<Intent> {
     return this._intentsRepository.findOne(id);
   }
