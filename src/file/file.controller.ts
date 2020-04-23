@@ -37,6 +37,9 @@ export class FileController {
       'file',
       {
         fileFilter: FileService.excelFileFilter,
+        limits: {
+          fileSize: 1e+7
+        },
       }
     )
   )
@@ -56,6 +59,9 @@ export class FileController {
       'file',
       {
         fileFilter: FileService.excelFileFilter,
+        limits: {
+          fileSize: 1e+7
+        },
       }
     )
   )

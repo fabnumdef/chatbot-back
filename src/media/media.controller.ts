@@ -35,8 +35,8 @@ export class MediaController {
       'file',
       {
         limits: {
-          // 5MB
-          fileSize: 5242880
+          // 5Mb
+          fileSize: 5e+6
         },
         fileFilter: MediaService.mediaFilter,
       }
