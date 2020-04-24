@@ -9,11 +9,24 @@ import { CreateUserDto } from "@core/dto/create-user.dto";
 import snakecaseKeys = require("snakecase-keys");
 import { UserModel } from "@core/models/user.model";
 import { JwtGuard } from "@core/guards/jwt.guard";
+import { RolesGuard } from "@core/guards/roles.guard";
+import { UserRole } from "@core/enums/user-role.enum";
+import { Roles } from "@core/decorators/roles.decorator";
 
 @Controller('user')
 @ApiTags('user')
 export class UserController {
   constructor(private readonly _userService: UserService) {}
+
+  @Get('')
+  @ApiOperation({ summary: 'Return all users' })
+  @ApiBearerAuth()
+  @UseGuards(JwtGuard, RolesGuard)
+  @Roles(UserRole.admin)
+  async getUsers(): Promise<UserDto[]> {
+    const users: User[] = await this._userService.findAll();
+    return plainToClass(UserDto, camelcaseKeys(users, {deep: true}));
+  }
 
   // TODO: Pour le développement, à voir commencer insérer les users par la suite
   @Post('admin')

@@ -22,6 +22,8 @@ import { Inbox } from "@core/entities/inbox.entity";
 import { RasaModule } from './rasa/rasa.module';
 import { FileHistoric } from "@core/entities/file.entity";
 import { RefDataController } from './ref-data/ref-data.controller';
+import { ChatbotConfig } from "@core/entities/chatbot-config.entity";
+import { ChatbotConfigModule } from './chatbot-config/chatbot-config.module';
 
 @Module({
   imports: [
@@ -43,7 +45,8 @@ import { RefDataController } from './ref-data/ref-data.controller';
         Media,
         Events,
         Inbox,
-        FileHistoric
+        FileHistoric,
+        ChatbotConfig
       ],
       // synchronize: !(process.env.NODE_ENV === 'prod'),
       synchronize: true,
@@ -58,7 +61,8 @@ import { RefDataController } from './ref-data/ref-data.controller';
     MediaModule,
     InboxModule,
     ScheduleModule.forRoot(),
-    RasaModule
+    RasaModule,
+    ChatbotConfigModule
   ],
   controllers: [RefDataController],
   providers: [
