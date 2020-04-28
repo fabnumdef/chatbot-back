@@ -9,10 +9,10 @@ export class Intent {
   @PrimaryColumn()
   id: string;
 
-  @Column({nullable: true})
+  @Column({nullable: true, length: 255})
   category?: string;
 
-  @Column({nullable: true})
+  @Column({nullable: true, length: 255})
   main_question?: string;
 
   @Column({default: 'active'})

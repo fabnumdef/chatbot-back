@@ -6,7 +6,6 @@ import { IntentDto } from "@core/dto/intent.dto";
 import { plainToClass } from "class-transformer";
 import { Intent } from "@core/entities/intent.entity";
 import camelcaseKeys = require("camelcase-keys");
-import { IntentModel } from "@core/models/intent.model";
 import snakecaseKeys = require("snakecase-keys");
 import { UpdateResult } from "typeorm/query-builder/result/UpdateResult";
 

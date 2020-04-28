@@ -5,9 +5,9 @@ export class FileHistoric {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ nullable: false })
+  @Column({ nullable: false, length: 50 })
   name: string;
 
-  @CreateDateColumn({type: "timestamp"})
+  @CreateDateColumn({type: 'timestamp'})
   created_at: number;
 }

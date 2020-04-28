@@ -13,13 +13,13 @@ export class Inbox {
   @Column({type: 'double precision'})
   confidence: number;
 
-  @Column()
+  @Column({length: 2000})
   question: string;
 
   @Column({type: 'text'})
   response: any;
 
-  @Column()
+  @Column({length: 255})
   sender_id: string;
 
   @Column({type: 'double precision'})
@@ -31,8 +31,8 @@ export class Inbox {
   @ManyToOne(type => Intent, intent => intent.inboxes)
   intent: Intent;
 
-  @CreateDateColumn()
-  created_at: string;
+  @CreateDateColumn({type: 'timestamp'})
+  created_at: number;
 
   constructor() {
     this.status = InboxStatus.pending;

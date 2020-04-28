@@ -13,6 +13,6 @@ export class Response {
   @Column('enum', { name: 'type', enum: ResponseType, nullable: false})
   response_type: ResponseType;
 
-  @Column({ nullable: false })
+  @Column({ nullable: false, length: 2000 })
   response: string;
 }

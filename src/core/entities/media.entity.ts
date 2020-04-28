@@ -6,7 +6,7 @@ export class Media {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ nullable: false })
+  @Column({ nullable: false, length: 50 })
   file: string;
 
   @CreateDateColumn({type: "timestamp"})

@@ -10,6 +10,6 @@ export class Knowledge {
   @ManyToOne(type => Intent, intent => intent.knowledges)
   intent: Intent;
 
-  @Column({ nullable: false })
+  @Column({ nullable: false, length: 255 })
   question: string;
 }
