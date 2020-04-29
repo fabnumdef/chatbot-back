@@ -5,7 +5,7 @@ export class PaginationUtils {
   static setPaginationOptions(pagination: PaginationQueryDto, attributes: string[]): any {
     const options: FindManyOptions = {};
 
-    const query = escape(pagination.query.trim());
+    const query = pagination.query ? escape(pagination.query.trim()) : null;
     if (!!query) {
       options.where = '';
       attributes.forEach((a, idx) => {

@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString, MaxLength } from "class-validator";
+import { IsHexColor, IsNotEmpty, IsString, MaxLength } from "class-validator";
 
 export class ConfigDto {
   @IsString()
@@ -6,12 +6,12 @@ export class ConfigDto {
   @MaxLength(50)
   name: string;
 
-  @IsString()
+  @IsHexColor()
   @IsNotEmpty()
   @MaxLength(20)
   primaryColor: string;
 
-  @IsString()
+  @IsHexColor()
   @IsNotEmpty()
   @MaxLength(20)
   secondaryColor: string;

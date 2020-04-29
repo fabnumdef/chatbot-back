@@ -1,7 +1,13 @@
 import { IsOptional, IsString } from "class-validator";
 
 export class PaginationQueryDto {
-  @IsString()
   @IsOptional()
-  query: string;
+  @IsString()
+  query?: string;
+
+  @IsOptional()
+  page: number = 1;
+
+  @IsOptional()
+  limit: number = 20;
 }

@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from "@nestjs/swagger";
 import { JwtGuard } from "@core/guards/jwt.guard";
 import { IntentService } from "./intent.service";
@@ -8,6 +8,8 @@ import { Intent } from "@core/entities/intent.entity";
 import camelcaseKeys = require("camelcase-keys");
 import snakecaseKeys = require("snakecase-keys");
 import { UpdateResult } from "typeorm/query-builder/result/UpdateResult";
+import { PaginationQueryDto } from "@core/dto/pagination-query.dto";
+import { Pagination } from "nestjs-typeorm-paginate/index";
 
 @ApiTags('intent')
 @Controller('intent')
@@ -21,6 +23,15 @@ export class IntentController {
   async getIntents(): Promise<IntentDto[]> {
     const intents: Intent[] = await this._intentService.findFullIntents();
     return plainToClass(IntentDto, camelcaseKeys(intents, {deep: true}));
+  }
+
+  @Get('search')
+  @ApiOperation({summary: 'Return intents paginated'})
+  async getIntentsPagination(@Query() options: PaginationQueryDto): Promise<IntentDto[]> {
+    const intents: Pagination<Intent> = await this._intentService.paginate(options);
+    intents.items.map(i => plainToClass(IntentDto, camelcaseKeys(i, {deep: true})));
+    // @ts-ignore
+    return camelcaseKeys(intents, {deep: true});
   }
 
   @Post('')

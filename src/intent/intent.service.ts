@@ -5,6 +5,8 @@ import { Intent } from "@core/entities/intent.entity";
 import { IntentModel } from "@core/models/intent.model";
 import { UpdateResult } from "typeorm/query-builder/result/UpdateResult";
 import { IntentStatus } from "@core/enums/intent-status.enum";
+import { PaginationQueryDto } from "@core/dto/pagination-query.dto";
+import { Pagination, paginate } from "nestjs-typeorm-paginate/index";
 
 @Injectable()
 export class IntentService {
@@ -18,6 +20,14 @@ export class IntentService {
   }
 
   findFullIntents(): Promise<Intent[]> {
+    return this.getFullIntentQueryBuilder().getMany();
+  }
+
+  async paginate(options: PaginationQueryDto): Promise<Pagination<Intent>> {
+    return paginate<Intent>(this.getFullIntentQueryBuilder(), options);
+  }
+
+  getFullIntentQueryBuilder() {
     return this._intentsRepository.createQueryBuilder('intent')
       .leftJoinAndSelect('intent.responses', 'responses')
       .leftJoinAndSelect('intent.knowledges', 'knowledges')
@@ -27,7 +37,6 @@ export class IntentService {
         'knowledges.id': 'ASC',
         'responses.id': 'ASC'
       })
-      .getMany();
   }
 
   async findAllCategories(): Promise<string[]> {

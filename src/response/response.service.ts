@@ -28,6 +28,15 @@ export class ResponseService {
     return this._responsesRepository.save(responses);
   }
 
+  async updateFileResponses(oldFile: string, newFile: string) {
+    this._responsesRepository.createQueryBuilder('response')
+      .update()
+      .set({
+        response: `REPLACE(response, '${oldFile}', '${newFile}')`
+      })
+      .where(`response LIKE '%${oldFile}%'`);
+  }
+
   async deleteByIntent(intent: Intent): Promise<void> {
     await this._responsesRepository.delete({
       intent: intent
