@@ -10,6 +10,7 @@ import snakecaseKeys = require("snakecase-keys");
 import { UpdateResult } from "typeorm/query-builder/result/UpdateResult";
 import { PaginationQueryDto } from "@core/dto/pagination-query.dto";
 import { Pagination } from "nestjs-typeorm-paginate/index";
+import { IntentFilterDto } from "@core/dto/intent-filter.dto";
 
 @ApiTags('intent')
 @Controller('intent')
@@ -25,10 +26,11 @@ export class IntentController {
     return plainToClass(IntentDto, camelcaseKeys(intents, {deep: true}));
   }
 
-  @Get('search')
+  @Post('search')
   @ApiOperation({summary: 'Return intents paginated'})
-  async getIntentsPagination(@Query() options: PaginationQueryDto): Promise<IntentDto[]> {
-    const intents: Pagination<Intent> = await this._intentService.paginate(options);
+  async getIntentsPagination(@Query() options: PaginationQueryDto,
+                             @Body() filters: IntentFilterDto): Promise<IntentDto[]> {
+    const intents: Pagination<Intent> = await this._intentService.paginate(options, filters);
     intents.items.map(i => plainToClass(IntentDto, camelcaseKeys(i, {deep: true})));
     // @ts-ignore
     return camelcaseKeys(intents, {deep: true});

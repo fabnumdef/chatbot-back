@@ -27,7 +27,7 @@ export class MediaService {
   }
 
   async paginate(options: PaginationQueryDto): Promise<Pagination<Media>> {
-    return paginate<Media>(this._mediasRepository, options, PaginationUtils.setPaginationOptions(options, Media.getAttributesToSearch()));
+    return paginate<Media>(this._mediasRepository, options, PaginationUtils.setQuery(options, Media.getAttributesToSearch()));
   }
 
   findOne(id: number): Promise<Media> {

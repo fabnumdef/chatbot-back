@@ -37,4 +37,8 @@ export class Intent {
     this.id = id;
   }
 
+  static getAttributesToSearch() {
+    return ['id', 'category', 'main_question'];
+  }
+
 }

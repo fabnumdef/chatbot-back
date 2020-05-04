@@ -2,11 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { Response } from "@core/entities/response.entity";
-import { ResponseDto } from "@core/dto/response.dto";
-import { Knowledge } from "@core/entities/knowledge.entity";
-import { ResponseModule } from "./response.module";
 import { ResponseModel } from "@core/models/response.model";
-import { IntentModel } from "@core/models/intent.model";
 import { Intent } from "@core/entities/intent.entity";
 
 @Injectable()
@@ -14,6 +10,10 @@ export class ResponseService {
 
   constructor(@InjectRepository(Response)
               private readonly _responsesRepository: Repository<Response>) {
+  }
+
+  findByIntent(intent: Intent): Promise<Response[]> {
+    return this._responsesRepository.find({where: {'intent': intent}, order: {'id': 'ASC'}});
   }
 
   findAll(): Promise<Response[]> {

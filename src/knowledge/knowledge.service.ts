@@ -2,16 +2,18 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { Knowledge } from "@core/entities/knowledge.entity";
-import { KnowledgeDto } from "@core/dto/knowledge.dto";
-import { IntentModel } from "@core/models/intent.model";
-import { Intent } from "@core/entities/intent.entity";
 import { KnowledgeModel } from "@core/models/knowledge.model";
+import { Intent } from "@core/entities/intent.entity";
 
 @Injectable()
 export class KnowledgeService {
 
   constructor(@InjectRepository(Knowledge)
               private readonly _knowledgesRepository: Repository<Knowledge>) {
+  }
+
+  findByIntent(intent: Intent): Promise<Knowledge[]> {
+    return this._knowledgesRepository.find({where: {'intent': intent}, order: {'id': 'ASC'}});
   }
 
   findAll(): Promise<Knowledge[]> {
