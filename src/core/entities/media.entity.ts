@@ -9,10 +9,10 @@ export class Media {
   @Column({ nullable: false, length: 50 })
   file: string;
 
-  @Column({ nullable: false })
+  @Column({ nullable: false, default: 0 })
   size: number;
 
-  @Column({ nullable: false, length: 100 })
+  @Column({ nullable: false, length: 100, default: 'auto' })
   added_by: string;
 
   @CreateDateColumn({type: "timestamp"})
