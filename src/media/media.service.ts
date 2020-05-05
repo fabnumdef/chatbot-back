@@ -114,7 +114,10 @@ export class MediaService {
     if (!fileExists) {
       throw new HttpException('Ce média n\'existe pas.', HttpStatus.INTERNAL_SERVER_ERROR);
     }
-    fs.unlinkSync(path.resolve(this._filesDirectory, fileExists.file));
+    try {
+      fs.unlinkSync(path.resolve(this._filesDirectory, fileExists.file));
+    } catch (e) {
+    }
     return this._mediasRepository.delete(id);
   }
 
