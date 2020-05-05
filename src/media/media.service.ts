@@ -9,6 +9,11 @@ import { PaginationQueryDto } from "@core/dto/pagination-query.dto";
 import { paginate, Pagination } from "nestjs-typeorm-paginate/index";
 import { PaginationUtils } from "@core/pagination-utils";
 import { ResponseService } from "../response/response.service";
+import { User } from "@core/entities/user.entity";
+import { IntentService } from "../intent/intent.service";
+import { MediaModel } from "@core/models/media.model";
+import { plainToClass } from "class-transformer";
+import { IntentModel } from "@core/models/intent.model";
 
 @Injectable()
 export class MediaService {
@@ -17,7 +22,8 @@ export class MediaService {
 
   constructor(@InjectRepository(Media)
               private readonly _mediasRepository: Repository<Media>,
-              private readonly _responseService: ResponseService) {
+              private readonly _responseService: ResponseService,
+              private readonly _intentService: IntentService) {
     // Create folder if it does not exists
     mkdirp(this._filesDirectory);
   }
@@ -26,8 +32,20 @@ export class MediaService {
     return this._mediasRepository.find(params);
   }
 
-  async paginate(options: PaginationQueryDto): Promise<Pagination<Media>> {
-    return paginate<Media>(this._mediasRepository, options, PaginationUtils.setQuery(options, Media.getAttributesToSearch()));
+  async paginate(options: PaginationQueryDto): Promise<Pagination<MediaModel>> {
+    const results = await paginate<Media>(this._mediasRepository, options, PaginationUtils.setQuery(options, Media.getAttributesToSearch()));
+
+    // Récupération des intents liés
+    return new Pagination(
+      await Promise.all(results.items.map(async (item: MediaModel) => {
+        const intents = await this._intentService.findByMedia(item);
+        item.intents = plainToClass(IntentModel, intents);
+
+        return item;
+      })),
+      results.meta,
+      results.links,
+    );
   }
 
   findOne(id: number): Promise<Media> {
@@ -38,26 +56,53 @@ export class MediaService {
     return this._mediasRepository.findOne(param);
   }
 
-  async create(file: any): Promise<Media> {
+  async create(file: any, user: User): Promise<Media> {
     const fileName = escape(file.originalname.trim());
+    if (fileName.length > 50) {
+      throw new HttpException('Le nom du fichier ne doit pas dépasser 50 caractères.', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
     const fileExists = await this.findOneWithParam({file: fileName});
     if (fileExists) {
       throw new HttpException('Un média avec le même nom existe déjà.', HttpStatus.INTERNAL_SERVER_ERROR);
     }
     fs.writeFileSync(path.resolve(this._filesDirectory, fileName), file.buffer);
-    return this._mediasRepository.save({file: fileName});
+    const stats = fs.statSync(path.resolve(this._filesDirectory, fileName));
+    const fileToSave: Media = {
+      id: null,
+      file: fileName,
+      // size in KB
+      size: Math.round(stats['size'] / 1000),
+      added_by: `${user.first_name} ${user.last_name}`,
+      created_at: null
+    }
+    return this._mediasRepository.save(fileToSave);
   }
 
-  async update(mediaId: number, file: any): Promise<Media> {
+  async update(mediaId: number, file: any, user: User): Promise<Media> {
     const fileName = escape(file.originalname.trim());
+    if (fileName.length > 50) {
+      throw new HttpException('Le nom du fichier ne doit pas dépasser 50 caractères.', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
     const fileExists = await this.findOneWithParam({file: fileName});
     if (fileExists && fileExists.id !== mediaId) {
       throw new HttpException('Un média avec le même nom existe déjà.', HttpStatus.INTERNAL_SERVER_ERROR);
     }
     const oldFile = await this.findOne(mediaId);
-    fs.unlinkSync(path.resolve(this._filesDirectory, oldFile.file));
+    try {
+      fs.unlinkSync(path.resolve(this._filesDirectory, oldFile.file));
+    } catch (e) {
+    }
     fs.writeFileSync(path.resolve(this._filesDirectory, fileName), file.buffer);
-    const mediaUpdated = await this._mediasRepository.save({id: mediaId, file: fileName});
+    const stats = fs.statSync(path.resolve(this._filesDirectory, fileName));
+    const fileToSave: Media = {
+      id: mediaId,
+      file: fileName,
+      // size in KB
+      size: Math.round(stats['size'] / 1000),
+      added_by: `${user.first_name} ${user.last_name}`,
+      created_at: new Date().getTime()
+    }
+    const mediaUpdated = await this._mediasRepository.save(fileToSave);
 
     await this._responseService.updateFileResponses(oldFile.file, mediaUpdated.file);
 

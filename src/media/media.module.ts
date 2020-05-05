@@ -4,11 +4,13 @@ import { MediaService } from './media.service';
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { Media } from "@core/entities/media.entity";
 import { ResponseModule } from "../response/response.module";
+import { IntentModule } from "../intent/intent.module";
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Media]),
-    ResponseModule
+    ResponseModule,
+    IntentModule
   ],
   controllers: [MediaController],
   providers: [MediaService]

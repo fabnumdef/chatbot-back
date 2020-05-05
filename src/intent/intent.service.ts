@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from "@nestjs/typeorm";
-import { FindManyOptions, Repository } from "typeorm";
+import { FindManyOptions, Like, Repository } from "typeorm";
 import { Intent } from "@core/entities/intent.entity";
 import { IntentModel } from "@core/models/intent.model";
 import { UpdateResult } from "typeorm/query-builder/result/UpdateResult";
@@ -11,6 +11,8 @@ import { KnowledgeService } from "../knowledge/knowledge.service";
 import { ResponseService } from "../response/response.service";
 import { PaginationUtils } from "@core/pagination-utils";
 import { IntentFilterDto } from "@core/dto/intent-filter.dto";
+import { Media } from "@core/entities/media.entity";
+import { MediaModel } from "@core/models/media.model";
 
 @Injectable()
 export class IntentService {
@@ -92,6 +94,16 @@ export class IntentService {
       .getRawMany();
 
     return intents.filter(i => !!i.category).map(i => i.category);
+  }
+
+  findByMedia(media: MediaModel): Promise<Intent[]> {
+    return this._intentsRepository.find({
+      select: ['id', 'main_question', 'category'],
+      join: { alias: 'intents', innerJoin: { responses: 'intents.responses' } },
+      where: qb => {
+        qb.where(`responses.response like '%/${media.file}%'`)
+      },
+    });
   }
 
   findOne(id: string): Promise<Intent> {

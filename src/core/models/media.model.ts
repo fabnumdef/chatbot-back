@@ -1,7 +1,8 @@
 import { IsNotEmpty, IsNumber, IsObject, IsOptional, IsString } from "class-validator";
-import { IntentDto } from "@core/dto/intent.dto";
+import { Intent } from "@core/entities/intent.entity";
+import { IntentModel } from "@core/models/intent.model";
 
-export class MediaDto {
+export class MediaModel {
   @IsNumber()
   @IsNotEmpty()
   id: number;
@@ -16,13 +17,13 @@ export class MediaDto {
 
   @IsString()
   @IsNotEmpty()
-  addedBy: string;
+  added_by: string;
 
-  @IsString()
-  @IsNotEmpty()
-  createdAt: string;
+  @IsNumber()
+  @IsOptional()
+  created_at?: number;
 
   @IsObject()
   @IsOptional()
-  intents: IntentDto[];
+  intents?: IntentModel[];
 }

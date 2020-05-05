@@ -5,7 +5,7 @@ import {
   Param,
   Post,
   Put,
-  Query,
+  Query, Req,
   UploadedFile,
   UseGuards,
   UseInterceptors
@@ -20,8 +20,9 @@ import camelcaseKeys = require("camelcase-keys");
 import { FileInterceptor } from "@nestjs/platform-express";
 import { FileUploadDto } from "@core/dto/file-upload.dto";
 import { PaginationQueryDto } from "@core/dto/pagination-query.dto";
-import { PaginationUtils } from "@core/pagination-utils";
 import { Pagination } from "nestjs-typeorm-paginate/index";
+import { User } from "@core/entities/user.entity";
+import { MediaModel } from "@core/models/media.model";
 
 @ApiTags('media')
 @Controller('media')
@@ -42,7 +43,7 @@ export class MediaController {
   @Post('search')
   @ApiOperation({summary: 'Return medias paginated'})
   async getMediasPagination(@Query() options: PaginationQueryDto): Promise<Pagination<MediaDto>> {
-    const medias: Pagination<Media> = await this._mediaService.paginate(options);
+    const medias: Pagination<MediaModel> = await this._mediaService.paginate(options);
     medias.items.map(i => plainToClass(MediaDto, camelcaseKeys(i, {deep: true})));
     // @ts-ignore
     return camelcaseKeys(medias, {deep: true});
@@ -67,8 +68,10 @@ export class MediaController {
     type: FileUploadDto,
   })
   @ApiOperation({summary: 'Ajout d\'un fichier à la médiathèque'})
-  async addFile(@UploadedFile() file): Promise<MediaDto> {
-    const media = await this._mediaService.create(file);
+  async addFile(@UploadedFile() file,
+                @Req() req): Promise<MediaDto> {
+    const userRequest: User = req.user;
+    const media = await this._mediaService.create(file, userRequest);
     return plainToClass(MediaDto, camelcaseKeys(media, {deep: true}));
   }
 
@@ -91,8 +94,11 @@ export class MediaController {
     type: FileUploadDto,
   })
   @ApiOperation({summary: 'Replace media'})
-  async replaceMedia(@Param('id') mediaId: string, @UploadedFile() file): Promise<MediaDto> {
-    const media = await this._mediaService.update(parseInt(mediaId), file);
+  async replaceMedia(@Param('id') mediaId: string,
+                     @UploadedFile() file,
+                     @Req() req): Promise<MediaDto> {
+    const userRequest: User = req.user;
+    const media = await this._mediaService.update(parseInt(mediaId), file, userRequest);
     return plainToClass(MediaDto, camelcaseKeys(media, {deep: true}));
   }
 
