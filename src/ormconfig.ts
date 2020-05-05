@@ -8,7 +8,8 @@ const config: TypeOrmModuleOptions = {
   password: process.env.DATABASE_PASSWORD,
   database: process.env.DATABASE_NAME,
   entities: [__dirname + '/core/entities/**/*.entity{.ts,.js}'],
-  synchronize: !(process.env.NODE_ENV === 'prod'),
+  synchronize: true,
+  // synchronize: !(process.env.NODE_ENV === 'prod'),
 
   // Allow both start:prod and start:dev to use migrations
   // __dirname is either dist or src folder, meaning either
