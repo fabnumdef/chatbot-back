@@ -13,6 +13,7 @@ import { IntentModule } from "../intent/intent.module";
     IntentModule
   ],
   controllers: [MediaController],
-  providers: [MediaService]
+  providers: [MediaService],
+  exports: [MediaService]
 })
 export class MediaModule {}

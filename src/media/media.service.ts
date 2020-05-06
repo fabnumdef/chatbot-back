@@ -57,15 +57,7 @@ export class MediaService {
   }
 
   async create(file: any, user: User): Promise<Media> {
-    const fileName = escape(file.originalname.trim());
-    if (fileName.length > 50) {
-      throw new HttpException('Le nom du fichier ne doit pas dépasser 50 caractères.', HttpStatus.INTERNAL_SERVER_ERROR);
-    }
-    const fileExists = await this.findOneWithParam({file: fileName});
-    if (fileExists) {
-      throw new HttpException('Un média avec le même nom existe déjà.', HttpStatus.INTERNAL_SERVER_ERROR);
-    }
-    fs.writeFileSync(path.resolve(this._filesDirectory, fileName), file.buffer);
+    const fileName = await this.storeFile(file);
     const stats = fs.statSync(path.resolve(this._filesDirectory, fileName));
     const fileToSave: Media = {
       id: null,
@@ -115,10 +107,27 @@ export class MediaService {
       throw new HttpException('Ce média n\'existe pas.', HttpStatus.INTERNAL_SERVER_ERROR);
     }
     try {
-      fs.unlinkSync(path.resolve(this._filesDirectory, fileExists.file));
+      this.deleteFile(fileExists.file);
     } catch (e) {
     }
     return this._mediasRepository.delete(id);
+  }
+
+  async storeFile(file): Promise<string> {
+    const fileName = escape(file.originalname.trim());
+    if (fileName.length > 50) {
+      throw new HttpException('Le nom du fichier ne doit pas dépasser 50 caractères.', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+    const fileExists = await this.findOneWithParam({file: fileName});
+    if (fileExists) {
+      throw new HttpException('Un média avec le même nom existe déjà.', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+    fs.writeFileSync(path.resolve(this._filesDirectory, fileName), file.buffer);
+    return fileName;
+  }
+
+  async deleteFile(filePath: string) {
+    fs.unlinkSync(path.resolve(this._filesDirectory, filePath));
   }
 
 

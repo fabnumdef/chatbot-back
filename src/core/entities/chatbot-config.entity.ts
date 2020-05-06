@@ -11,6 +11,12 @@ export class ChatbotConfig {
   @Column({ nullable: false, length: 50 })
   name: string;
 
+  @Column({ nullable: true, length: 50 })
+  function: string;
+
+  @Column({ nullable: false, length: 50 })
+  icon: string;
+
   @Column({ nullable: false, length: 20 })
   primary_color: string;
 
