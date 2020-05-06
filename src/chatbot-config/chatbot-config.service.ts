@@ -20,18 +20,20 @@ export class ChatbotConfigService {
     return this._configRepository.save(config);
   }
 
-  async delete() {
+  async delete(fromDb = true) {
     try {
       const currentConfig = await this.getChatbotConfig();
       await this._mediaService.deleteFile(currentConfig.icon);
-      await this._configRepository.delete(1);
+      if(fromDb) {
+        await this._configRepository.delete(1);
+      }
     } catch (e) {
     }
   }
 
   static imageFileFilter = (req, file, callback) => {
-    if (!file.originalname.match(/\.(jpg|png)$/)) {
-      return callback(new HttpException('Seul les fichiers en .jpg et .png sont acceptés.', HttpStatus.BAD_REQUEST), false);
+    if (!file.originalname.match(/\.(jpg|png|svg)$/)) {
+      return callback(new HttpException('Seul les fichiers en .jpg, .png et .svg sont acceptés.', HttpStatus.BAD_REQUEST), false);
     }
     return callback(null, true);
   };
