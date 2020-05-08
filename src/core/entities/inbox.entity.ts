@@ -38,4 +38,8 @@ export class Inbox {
     this.status = InboxStatus.pending;
   }
 
+  static getAttributesToSearch() {
+    return ['question', 'response'];
+  }
+
 }
