@@ -24,16 +24,19 @@ export class KnowledgeService {
     return this._knowledgesRepository.save(knowledge);
   }
 
+  async createSafe(knowledge: Knowledge): Promise<Knowledge> {
+    const kEntity = await this._knowledgesRepository.findOne({intent: knowledge.intent, question: knowledge.question});
+    if(!kEntity) {
+      return this._knowledgesRepository.save(knowledge);
+    }
+    return knowledge;
+  }
+
   async findOrSave(knowledges: Knowledge[]): Promise<Knowledge[]> {
     // On ne sait pas si le knowledge existe, pour éviter de faire péter la constraint unique
     const knowledgesEntity: Knowledge[] = [];
     await knowledges.forEach(async k => {
-      const kEntity = await this._knowledgesRepository.findOne({intent: k.intent, question: k.question});
-      if(!kEntity) {
-        knowledgesEntity.push(await this._knowledgesRepository.save(k));
-      } else {
-        knowledgesEntity.push(kEntity);
-      }
+      knowledgesEntity.push(await this.createSafe(k));
     });
     return knowledgesEntity;
   }

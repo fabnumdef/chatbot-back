@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
 import { InboxService } from "./inbox.service";
 import { ApiBearerAuth, ApiOperation, ApiTags } from "@nestjs/swagger";
 import { JwtGuard } from "@core/guards/jwt.guard";
@@ -9,6 +9,7 @@ import { InboxDto } from "@core/dto/inbox.dto";
 import { PaginationQueryDto } from "@core/dto/pagination-query.dto";
 import { Pagination } from "nestjs-typeorm-paginate/index";
 import { InboxFilterDto } from "@core/dto/inbox-filter.dto";
+import { UpdateResult } from "typeorm/query-builder/result/UpdateResult";
 
 @ApiTags('inbox')
 @Controller('inbox')
@@ -32,5 +33,17 @@ export class InboxController {
     inboxes.items.map(i => plainToClass(InboxDto, camelcaseKeys(i, {deep: true})));
     // @ts-ignore
     return camelcaseKeys(inboxes, {deep: true});
+  }
+
+  @Post(':inboxId/validate')
+  @ApiOperation({ summary: 'Validate an inbox' })
+  async validateInbox(@Param('inboxId') inboxId: number): Promise<UpdateResult> {
+    return this._inboxService.validate(inboxId);
+  }
+
+  @Delete(':inboxId')
+  @ApiOperation({ summary: 'Archive an inbox' })
+  async deleteInbox(@Param('inboxId') inboxId: number): Promise<UpdateResult> {
+    return this._inboxService.delete(inboxId);
   }
 }
