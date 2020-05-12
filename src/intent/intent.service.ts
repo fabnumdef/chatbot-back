@@ -11,8 +11,8 @@ import { KnowledgeService } from "../knowledge/knowledge.service";
 import { ResponseService } from "../response/response.service";
 import { PaginationUtils } from "@core/pagination-utils";
 import { IntentFilterDto } from "@core/dto/intent-filter.dto";
-import { Media } from "@core/entities/media.entity";
 import { MediaModel } from "@core/models/media.model";
+import { Inbox } from "@core/entities/inbox.entity";
 
 @Injectable()
 export class IntentService {
@@ -102,6 +102,16 @@ export class IntentService {
       join: { alias: 'intents', innerJoin: { responses: 'intents.responses' } },
       where: qb => {
         qb.where(`responses.response like '%/${media.file}%'`)
+      },
+    });
+  }
+
+  findByInbox(inbox: Inbox): Promise<Intent> {
+    return this._intentsRepository.findOne({
+      select: ['id', 'main_question', 'category'],
+      join: { alias: 'intents', innerJoin: { inboxes: 'intents.inboxes' } },
+      where: qb => {
+        qb.where(`inboxes.id = ${inbox.id}`)
       },
     });
   }

@@ -10,16 +10,20 @@ import { InboxFilterDto } from "@core/dto/inbox-filter.dto";
 import { UpdateResult } from "typeorm/query-builder/result/UpdateResult";
 import { KnowledgeService } from "../knowledge/knowledge.service";
 import { Knowledge } from "@core/entities/knowledge.entity";
+import { plainToClass } from "class-transformer";
+import { IntentService } from "../intent/intent.service";
+import { Intent } from "@core/entities/intent.entity";
 
 @Injectable()
 export class InboxService {
 
   constructor(@InjectRepository(Inbox)
               private readonly _inboxesRepository: Repository<Inbox>,
-              private readonly _knowledgeService: KnowledgeService) {
+              private readonly _knowledgeService: KnowledgeService,
+              private readonly _intentService: IntentService) {
   }
 
-  findAll(params =   {
+  findAll(params = {
     where: {
       status: InboxStatus.pending
     }
@@ -28,11 +32,23 @@ export class InboxService {
   }
 
   findOne(inboxId) {
-    return this._inboxesRepository.findOne(inboxId, { relations: ['intent'] });
+    return this._inboxesRepository.findOne(inboxId, {relations: ['intent']});
   }
 
   async paginate(options: PaginationQueryDto, filters: InboxFilterDto): Promise<Pagination<Inbox>> {
-    return paginate<Inbox>(this._inboxesRepository, options, PaginationUtils.setQuery(options, Inbox.getAttributesToSearch()));
+    const results = await paginate<Inbox>(this._inboxesRepository, options, PaginationUtils.setQuery(options, Inbox.getAttributesToSearch()));
+
+    // Récupération des intents liés
+    return new Pagination(
+      await Promise.all(results.items.map(async (item: Inbox) => {
+        const intent = await this._intentService.findByInbox(item);
+        item.intent = plainToClass(Intent, intent);
+
+        return item;
+      })),
+      results.meta,
+      results.links,
+    );
   }
 
   async validate(inboxId): Promise<UpdateResult> {
