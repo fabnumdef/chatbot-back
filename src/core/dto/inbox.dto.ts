@@ -17,7 +17,7 @@ export class InboxDto {
 
   @IsJSON()
   @IsNotEmpty()
-  response: any;
+  response: any[];
 
   @IsNumber()
   @IsNotEmpty()

@@ -5,8 +5,11 @@ export class InboxFilterDto {
   categories: string[];
 
   @IsOptional()
-  expiresAt: string;
+  statutes: string[];
 
   @IsOptional()
-  expires: boolean;
+  startDate: string;
+
+  @IsOptional()
+  endDate: string;
 }
