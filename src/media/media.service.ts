@@ -14,6 +14,11 @@ import { IntentService } from "../intent/intent.service";
 import { MediaModel } from "@core/models/media.model";
 import { plainToClass } from "class-transformer";
 import { IntentModel } from "@core/models/intent.model";
+import { ChatbotConfig } from "@core/entities/chatbot-config.entity";
+import { Response } from "express";
+
+const getSize = require('get-folder-size');
+const archiver = require('archiver');
 
 @Injectable()
 export class MediaService {
@@ -23,7 +28,9 @@ export class MediaService {
   constructor(@InjectRepository(Media)
               private readonly _mediasRepository: Repository<Media>,
               private readonly _responseService: ResponseService,
-              private readonly _intentService: IntentService) {
+              private readonly _intentService: IntentService,
+              @InjectRepository(ChatbotConfig)
+              private readonly _configRepository: Repository<ChatbotConfig>,) {
     // Create folder if it does not exists
     mkdirp(this._filesDirectory);
   }
@@ -85,6 +92,7 @@ export class MediaService {
     } catch (e) {
     }
     fs.writeFileSync(path.resolve(this._filesDirectory, fileName), file.buffer);
+    this._updateMediaSize();
     const stats = fs.statSync(path.resolve(this._filesDirectory, fileName));
     const fileToSave: Media = {
       id: mediaId,
@@ -123,11 +131,26 @@ export class MediaService {
       throw new HttpException('Un média avec le même nom existe déjà.', HttpStatus.INTERNAL_SERVER_ERROR);
     }
     fs.writeFileSync(path.resolve(this._filesDirectory, fileName), file.buffer);
+    this._updateMediaSize();
     return fileName;
   }
 
   async deleteFile(filePath: string) {
     fs.unlinkSync(path.resolve(this._filesDirectory, filePath));
+  }
+
+  export(res: Response) {
+    const archive = archiver('zip', {
+      zlib: { level: 9 } // Sets the compression level.
+    });
+
+    //set the archive name
+    res.attachment('MEDIATHEQUE.zip');
+
+    //this is the streaming magic
+    archive.pipe(res);
+    archive.directory(this._filesDirectory, false);
+    archive.finalize();
   }
 
 
@@ -139,5 +162,12 @@ export class MediaService {
     }
     return callback(null, true);
   };
+
+  private _updateMediaSize() {
+    getSize(this._filesDirectory, (err, sizeInB) => {
+      const sizeInGb = Math.round((sizeInB / 1024 / 1024 / 1024) * 100) / 100;
+      this._configRepository.save({id: 1, media_size: sizeInGb});
+    });
+  }
 
 }

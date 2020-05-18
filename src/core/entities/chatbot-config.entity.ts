@@ -31,4 +31,7 @@ export class ChatbotConfig {
 
   @Column({ nullable: false, length: 200 })
   solution: string;
+
+  @Column({ nullable: false, default: 0, type: 'real' })
+  media_size: number;
 }

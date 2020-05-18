@@ -5,8 +5,8 @@ import {
   Param,
   Post,
   Put,
-  Query, Req,
-  UploadedFile,
+  Query, Req, Res,
+  UploadedFile, UploadedFiles,
   UseGuards,
   UseInterceptors
 } from '@nestjs/common';
@@ -17,12 +17,13 @@ import { Media } from "@core/entities/media.entity";
 import { MediaDto } from "@core/dto/media.dto";
 import { plainToClass } from "class-transformer";
 import camelcaseKeys = require("camelcase-keys");
-import { FileInterceptor } from "@nestjs/platform-express";
+import { FileInterceptor, FilesInterceptor } from "@nestjs/platform-express";
 import { FileUploadDto } from "@core/dto/file-upload.dto";
 import { PaginationQueryDto } from "@core/dto/pagination-query.dto";
 import { Pagination } from "nestjs-typeorm-paginate/index";
 import { User } from "@core/entities/user.entity";
 import { MediaModel } from "@core/models/media.model";
+import { Response } from "express";
 
 @ApiTags('media')
 @Controller('media')
@@ -40,6 +41,12 @@ export class MediaController {
     return plainToClass(MediaDto, camelcaseKeys(medias, {deep: true}));
   }
 
+  @Get('export')
+  @ApiOperation({summary: 'Export all medias in .zip'})
+  async exportMedias(@Res() res: Response): Promise<any> {
+    return this._mediaService.export(res);
+  }
+
   @Post('search')
   @ApiOperation({summary: 'Return medias paginated'})
   async getMediasPagination(@Query() options: PaginationQueryDto): Promise<Pagination<MediaDto>> {
@@ -51,8 +58,9 @@ export class MediaController {
 
   @Post('')
   @UseInterceptors(
-    FileInterceptor(
-      'file',
+    FilesInterceptor(
+      'files',
+      100,
       {
         limits: {
           // 5Mb
@@ -68,11 +76,11 @@ export class MediaController {
     type: FileUploadDto,
   })
   @ApiOperation({summary: 'Ajout d\'un fichier à la médiathèque'})
-  async addFile(@UploadedFile() file,
-                @Req() req): Promise<MediaDto> {
+  async addFile(@UploadedFiles() files,
+                @Req() req): Promise<MediaDto[]> {
     const userRequest: User = req.user;
-    const media = await this._mediaService.create(file, userRequest);
-    return plainToClass(MediaDto, camelcaseKeys(media, {deep: true}));
+    const medias = await Promise.all(files.map(file => this._mediaService.create(file, userRequest)));
+    return plainToClass(MediaDto, camelcaseKeys(medias, {deep: true}));
   }
 
   @Put(':id')
