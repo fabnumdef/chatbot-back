@@ -16,5 +16,6 @@ export enum ResponseType_ReverseFr {
   'Texte' = 'text',
   'Image' = 'image',
   'Lien' = 'button',
-  'Réponse à choix' = 'quick_reply'
+  'Bouton' = 'button',
+  'Réponse à choix' = 'quick_reply',
 }

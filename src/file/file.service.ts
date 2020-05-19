@@ -117,14 +117,14 @@ export class FileService {
     };
     const options: Sheet2JSONOpts = {};
     const excelJson = this._xlsx.utils.sheet_to_json(worksheet, options);
-    const templateFile: TemplateFileDto[] = excelJson.map((t: TemplateFileDto, idx: number) => {
+    return excelJson.map((t: TemplateFileDto, idx: number) => {
       for (let key of Object.keys(t)) {
         if(!!headers[key]) {
           t[headers[key]] = t[key];
         }
         delete t[key];
       }
-      t.id = t.id.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\W/g, '_');
+      t.id = t.id?.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\W/g, '_');
       if(!t.id) {
         t.id = excelJson[idx - 1].id;
       }
@@ -134,7 +134,6 @@ export class FileService {
       t.response_type = ResponseType[ResponseType_ReverseFr[t.response_type]];
       return t;
     });
-    return templateFile;
   }
 
   /**
