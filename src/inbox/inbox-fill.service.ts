@@ -6,6 +6,7 @@ import { Cron, CronExpression } from "@nestjs/schedule";
 import { Inbox } from "@core/entities/inbox.entity";
 import { EventActionTypeEnum } from "@core/enums/event-action-type.enum";
 import { Intent } from "@core/entities/intent.entity";
+import { InboxStatus } from "@core/enums/inbox-status.enum";
 
 @Injectable()
 export class InboxFillService {
@@ -73,6 +74,7 @@ export class InboxFillService {
         case 'user':
           inbox.question = data.text;
           inbox.confidence = data.parse_data?.intent?.confidence;
+          inbox.status = (inbox.confidence > 0.7) ? InboxStatus.to_verify : InboxStatus.pending
           inbox.intent = new Intent(data.parse_data?.intent?.name);
           break;
       }

@@ -49,7 +49,6 @@ export class InboxService {
   getInboxQueryBuilder(findManyOptions: FindManyOptions, filters?: InboxFilterDto) {
     const query = this._inboxesRepository.createQueryBuilder('inbox')
       .leftJoinAndSelect('inbox.intent', 'intent')
-      .where('inbox.status IN (:...status)', {status: [InboxStatus.pending]})
       .andWhere(!!findManyOptions.where ? findManyOptions.where.toString() : `'1'`)
       .orderBy({
         'inbox.timestamp': 'DESC'

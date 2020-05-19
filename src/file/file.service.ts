@@ -105,18 +105,36 @@ export class FileService {
    * @param worksheet
    */
   private _convertExcelToJson(worksheet: WorkSheet): TemplateFileDto[] {
-    const options: Sheet2JSONOpts = {
-      header: ['id', 'category', 'main_question', 'response_type', 'response', '', 'questions'],
-      range: 1
+
+    const headers = {
+      'ID': 'id',
+      'Catégorie': 'category',
+      'Question': 'main_question',
+      'Type de réponse': 'response_type',
+      'Réponse(s)': 'response',
+      'Questions synonymes (à séparer par un point-virgule ;)': 'questions',
+      'Expire le': 'expires_at'
     };
-    return this._xlsx.utils.sheet_to_json(worksheet, options).map((t: TemplateFileDto) => {
+    const options: Sheet2JSONOpts = {};
+    const excelJson = this._xlsx.utils.sheet_to_json(worksheet, options);
+    const templateFile: TemplateFileDto[] = excelJson.map((t: TemplateFileDto, idx: number) => {
+      for (let key of Object.keys(t)) {
+        if(!!headers[key]) {
+          t[headers[key]] = t[key];
+        }
+        delete t[key];
+      }
       t.id = t.id.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\W/g, '_');
+      if(!t.id) {
+        t.id = excelJson[idx - 1].id;
+      }
       t.category = t.category?.trim();
       t.main_question = t.main_question?.trim();
       t.questions = t.questions ? (<any>t.questions).split(';').map(q => q.trim()) : [];
       t.response_type = ResponseType[ResponseType_ReverseFr[t.response_type]];
       return t;
     });
+    return templateFile;
   }
 
   /**
