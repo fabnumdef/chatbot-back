@@ -130,7 +130,7 @@ export class FileService {
       }
       t.category = t.category?.trim();
       t.main_question = t.main_question?.trim();
-      t.questions = t.questions ? (<any>t.questions).split(';').map(q => q.trim()) : [];
+      t.questions = t.questions ? (<any>t.questions).split(';').map(q => q.trim()).filter(q => !!q) : [];
       t.response_type = ResponseType[ResponseType_ReverseFr[t.response_type]];
       return t;
     });
