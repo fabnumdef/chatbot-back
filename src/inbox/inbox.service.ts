@@ -81,7 +81,7 @@ export class InboxService {
       question: inbox.question
     }
     await this._knowledgeService.createSafe(newKnowledge);
-    return this.delete(inboxId);
+    return this._inboxesRepository.update({id: inboxId}, {status: InboxStatus.confirmed});
   }
 
   delete(inboxId): Promise<UpdateResult> {

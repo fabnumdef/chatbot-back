@@ -14,7 +14,7 @@ const yaml = require('js-yaml');
 @Injectable()
 export class RasaService {
 
-  private _chatbotTemplateDir = path.resolve(__dirname, '../../../chatbot-template');
+  private _chatbotTemplateDir = path.resolve('/var/www/chatbot-template');
 
   constructor(private readonly _intentService: IntentService) {
   }

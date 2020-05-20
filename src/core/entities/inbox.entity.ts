@@ -26,6 +26,9 @@ export class Inbox {
   @Column({type: 'double precision'})
   timestamp: number;
 
+  @Column({ nullable: false, default: 1000 })
+  response_time: number;
+
   @Column()
   status: InboxStatus;
 
