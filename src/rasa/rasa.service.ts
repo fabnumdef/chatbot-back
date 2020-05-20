@@ -14,7 +14,7 @@ const yaml = require('js-yaml');
 @Injectable()
 export class RasaService {
 
-  private _chatbotTemplateDir = path.resolve('/var/www/chatbot-template');
+  private _chatbotTemplateDir = path.resolve(__dirname, '../../../chatbot-template');
 
   constructor(private readonly _intentService: IntentService) {
   }
@@ -27,6 +27,14 @@ export class RasaService {
   async trainRasa() {
     await execShellCommand(`rasa train`, this._chatbotTemplateDir).then(res => {
       console.log('TRAINING RASA');
+      console.log(res);
+    });
+    await execShellCommand(`pkill screen`, this._chatbotTemplateDir).then(res => {
+      console.log('KILLING SCREEN');
+      console.log(res);
+    });
+    await execShellCommand(`screen -S rasa -dmS rasa run -m models --enable-api --log-file out.log --cors "*" --debug`, this._chatbotTemplateDir).then(res => {
+      console.log('LAUNCHING SCREEN');
       console.log(res);
     });
   }
