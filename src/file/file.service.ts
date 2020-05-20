@@ -209,7 +209,7 @@ export class FileService {
     const intents: IntentModel[] = [];
     templateFile.forEach(t => {
       if (t.id
-        && (t.main_question || ['get_started', 'out_of_scope'].includes(t.id))
+        && (t.main_question || ['phrase_presentation', 'phrase_hors_sujet'].includes(t.id))
         && !intents.find(i => i.id === t.id)) {
         intents.push({
           id: t.id,

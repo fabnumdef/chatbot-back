@@ -43,6 +43,7 @@ export class IntentController {
     intent.responses.map(r => {
       r.intent = <Intent> {id: intent.id}
     });
+    intent.knowledges = intent.knowledges.filter(k => !!k.question.trim());
     intent.knowledges.map(k => {
       k.intent = <Intent> {id: intent.id}
     });
