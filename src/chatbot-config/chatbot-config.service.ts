@@ -3,6 +3,7 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { ChatbotConfig } from "@core/entities/chatbot-config.entity";
 import { MediaService } from "../media/media.service";
+import { UpdateResult } from "typeorm/query-builder/result/UpdateResult";
 
 @Injectable()
 export class ChatbotConfigService {
@@ -14,6 +15,10 @@ export class ChatbotConfigService {
 
   getChatbotConfig(): Promise<ChatbotConfig> {
     return this._configRepository.findOne(1);
+  }
+
+  update(config: ChatbotConfig): Promise<UpdateResult> {
+    return this._configRepository.update({id: 1}, config);
   }
 
   save(config: ChatbotConfig): Promise<ChatbotConfig> {

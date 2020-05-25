@@ -47,7 +47,7 @@ export class ChatbotConfigController {
                          @Body() chatbotConfig: ConfigDto): Promise<ConfigDto> {
     await this._configService.delete();
     const iconName = await this._mediaService.storeFile(icon);
-    const configEntity = await this._configService.save(plainToClass(ChatbotConfig, snakecaseKeys({...chatbotConfig, ...{icon: iconName}})));
+    const configEntity = await this._configService.update(plainToClass(ChatbotConfig, snakecaseKeys({...chatbotConfig, ...{icon: iconName}})));
     return plainToClass(ConfigDto, camelcaseKeys(configEntity, {deep: true}));
   }
 
@@ -74,7 +74,7 @@ export class ChatbotConfigController {
       const iconName = await this._mediaService.storeFile(icon);
       botConfig = {...chatbotConfig, ...{icon: iconName}};
     }
-    const configEntity = await this._configService.save(plainToClass(ChatbotConfig, snakecaseKeys(botConfig)));
+    const configEntity = await this._configService.update(plainToClass(ChatbotConfig, snakecaseKeys(botConfig)));
     return plainToClass(ConfigDto, camelcaseKeys(configEntity, {deep: true}));
   }
 }

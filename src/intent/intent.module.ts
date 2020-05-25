@@ -5,12 +5,14 @@ import { Intent } from "@core/entities/intent.entity";
 import { IntentService } from './intent.service';
 import { KnowledgeModule } from "../knowledge/knowledge.module";
 import { ResponseModule } from "../response/response.module";
+import { ChatbotConfigModule } from "../chatbot-config/chatbot-config.module";
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Intent]),
     KnowledgeModule,
-    ResponseModule
+    ResponseModule,
+    ChatbotConfigModule
   ],
   controllers: [IntentController],
   providers: [IntentService],

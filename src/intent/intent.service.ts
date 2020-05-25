@@ -1,18 +1,20 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from "@nestjs/typeorm";
-import { FindManyOptions, Like, Repository } from "typeorm";
+import { FindManyOptions, In, Repository } from "typeorm";
 import { Intent } from "@core/entities/intent.entity";
 import { IntentModel } from "@core/models/intent.model";
 import { UpdateResult } from "typeorm/query-builder/result/UpdateResult";
 import { IntentStatus } from "@core/enums/intent-status.enum";
 import { PaginationQueryDto } from "@core/dto/pagination-query.dto";
-import { Pagination, paginate } from "nestjs-typeorm-paginate/index";
+import { paginate, Pagination } from "nestjs-typeorm-paginate/index";
 import { KnowledgeService } from "../knowledge/knowledge.service";
 import { ResponseService } from "../response/response.service";
 import { PaginationUtils } from "@core/pagination-utils";
 import { IntentFilterDto } from "@core/dto/intent-filter.dto";
 import { MediaModel } from "@core/models/media.model";
 import { Inbox } from "@core/entities/inbox.entity";
+import { ChatbotConfigService } from "../chatbot-config/chatbot-config.service";
+import { ChatbotConfig } from "@core/entities/chatbot-config.entity";
 
 @Injectable()
 export class IntentService {
@@ -20,7 +22,8 @@ export class IntentService {
   constructor(@InjectRepository(Intent)
               private readonly _intentsRepository: Repository<Intent>,
               private readonly _knowledgeService: KnowledgeService,
-              private readonly _responseService: ResponseService) {
+              private readonly _responseService: ResponseService,
+              private readonly _configService: ChatbotConfigService) {
   }
 
   findAll(params: any = {status: IntentStatus.active}): Promise<Intent[]> {
@@ -54,7 +57,7 @@ export class IntentService {
 
   getIntentQueryBuilder(findManyOptions: FindManyOptions, filters?: IntentFilterDto) {
     const query = this._intentsRepository.createQueryBuilder('intent')
-      .where('intent.status IN (:...status)', {status: [IntentStatus.draft, IntentStatus.to_deploy, IntentStatus.active]})
+      .where('intent.status IN (:...status)', {status: [IntentStatus.to_deploy, IntentStatus.active, IntentStatus.active_modified]})
       .andWhere(!!findManyOptions.where ? findManyOptions.where.toString() : `'1'`)
       .orderBy({
         'intent.id': 'ASC'
@@ -79,7 +82,7 @@ export class IntentService {
     return this._intentsRepository.createQueryBuilder('intent')
       .leftJoinAndSelect('intent.responses', 'responses')
       .leftJoinAndSelect('intent.knowledges', 'knowledges')
-      .where("intent.status IN (:...status)", {status: [IntentStatus.draft, IntentStatus.to_deploy, IntentStatus.active, IntentStatus.archived]})
+      .where("intent.status IN (:...status)", {status: [IntentStatus.to_deploy, IntentStatus.active, IntentStatus.active_modified]})
       .orderBy({
         'intent.id': 'ASC',
         'knowledges.id': 'ASC',
@@ -96,51 +99,45 @@ export class IntentService {
     return intents.filter(i => !!i.category).map(i => i.category);
   }
 
-  findByMedia(media: MediaModel): Promise<Intent[]> {
-    return this._intentsRepository.find({
-      select: ['id', 'main_question', 'category'],
-      join: { alias: 'intents', innerJoin: { responses: 'intents.responses' } },
-      where: qb => {
-        qb.where(`responses.response like '%/${media.file}%'`)
-      },
-    });
-  }
-
-  findByInbox(inbox: Inbox): Promise<Intent> {
-    return this._intentsRepository.findOne({
-      select: ['id', 'main_question', 'category'],
-      join: { alias: 'intents', innerJoin: { inboxes: 'intents.inboxes' } },
-      where: qb => {
-        qb.where(`inboxes.id = ${inbox.id}`)
-      },
-    });
-  }
-
   findOne(id: string): Promise<Intent> {
     return this._intentsRepository.findOne(id);
   }
 
-  create(intent: Intent): Promise<Intent> {
-    return this._intentsRepository.save(intent);
+  async create(intent: Intent): Promise<Intent> {
+    switch (intent.status) {
+      case IntentStatus.active:
+        intent.status = IntentStatus.active_modified;
+        break;
+    }
+    const intentCreated = await this._intentsRepository.save(intent);
+    this._updateNeedTraining();
+    return intentCreated;
   }
 
-  delete(intentId): Promise<UpdateResult> {
-    return this._intentsRepository.update({id: intentId}, {status: IntentStatus.archived});
+  async delete(intentId): Promise<UpdateResult> {
+    const intentDeleted = await this._intentsRepository.update({id: intentId}, {status: IntentStatus.to_archive});
+    this._updateNeedTraining();
+    return intentDeleted;
   }
 
-  saveMany(intents: IntentModel[]): Promise<Intent[]> {
-    return this._intentsRepository.save(intents);
+  async saveMany(intents: IntentModel[]): Promise<Intent[]> {
+    const intentsCreated = await this._intentsRepository.save(intents);
+    this._updateNeedTraining();
+    return intentsCreated;
   }
 
-  updateManyByCondition(condition: any, params: any): Promise<UpdateResult> {
-    return this._intentsRepository.update(condition, params);
-  }
-
-  async remove(id: string): Promise<void> {
-    await this._intentsRepository.delete(id);
+  async updateManyByCondition(condition: any, params: any): Promise<UpdateResult> {
+    const intentsUpdated = await this._intentsRepository.update(condition, params);
+    this._updateNeedTraining();
+    return intentsUpdated;
   }
 
   getRepository(): Repository<Intent> {
     return this._intentsRepository;
+  }
+
+  private async _updateNeedTraining() {
+    const needTraining = await this._intentsRepository.count({status: In([IntentStatus.to_deploy, IntentStatus.active_modified, IntentStatus.to_archive])});
+    this._configService.update(<ChatbotConfig>{need_training: (needTraining > 0)});
   }
 }

@@ -7,6 +7,10 @@ import { Response } from "@core/entities/response.entity";
 import { ResponseType } from "@core/enums/response-type.enum";
 import { execShellCommand } from "@core/utils";
 import * as path from "path";
+import { ChatbotConfigService } from "../chatbot-config/chatbot-config.service";
+import { ChatbotConfig } from "@core/entities/chatbot-config.entity";
+import { In, Not } from "typeorm";
+import { IntentStatus } from "@core/enums/intent-status.enum";
 
 const fs = require('fs');
 const yaml = require('js-yaml');
@@ -16,7 +20,13 @@ export class RasaService {
 
   private _chatbotTemplateDir = path.resolve(__dirname, '../../../chatbot-template');
 
-  constructor(private readonly _intentService: IntentService) {
+  constructor(private readonly _intentService: IntentService,
+              private readonly _configService: ChatbotConfigService) {
+  }
+
+  async isRasaTraining() {
+    const chatbotConfig: ChatbotConfig = await this._configService.getChatbotConfig();
+    return chatbotConfig.training_rasa;
   }
 
   async generateFiles() {
@@ -25,18 +35,25 @@ export class RasaService {
   }
 
   async trainRasa() {
-    await execShellCommand(`rasa train`, this._chatbotTemplateDir).then(res => {
-      console.log('TRAINING RASA');
-      console.log(res);
-    });
-    await execShellCommand(`pkill screen`, this._chatbotTemplateDir).then(res => {
-      console.log('KILLING SCREEN');
-      console.log(res);
-    });
-    await execShellCommand(`screen -S rasa -dmS rasa run -m models --enable-api --log-file out.log --cors "*" --debug`, this._chatbotTemplateDir).then(res => {
-      console.log('LAUNCHING SCREEN');
-      console.log(res);
-    });
+    await this._configService.update(<ChatbotConfig>{training_rasa: true});
+    try {
+      await execShellCommand(`rasa train`, this._chatbotTemplateDir).then(res => {
+        console.log('TRAINING RASA');
+        console.log(res);
+      });
+      await execShellCommand(`pkill screen`, this._chatbotTemplateDir).then(res => {
+        console.log('KILLING SCREEN');
+        console.log(res);
+      });
+      await execShellCommand(`screen -S rasa -dmS rasa run -m models --enable-api --log-file out.log --cors "*" --debug`, this._chatbotTemplateDir).then(res => {
+        console.log('LAUNCHING SCREEN');
+        console.log(res);
+      });
+      await this._intentService.updateManyByCondition({status: In([IntentStatus.to_deploy, IntentStatus.active])}, {status: IntentStatus.active});
+      await this._intentService.updateManyByCondition({status: IntentStatus.to_archive}, {status: IntentStatus.archived});
+    } catch(e) {
+    }
+    await this._configService.update(<ChatbotConfig>{training_rasa: false});
   }
 
   /**

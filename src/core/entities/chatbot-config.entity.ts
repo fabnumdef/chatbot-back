@@ -34,4 +34,10 @@ export class ChatbotConfig {
 
   @Column({ nullable: false, default: 0, type: 'real' })
   media_size: number;
+
+  @Column({ nullable: false, default: false })
+  training_rasa: boolean;
+
+  @Column({ nullable: false, default: false })
+  need_training: boolean;
 }

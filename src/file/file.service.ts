@@ -222,7 +222,7 @@ export class FileService {
     const intentsSaved: Intent[] = await this._intentService.saveMany(plainToClass(IntentModel, snakecaseKeys(intents)));
 
     if(deleteIntents) {
-      this._intentService.updateManyByCondition({id: Not(In(intentsSaved.map(i => i.id)))}, {status: IntentStatus.archived});
+      this._intentService.updateManyByCondition({id: Not(In(intentsSaved.map(i => i.id)))}, {status: IntentStatus.to_archive});
     }
 
     // Save Knowledge

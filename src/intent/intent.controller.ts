@@ -37,8 +37,8 @@ export class IntentController {
   }
 
   @Post('')
-  @ApiOperation({ summary: 'Create an intent' })
-  async createIntent(@Body() intentDto: IntentDto): Promise<IntentDto> {
+  @ApiOperation({ summary: 'Create or edit an intent' })
+  async createEditIntent(@Body() intentDto: IntentDto): Promise<IntentDto> {
     let intent: Intent = plainToClass(Intent, snakecaseKeys(intentDto));
     intent.responses.map(r => {
       r.intent = <Intent> {id: intent.id}

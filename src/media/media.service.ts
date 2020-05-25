@@ -10,12 +10,12 @@ import { paginate, Pagination } from "nestjs-typeorm-paginate/index";
 import { PaginationUtils } from "@core/pagination-utils";
 import { ResponseService } from "../response/response.service";
 import { User } from "@core/entities/user.entity";
-import { IntentService } from "../intent/intent.service";
 import { MediaModel } from "@core/models/media.model";
 import { plainToClass } from "class-transformer";
 import { IntentModel } from "@core/models/intent.model";
 import { ChatbotConfig } from "@core/entities/chatbot-config.entity";
 import { Response } from "express";
+import { Intent } from "@core/entities/intent.entity";
 
 const getSize = require('get-folder-size');
 const archiver = require('archiver');
@@ -28,9 +28,10 @@ export class MediaService {
   constructor(@InjectRepository(Media)
               private readonly _mediasRepository: Repository<Media>,
               private readonly _responseService: ResponseService,
-              private readonly _intentService: IntentService,
               @InjectRepository(ChatbotConfig)
-              private readonly _configRepository: Repository<ChatbotConfig>,) {
+              private readonly _configRepository: Repository<ChatbotConfig>,
+              @InjectRepository(Intent)
+              private readonly _intentsRepository: Repository<Intent>,) {
     // Create folder if it does not exists
     mkdirp(this._filesDirectory);
   }
@@ -45,7 +46,7 @@ export class MediaService {
     // Récupération des intents liés
     return new Pagination(
       await Promise.all(results.items.map(async (item: MediaModel) => {
-        const intents = await this._intentService.findByMedia(item);
+        const intents = await this._findIntentsByMedia(item);
         item.intents = plainToClass(IntentModel, intents);
 
         return item;
@@ -167,6 +168,16 @@ export class MediaService {
     getSize(this._filesDirectory, (err, sizeInB) => {
       const sizeInGb = Math.round((sizeInB / 1024 / 1024 / 1024) * 100) / 100;
       this._configRepository.save({id: 1, media_size: sizeInGb});
+    });
+  }
+
+  private _findIntentsByMedia(media: MediaModel): Promise<Intent[]> {
+    return this._intentsRepository.find({
+      select: ['id', 'main_question', 'category'],
+      join: {alias: 'intents', innerJoin: {responses: 'intents.responses'}},
+      where: qb => {
+        qb.where(`responses.response like '%/${media.file}%'`)
+      },
     });
   }
 
