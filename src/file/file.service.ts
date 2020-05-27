@@ -209,20 +209,21 @@ export class FileService {
     const intents: IntentModel[] = [];
     templateFile.forEach(t => {
       if (t.id
-        && (t.main_question || ['phrase_presentation', 'phrase_hors_sujet'].includes(t.id))
+        && (!!t.main_question || ['phrase_presentation', 'phrase_hors_sujet'].includes(t.id))
         && !intents.find(i => i.id === t.id)) {
         intents.push({
           id: t.id,
           category: t.category,
           main_question: t.main_question,
-          status: IntentStatus.active
+          status: IntentStatus.to_deploy
         });
       }
     });
     const intentsSaved: Intent[] = await this._intentService.saveMany(plainToClass(IntentModel, snakecaseKeys(intents)));
 
     if(deleteIntents) {
-      this._intentService.updateManyByCondition({id: Not(In(intentsSaved.map(i => i.id)))}, {status: IntentStatus.to_archive});
+      this._intentService.updateManyByCondition({id: Not(In([...intentsSaved.map(i => i.id), ...['phrase_presentation', 'phrase_hors_sujet']]))},
+        {status: IntentStatus.to_archive});
     }
 
     // Save Knowledge
