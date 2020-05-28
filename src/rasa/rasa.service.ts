@@ -37,7 +37,7 @@ export class RasaService {
   async trainRasa() {
     await this._configService.update(<ChatbotConfig>{training_rasa: true});
     try {
-      await execShellCommand(`rasa train`, this._chatbotTemplateDir).then(res => {
+      await execShellCommand(`rasa train --augmentation 0`, this._chatbotTemplateDir).then(res => {
         console.log('TRAINING RASA');
         console.log(res);
       });
