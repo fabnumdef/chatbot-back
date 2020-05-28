@@ -17,10 +17,11 @@ import { IntentFilterDto } from "@core/dto/intent-filter.dto";
 @ApiBearerAuth()
 @UseGuards(JwtGuard)
 export class IntentController {
-  constructor(private readonly _intentService: IntentService) {}
+  constructor(private readonly _intentService: IntentService) {
+  }
 
   @Get('')
-  @ApiOperation({ summary: 'Return all intents' })
+  @ApiOperation({summary: 'Return all intents'})
   async getIntents(): Promise<IntentDto[]> {
     const intents: Intent[] = await this._intentService.findFullIntents();
     return plainToClass(IntentDto, camelcaseKeys(intents, {deep: true}));
@@ -37,22 +38,28 @@ export class IntentController {
   }
 
   @Post('')
-  @ApiOperation({ summary: 'Create or edit an intent' })
+  @ApiOperation({summary: 'Create or edit an intent'})
   async createEditIntent(@Body() intentDto: IntentDto): Promise<IntentDto> {
     let intent: Intent = plainToClass(Intent, snakecaseKeys(intentDto));
     intent.responses.map(r => {
-      r.intent = <Intent> {id: intent.id}
+      r.intent = <Intent>{id: intent.id};
+      if (!r.id) {
+        delete r.id;
+      }
     });
     intent.knowledges = intent.knowledges.filter(k => !!k.question.trim());
     intent.knowledges.map(k => {
-      k.intent = <Intent> {id: intent.id}
+      k.intent = <Intent>{id: intent.id};
+      if (!k.id) {
+        delete k.id;
+      }
     });
     intent = await this._intentService.create(intent);
     return plainToClass(IntentDto, camelcaseKeys(intent, {deep: true}));
   }
 
   @Delete(':intentId')
-  @ApiOperation({ summary: 'Archive an intent' })
+  @ApiOperation({summary: 'Archive an intent'})
   async deleteIntent(@Param('intentId') intentId: string): Promise<UpdateResult> {
     return this._intentService.delete(intentId);
   }
