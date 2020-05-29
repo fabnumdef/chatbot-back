@@ -13,7 +13,6 @@ import { plainToClass } from "class-transformer";
 import { Response } from "@core/entities/response.entity";
 import { ResponseService } from "../response/response.service";
 import { ResponseType, ResponseType_Fr, ResponseType_ReverseFr } from "@core/enums/response-type.enum";
-import snakecaseKeys = require("snakecase-keys");
 import { ImportResponseDto } from "@core/dto/import-response.dto";
 import * as fs from "fs";
 import { In, Not, Repository } from "typeorm";
@@ -21,6 +20,7 @@ import * as path from "path";
 import { InjectRepository } from "@nestjs/typeorm";
 import { FileHistoric } from "@core/entities/file.entity";
 import * as mkdirp from "mkdirp";
+import snakecaseKeys = require("snakecase-keys");
 
 const XLSX = require('xlsx');
 const uuid = require('uuid');
@@ -156,6 +156,10 @@ export class FileService {
       }
       if (!excelRow.response && !excelRow.response_type) {
         this._addMessage(templateFileCheckResume.errors, excelIndex, `La réponse et le type de réponse n'est pas renseigné.`);
+      }
+      if ([ResponseType.quick_reply, ResponseType.image, ResponseType.button].includes(excelRow.response_type)
+      && templateFile[index - 1]?.response_type !== ResponseType.text) {
+        this._addMessage(templateFileCheckResume.errors, excelIndex, `Ce type de réponse nécessite d'être précédée d'une réponse de type texte.`);
       }
       // Si il y a une question principale il est censé y avoir une réponse, une catégorie etc ...
       if (!!excelRow.main_question) {
