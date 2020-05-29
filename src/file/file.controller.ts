@@ -89,7 +89,7 @@ export class FileController {
       streamFile.pipe(res);
     }
     catch (err) {
-      console.error(err);
+      console.error(`${new Date().toLocaleString()} - ${JSON.stringify(err)}`);
       throw new HttpException(`Une erreur est survenue durant l'export de la base de connaissance`, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }

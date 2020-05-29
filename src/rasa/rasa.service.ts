@@ -38,15 +38,15 @@ export class RasaService {
     await this._configService.update(<ChatbotConfig>{training_rasa: true});
     try {
       await execShellCommand(`rasa train --augmentation 0`, this._chatbotTemplateDir).then(res => {
-        console.log('TRAINING RASA');
+        console.log(`${new Date().toLocaleString()} - TRAINING RASA`);
         console.log(res);
       });
       await execShellCommand(`pkill screen`, this._chatbotTemplateDir).then(res => {
-        console.log('KILLING SCREEN');
+        console.log(`${new Date().toLocaleString()} - KILLING SCREEN`);
         console.log(res);
       });
       await execShellCommand(`screen -S rasa -dmS rasa run -m models --enable-api --log-file out.log --cors "*" --debug`, this._chatbotTemplateDir).then(res => {
-        console.log('LAUNCHING SCREEN');
+        console.log(`${new Date().toLocaleString()} - LAUNCHING SCREEN`);
         console.log(res);
       });
       await this._intentService.updateManyByCondition({status: In([IntentStatus.to_deploy, IntentStatus.active])}, {status: IntentStatus.active});
