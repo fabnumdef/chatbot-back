@@ -44,7 +44,7 @@ export class ChatbotConfigController {
   @ApiConsumes('multipart/form-data')
   @ApiOperation({summary: 'Set the chatbot config'})
   async setChatbotConfig(@UploadedFile() icon,
-                         @Body() chatbotConfig: ConfigDto): Promise<ConfigDto> {
+                         @Body() chatbotConfig: ConfigUpdateDto): Promise<ConfigDto> {
     await this._configService.delete();
     const iconName = await this._mediaService.storeFile(icon);
     const configEntity = await this._configService.update(plainToClass(ChatbotConfig, snakecaseKeys({...chatbotConfig, ...{icon: iconName}})));
