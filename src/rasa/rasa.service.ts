@@ -9,8 +9,9 @@ import { execShellCommand } from "@core/utils";
 import * as path from "path";
 import { ChatbotConfigService } from "../chatbot-config/chatbot-config.service";
 import { ChatbotConfig } from "@core/entities/chatbot-config.entity";
-import { In, Not } from "typeorm";
+import { In } from "typeorm";
 import { IntentStatus } from "@core/enums/intent-status.enum";
+import * as mkdirp from "mkdirp";
 
 const fs = require('fs');
 const yaml = require('js-yaml');
@@ -22,6 +23,8 @@ export class RasaService {
 
   constructor(private readonly _intentService: IntentService,
               private readonly _configService: ChatbotConfigService) {
+    // Create folder if it does not exists
+    mkdirp(`${this._chatbotTemplateDir}/data`);
   }
 
   async isRasaTraining() {
