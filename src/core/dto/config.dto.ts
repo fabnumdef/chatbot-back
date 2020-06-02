@@ -42,14 +42,14 @@ export class ConfigDto {
   solution: string;
 
   @IsNumber()
-  @IsNotEmpty()
+  @IsOptional()
   mediaSize: number;
 
   @IsBoolean()
-  @IsNotEmpty()
+  @IsOptional()
   trainingRasa: boolean;
 
   @IsBoolean()
-  @IsNotEmpty()
+  @IsOptional()
   needTraining: boolean;
 }
