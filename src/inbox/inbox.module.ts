@@ -15,7 +15,8 @@ import { IntentModule } from "../intent/intent.module";
     IntentModule
   ],
   providers: [InboxFillService, InboxService],
-  controllers: [InboxController]
+  controllers: [InboxController],
+  exports: [InboxService],
 })
 export class InboxModule {
 }

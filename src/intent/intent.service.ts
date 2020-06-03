@@ -143,4 +143,15 @@ export class IntentService {
   getRepository(): Repository<Intent> {
     return this._intentsRepository;
   }
+
+  findNbIntent(): Promise<Array<string>> {
+    
+    const result =  this._intentsRepository.createQueryBuilder('intent')
+    .select("DATE(intent.created_at) AS date")
+    .addSelect("COUNT(*) AS count")
+    .groupBy("DATE(intent.created_at)")
+    .orderBy("DATE(intent.created_at)", 'ASC')
+    .getRawMany();
+    return result;
+ }
 }

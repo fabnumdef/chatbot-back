@@ -11,6 +11,7 @@ import { LoggerInterceptor } from "@core/interceptors/logger.interceptor";
 import { FileModule } from './file/file.module';
 import { MediaModule } from './media/media.module';
 import { InboxModule } from './inbox/inbox.module';
+import { StatsModule } from './stats/stats.module';
 import { ScheduleModule } from "@nestjs/schedule";
 import { RasaModule } from './rasa/rasa.module';
 import { RefDataController } from './ref-data/ref-data.controller';
@@ -33,6 +34,7 @@ import * as ormconfig from './ormconfig';
     FileModule,
     MediaModule,
     InboxModule,
+    StatsModule,
     ScheduleModule.forRoot(),
     RasaModule,
     ChatbotConfigModule,
