@@ -139,6 +139,17 @@ export class IntentService {
     return this._intentsRepository;
   }
 
+  findNbIntentByTime(): Promise<Array<string>> {
+    
+    const result =  this._intentsRepository.createQueryBuilder('intent')
+    .select("DATE(intent.created_at) AS date")
+    .addSelect("COUNT(*) AS count")
+    .groupBy("DATE(intent.created_at)")
+    .orderBy("DATE(intent.created_at)", 'ASC')
+    .getRawMany();
+    return result;
+ }
+
   private async _updateNeedTraining() {
     const needTraining = await this._intentsRepository.count({status: In([IntentStatus.to_deploy, IntentStatus.active_modified, IntentStatus.to_archive])});
     this._configService.update(<ChatbotConfig>{need_training: (needTraining > 0)});

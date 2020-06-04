@@ -90,4 +90,34 @@ export class InboxService {
     return this._inboxesRepository.update({id: inboxId}, {status: InboxStatus.archived});
   }
 
+  findNbInboxByTime(): Promise<Array<string>> {
+    
+    const result =  this._inboxesRepository.createQueryBuilder('inbox')
+    .select("DATE(inbox.created_at) AS date")
+    .addSelect("COUNT(*) AS count")
+    .groupBy("DATE(inbox.created_at)")
+    .orderBy("DATE(inbox.created_at)", 'ASC')
+    .getRawMany();
+    return result;
+ }
+
+  findNbVisitorsByTime(): Promise<Array<string>> {
+    
+    const result =  this._inboxesRepository.createQueryBuilder('inbox')
+    .select("DATE(inbox.created_at) AS date")
+    .addSelect("COUNT(DISTINCT sender_id) AS count")
+    .groupBy("DATE(inbox.created_at)")
+    .orderBy("DATE(inbox.created_at)", 'ASC')
+    .getRawMany();
+    return result;
+  }
+
+  findNbUniqueVisitors(): Promise<string> {
+    
+    const result =  this._inboxesRepository.createQueryBuilder('inbox')
+    .select("COUNT(DISTINCT sender_id) AS visitors")
+    .getRawOne();
+    return result;
+  }
+
 }
