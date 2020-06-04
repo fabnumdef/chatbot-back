@@ -144,7 +144,7 @@ export class IntentService {
     return this._intentsRepository;
   }
 
-  findNbIntent(): Promise<Array<string>> {
+  findNbIntentByTime(): Promise<Array<string>> {
     
     const result =  this._intentsRepository.createQueryBuilder('intent')
     .select("DATE(intent.created_at) AS date")

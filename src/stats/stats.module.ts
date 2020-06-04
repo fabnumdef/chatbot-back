@@ -12,7 +12,6 @@ import { InboxModule } from "../inbox/inbox.module";
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Events, Knowledge, Intent, Inbox]),
     KnowledgeModule,
     InboxModule,
     IntentModule,

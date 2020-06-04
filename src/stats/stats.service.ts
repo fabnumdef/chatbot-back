@@ -27,7 +27,7 @@ export class StatsService {
   }
 
   getNbIntent(): Promise<Array<string>> {
-    return this._intentService.findNbIntent();
+    return this._intentService.findNbIntentByTime();
   }
 
 
