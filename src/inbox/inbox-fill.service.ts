@@ -76,7 +76,7 @@ export class InboxFillService {
         case 'user':
           inbox.question = data.text;
           inbox.confidence = data.parse_data?.intent?.confidence;
-          inbox.status = (inbox.confidence > 0.7) ? InboxStatus.to_verify : InboxStatus.pending
+          inbox.status = (inbox.confidence >= 0.4) ? InboxStatus.to_verify : InboxStatus.pending
           inbox.intent = new Intent(data.parse_data?.intent?.name);
           getMessageTimestamp = data.timestamp;
           break;
