@@ -11,7 +11,8 @@ export function execShellCommand(cmd, curDir?: string) {
       DEBUG: '',
       HOME: process.env.HOME,
       PATH: process.env.PATH,
-    }
+    },
+    maxBuffer: 1024*1024*1024
   };
   const exec = require('child_process').exec;
   return new Promise((resolve, reject) => {

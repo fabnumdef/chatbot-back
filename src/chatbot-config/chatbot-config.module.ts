@@ -11,6 +11,7 @@ import { MediaModule } from "../media/media.module";
     MediaModule
   ],
   controllers: [ChatbotConfigController],
-  providers: [ChatbotConfigService]
+  providers: [ChatbotConfigService],
+  exports: [ChatbotConfigService]
 })
 export class ChatbotConfigModule {}

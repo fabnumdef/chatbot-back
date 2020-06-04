@@ -1,4 +1,4 @@
-import { Column, CreateDateColumn, Entity, OneToMany, PrimaryColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, OneToMany, PrimaryColumn, UpdateDateColumn } from "typeorm";
 import { Knowledge } from "@core/entities/knowledge.entity";
 import { Response } from "@core/entities/response.entity";
 import { IntentStatus } from "@core/enums/intent-status.enum";
@@ -15,7 +15,7 @@ export class Intent {
   @Column({nullable: true, length: 255})
   main_question?: string;
 
-  @Column({default: 'active'})
+  @Column({default: IntentStatus.to_deploy})
   status: IntentStatus;
 
   @OneToMany(type => Knowledge, knowledge => knowledge.intent, {cascade: true})
@@ -32,6 +32,9 @@ export class Intent {
 
   @CreateDateColumn({type: "timestamp"})
   created_at: number;
+
+  @UpdateDateColumn({type: "timestamp"})
+  updated_at: number;
 
   constructor(id) {
     this.id = id;

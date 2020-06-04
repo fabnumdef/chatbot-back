@@ -1,5 +1,6 @@
-import { Entity, Column, PrimaryColumn, CreateDateColumn } from 'typeorm';
+import { Entity, Column, PrimaryColumn, CreateDateColumn, OneToMany } from 'typeorm';
 import { UserRole } from "../enums/user-role.enum";
+import { Inbox } from "@core/entities/inbox.entity";
 
 @Entity('chatbot_user')
 export class User {
@@ -29,4 +30,7 @@ export class User {
 
   @Column({type: "timestamp", nullable: true})
   reset_password_expires: number;
+
+  @OneToMany(type => Inbox, inbox => inbox.user)
+  inboxes: Inbox[];
 }

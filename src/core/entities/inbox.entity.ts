@@ -1,6 +1,7 @@
 import { Column, CreateDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 import { Intent } from "@core/entities/intent.entity";
 import { InboxStatus } from "@core/enums/inbox-status.enum";
+import { User } from "@core/entities/user.entity";
 
 @Entity('inbox')
 export class Inbox {
@@ -25,11 +26,17 @@ export class Inbox {
   @Column({type: 'double precision'})
   timestamp: number;
 
+  @Column({ nullable: false, default: 1000 })
+  response_time: number;
+
   @Column()
   status: InboxStatus;
 
   @ManyToOne(type => Intent, intent => intent.inboxes)
   intent: Intent;
+
+  @ManyToOne(type => User, user => user.inboxes)
+  user: User;
 
   @CreateDateColumn({type: 'timestamp'})
   created_at: number;

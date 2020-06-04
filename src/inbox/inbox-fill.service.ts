@@ -6,6 +6,7 @@ import { Cron, CronExpression } from "@nestjs/schedule";
 import { Inbox } from "@core/entities/inbox.entity";
 import { EventActionTypeEnum } from "@core/enums/event-action-type.enum";
 import { Intent } from "@core/entities/intent.entity";
+import { InboxStatus } from "@core/enums/inbox-status.enum";
 
 @Injectable()
 export class InboxFillService {
@@ -16,7 +17,7 @@ export class InboxFillService {
   }
 
   // Check last events of the chatbot to fill Inbox
-  @Cron(CronExpression.EVERY_30_SECONDS)
+  @Cron(CronExpression.EVERY_10_SECONDS)
   async checkEvents() {
     // Get max timestamp of inbox
     const maxTimestamp = (await this._inboxesRepository
@@ -38,7 +39,6 @@ export class InboxFillService {
       return;
     }
 
-
     const inboxes: Inbox[] = [];
     while (events.length > 0) {
       const conversationIdx = events.findIndex(e => e.action_name === EventActionTypeEnum.action_listen);
@@ -53,6 +53,8 @@ export class InboxFillService {
 
   private _getNextInbox(events: Events[]): Inbox {
     const inbox = new Inbox();
+    let getMessageTimestamp: number;
+    let sendMessageTimestamp: number;
     inbox.timestamp = Math.max.apply(Math, events.map(e => e.timestamp));
 
     inbox.sender_id = events[0]?.sender_id;
@@ -69,15 +71,19 @@ export class InboxFillService {
           break;
         case 'bot':
           inbox.response.push({text: data.text, data: data.data});
+          sendMessageTimestamp = data.timestamp;
           break;
         case 'user':
           inbox.question = data.text;
           inbox.confidence = data.parse_data?.intent?.confidence;
+          inbox.status = (inbox.confidence >= 0.4) ? InboxStatus.to_verify : InboxStatus.pending
           inbox.intent = new Intent(data.parse_data?.intent?.name);
+          getMessageTimestamp = data.timestamp;
           break;
       }
     }
     inbox.response = JSON.stringify(inbox.response);
+    inbox.response_time = Math.round((sendMessageTimestamp - getMessageTimestamp) * 1000);
     return inbox;
   }
 

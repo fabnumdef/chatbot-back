@@ -13,7 +13,6 @@ import { plainToClass } from "class-transformer";
 import { Response } from "@core/entities/response.entity";
 import { ResponseService } from "../response/response.service";
 import { ResponseType, ResponseType_Fr, ResponseType_ReverseFr } from "@core/enums/response-type.enum";
-import snakecaseKeys = require("snakecase-keys");
 import { ImportResponseDto } from "@core/dto/import-response.dto";
 import * as fs from "fs";
 import { In, Not, Repository } from "typeorm";
@@ -21,6 +20,7 @@ import * as path from "path";
 import { InjectRepository } from "@nestjs/typeorm";
 import { FileHistoric } from "@core/entities/file.entity";
 import * as mkdirp from "mkdirp";
+import snakecaseKeys = require("snakecase-keys");
 
 const XLSX = require('xlsx');
 const uuid = require('uuid');
@@ -105,15 +105,32 @@ export class FileService {
    * @param worksheet
    */
   private _convertExcelToJson(worksheet: WorkSheet): TemplateFileDto[] {
-    const options: Sheet2JSONOpts = {
-      header: ['id', 'category', 'main_question', 'response_type', 'response', '', 'questions'],
-      range: 1
+
+    const headers = {
+      'ID': 'id',
+      'Catégorie': 'category',
+      'Question': 'main_question',
+      'Type de réponse': 'response_type',
+      'Réponse(s)': 'response',
+      'Questions synonymes (à séparer par un point-virgule ;)': 'questions',
+      'Expire le': 'expires_at'
     };
-    return this._xlsx.utils.sheet_to_json(worksheet, options).map((t: TemplateFileDto) => {
-      t.id = t.id.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\W/g, '_');
+    const options: Sheet2JSONOpts = {};
+    const excelJson = this._xlsx.utils.sheet_to_json(worksheet, options);
+    return excelJson.map((t: TemplateFileDto, idx: number) => {
+      for (let key of Object.keys(t)) {
+        if(!!headers[key]) {
+          t[headers[key]] = t[key];
+        }
+        delete t[key];
+      }
+      t.id = t.id?.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\W/g, '_');
+      if(!t.id) {
+        t.id = excelJson[idx - 1].id;
+      }
       t.category = t.category?.trim();
       t.main_question = t.main_question?.trim();
-      t.questions = t.questions ? (<any>t.questions).split(';').map(q => q.trim()) : [];
+      t.questions = t.questions ? (<any>t.questions).split(';').map(q => q.trim()).filter(q => !!q) : [];
       t.response_type = ResponseType[ResponseType_ReverseFr[t.response_type]];
       return t;
     });
@@ -139,6 +156,10 @@ export class FileService {
       }
       if (!excelRow.response && !excelRow.response_type) {
         this._addMessage(templateFileCheckResume.errors, excelIndex, `La réponse et le type de réponse n'est pas renseigné.`);
+      }
+      if ([ResponseType.quick_reply, ResponseType.image, ResponseType.button].includes(excelRow.response_type)
+      && templateFile[index - 1]?.response_type !== ResponseType.text) {
+        this._addMessage(templateFileCheckResume.errors, excelIndex, `Ce type de réponse nécessite d'être précédée d'une réponse de type texte.`);
       }
       // Si il y a une question principale il est censé y avoir une réponse, une catégorie etc ...
       if (!!excelRow.main_question) {
@@ -192,20 +213,21 @@ export class FileService {
     const intents: IntentModel[] = [];
     templateFile.forEach(t => {
       if (t.id
-        && (t.main_question || ['get_started', 'out_of_scope'].includes(t.id))
+        && (!!t.main_question || ['phrase_presentation', 'phrase_hors_sujet'].includes(t.id))
         && !intents.find(i => i.id === t.id)) {
         intents.push({
           id: t.id,
           category: t.category,
           main_question: t.main_question,
-          status: IntentStatus.active
+          status: IntentStatus.to_deploy
         });
       }
     });
     const intentsSaved: Intent[] = await this._intentService.saveMany(plainToClass(IntentModel, snakecaseKeys(intents)));
 
     if(deleteIntents) {
-      this._intentService.updateManyByCondition({id: Not(In(intentsSaved.map(i => i.id)))}, {status: IntentStatus.archived});
+      this._intentService.updateManyByCondition({id: Not(In([...intentsSaved.map(i => i.id), ...['phrase_presentation', 'phrase_hors_sujet']]))},
+        {status: IntentStatus.to_archive});
     }
 
     // Save Knowledge

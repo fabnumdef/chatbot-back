@@ -10,9 +10,8 @@ import { InboxFilterDto } from "@core/dto/inbox-filter.dto";
 import { UpdateResult } from "typeorm/query-builder/result/UpdateResult";
 import { KnowledgeService } from "../knowledge/knowledge.service";
 import { Knowledge } from "@core/entities/knowledge.entity";
-import { plainToClass } from "class-transformer";
 import { IntentService } from "../intent/intent.service";
-import { Intent } from "@core/entities/intent.entity";
+import { IntentStatus } from "@core/enums/intent-status.enum";
 
 @Injectable()
 export class InboxService {
@@ -49,7 +48,6 @@ export class InboxService {
   getInboxQueryBuilder(findManyOptions: FindManyOptions, filters?: InboxFilterDto) {
     const query = this._inboxesRepository.createQueryBuilder('inbox')
       .leftJoinAndSelect('inbox.intent', 'intent')
-      .where('inbox.status IN (:...status)', {status: [InboxStatus.pending]})
       .andWhere(!!findManyOptions.where ? findManyOptions.where.toString() : `'1'`)
       .orderBy({
         'inbox.timestamp': 'DESC'
@@ -82,7 +80,10 @@ export class InboxService {
       question: inbox.question
     }
     await this._knowledgeService.createSafe(newKnowledge);
-    return this.delete(inboxId);
+    if (inbox.intent.status === IntentStatus.active) {
+      await this._intentService.updateManyByCondition({id: inbox.intent.id}, {status: IntentStatus.active_modified});
+    }
+    return this._inboxesRepository.update({id: inboxId}, {status: InboxStatus.confirmed});
   }
 
   delete(inboxId): Promise<UpdateResult> {

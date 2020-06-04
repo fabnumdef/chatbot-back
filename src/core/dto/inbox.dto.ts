@@ -23,6 +23,10 @@ export class InboxDto {
   @IsNotEmpty()
   timestamp: number;
 
+  @IsNumber()
+  @IsNotEmpty()
+  responseTime: number;
+
   @IsString()
   @IsNotEmpty()
   status: InboxStatus;
