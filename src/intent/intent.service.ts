@@ -59,9 +59,14 @@ export class IntentService {
     const query = this._intentsRepository.createQueryBuilder('intent')
       .where('intent.status IN (:...status)', {status: [IntentStatus.to_deploy, IntentStatus.active, IntentStatus.active_modified]})
       .andWhere(!!findManyOptions.where ? findManyOptions.where.toString() : `'1'`)
-      .orderBy({
-        'intent.id': 'ASC'
-      })
+      .addOrderBy(`case intent.status 
+          when 'to_deploy' then 1
+          when 'active_modified' then 2
+          when 'to_archive' then 3
+          when 'active' then 4
+          when 'archived' then 5 
+          end`)
+      .addOrderBy('intent.main_question', 'ASC');
 
     if (!filters) {
       return query;
