@@ -12,7 +12,7 @@ export class PaginationUtils {
       options.where = '(';
       attributes.forEach((a, idx) => {
         options.where += idx > 0 ? ' or ' : '';
-        options.where += escape(`upper(%I) like %L`, a, query.toUpperCase());
+        options.where += escape(`unaccent(upper(%I)) like unaccent(%L)`, a, query.toUpperCase());
       });
       options.where += ')';
     }
