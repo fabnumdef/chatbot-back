@@ -66,6 +66,7 @@ export class IntentService {
           when 'active' then 4
           when 'archived' then 5 
           end`)
+      .addOrderBy('intent.updated_at', 'DESC')
       .addOrderBy('intent.main_question', 'ASC');
 
     if (!filters) {
