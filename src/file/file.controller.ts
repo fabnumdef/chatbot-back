@@ -20,12 +20,16 @@ import { plainToClass } from "class-transformer";
 import { FileHistoric } from "@core/entities/file.entity";
 import { FileHistoricDto } from "@core/dto/file-historic.dto";
 import camelcaseKeys = require("camelcase-keys");
+import { RolesGuard } from "@core/guards/roles.guard";
+import { UserRole } from "@core/enums/user-role.enum";
+import { Roles } from "@core/decorators/roles.decorator";
 
 
 @ApiTags('file')
 @Controller('file')
 @ApiBearerAuth()
-@UseGuards(JwtGuard)
+@UseGuards(JwtGuard, RolesGuard)
+@Roles(UserRole.admin)
 export class FileController {
 
   constructor(private readonly _fileService: FileService) {

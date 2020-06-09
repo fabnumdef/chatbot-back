@@ -10,6 +10,9 @@ import snakecaseKeys = require("snakecase-keys");
 import { FileInterceptor } from "@nestjs/platform-express";
 import { MediaService } from "../media/media.service";
 import { ConfigUpdateDto } from "@core/dto/config-update.dto";
+import { RolesGuard } from "@core/guards/roles.guard";
+import { Roles } from "@core/decorators/roles.decorator";
+import { UserRole } from "@core/enums/user-role.enum";
 
 @ApiTags('config')
 @Controller('config')
@@ -43,6 +46,8 @@ export class ChatbotConfigController {
   )
   @ApiConsumes('multipart/form-data')
   @ApiOperation({summary: 'Set the chatbot config'})
+  @UseGuards(JwtGuard, RolesGuard)
+  @Roles(UserRole.admin)
   async setChatbotConfig(@UploadedFile() icon,
                          @Body() chatbotConfig: ConfigUpdateDto): Promise<ConfigDto> {
     await this._configService.delete();
@@ -66,6 +71,8 @@ export class ChatbotConfigController {
   )
   @ApiConsumes('multipart/form-data')
   @ApiOperation({summary: 'Update the chatbot config'})
+  @UseGuards(JwtGuard, RolesGuard)
+  @Roles(UserRole.admin)
   async updateChatbotConfig(@UploadedFile() icon,
                             @Body() chatbotConfig: ConfigUpdateDto): Promise<ConfigDto> {
     let botConfig: any = chatbotConfig;

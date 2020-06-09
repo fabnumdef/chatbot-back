@@ -46,7 +46,8 @@ export class UserController {
     type: CreateUserDto,
   })
   @ApiBearerAuth()
-  @UseGuards(JwtGuard)
+  @UseGuards(JwtGuard, RolesGuard)
+  @Roles(UserRole.admin)
   async create(@Body() user: CreateUserDto): Promise<UserDto> {
     const userModel = await this._userService.create(plainToClass(UserModel, snakecaseKeys(user)));
     return plainToClass(UserDto, camelcaseKeys(userModel, {deep: true}));
@@ -55,7 +56,8 @@ export class UserController {
   @Delete(':email')
   @ApiOperation({ summary: 'Delete user' })
   @ApiBearerAuth()
-  @UseGuards(JwtGuard)
+  @UseGuards(JwtGuard, RolesGuard)
+  @Roles(UserRole.admin)
   async delete(@Param('email') email: string): Promise<void> {
     return this._userService.delete(email);
   }
