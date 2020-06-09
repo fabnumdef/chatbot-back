@@ -54,6 +54,7 @@ export class RasaService {
       });
       await this._intentService.updateManyByCondition({status: In([IntentStatus.to_deploy, IntentStatus.active])}, {status: IntentStatus.active});
       await this._intentService.updateManyByCondition({status: IntentStatus.to_archive}, {status: IntentStatus.archived});
+      await this._configService.update(<ChatbotConfig>{need_training: false});
     } catch(e) {
     }
     await this._configService.update(<ChatbotConfig>{training_rasa: false});
