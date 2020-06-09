@@ -280,7 +280,7 @@ export class FileService {
       .createQueryBuilder('intent')
       .leftJoinAndSelect('intent.responses', 'response')
       .leftJoinAndSelect('intent.knowledges', 'knowledge')
-      .where('intent.status = :status', {status: IntentStatus.active})
+      .where('intent.status IN (:...status)', {status: [IntentStatus.to_deploy, IntentStatus.active, IntentStatus.active_modified]})
       .orderBy({
         'intent.id': 'ASC',
         'response.id': 'ASC'
