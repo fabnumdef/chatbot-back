@@ -21,8 +21,7 @@ export class UserController {
   @Get('')
   @ApiOperation({ summary: 'Return all users' })
   @ApiBearerAuth()
-  @UseGuards(JwtGuard, RolesGuard)
-  @Roles(UserRole.admin)
+  @UseGuards(JwtGuard)
   async getUsers(): Promise<UserDto[]> {
     const users: User[] = await this._userService.findAll();
     return plainToClass(UserDto, camelcaseKeys(users, {deep: true}));
