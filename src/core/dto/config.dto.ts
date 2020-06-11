@@ -36,11 +36,6 @@ export class ConfigDto {
   @MaxLength(200)
   audience: string;
 
-  @IsString()
-  @IsNotEmpty()
-  @MaxLength(200)
-  solution: string;
-
   @IsNumber()
   @IsOptional()
   mediaSize: number;

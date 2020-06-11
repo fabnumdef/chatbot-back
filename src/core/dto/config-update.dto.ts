@@ -36,9 +36,4 @@ export class ConfigUpdateDto {
   @IsOptional()
   @MaxLength(200)
   audience: string;
-
-  @IsString()
-  @IsOptional()
-  @MaxLength(200)
-  solution: string;
 }
