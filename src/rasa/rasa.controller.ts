@@ -19,9 +19,16 @@ export class RasaController {
     if(await this._rasaService.isRasaTraining()) {
       throw new HttpException(`Le chatbot est déjà entrain d'être mis à jour. Merci de patienter quelques minutes.`, HttpStatus.NOT_ACCEPTABLE);
     }
+
     await this._rasaService.generateFiles();
     await this._rasaService.trainRasa();
     await this._fileService.storeFile();
     return;
+  }
+
+  sleep(ms) {
+    return new Promise((resolve) => {
+      setTimeout(resolve, ms);
+    });
   }
 }

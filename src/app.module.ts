@@ -19,6 +19,7 @@ import { ChatbotConfigModule } from './chatbot-config/chatbot-config.module';
 import { TerminusModule } from '@nestjs/terminus';
 import { HealthController } from './health/health.controller';
 import * as ormconfig from './ormconfig';
+import { TimeoutInterceptor } from "@core/interceptors/timeout.interceptor";
 
 @Module({
   imports: [
@@ -45,6 +46,10 @@ import * as ormconfig from './ormconfig';
     {
       provide: APP_INTERCEPTOR,
       useClass: LoggerInterceptor,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: TimeoutInterceptor,
     }
   ],
 })
