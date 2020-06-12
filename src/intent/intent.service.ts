@@ -15,6 +15,8 @@ import { MediaModel } from "@core/models/media.model";
 import { Inbox } from "@core/entities/inbox.entity";
 import { ChatbotConfigService } from "../chatbot-config/chatbot-config.service";
 import { ChatbotConfig } from "@core/entities/chatbot-config.entity";
+import { StatsFilterDto } from '@core/dto/stats-filter.dto';
+import * as moment from 'moment';
 
 @Injectable()
 export class IntentService {
@@ -146,15 +148,18 @@ export class IntentService {
     return this._intentsRepository;
   }
 
-  findNbIntentByTime(): Promise<Array<string>> {
-    
-    const result =  this._intentsRepository.createQueryBuilder('intent')
+  findNbIntentByTime(filters: StatsFilterDto): Promise<Array<string>> {
+    const startDate = filters.startDate ? (moment(filters.startDate).add(1, 'day').format('YYYY-MM-DD')): (moment().add(1, 'day').subtract(1, 'month').format('YYYY-MM-DD'));
+    const endDate = filters.endDate ? moment(filters.endDate).add(1,'day').format('YYYY-MM-DD') : moment().add(1,'day').format('YYYY-MM-DD');   
+    const query =  this._intentsRepository.createQueryBuilder('intent')
     .select("DATE(intent.created_at) AS date")
     .addSelect("COUNT(*) AS count")
+    .where(`DATE(intent.created_at) >= '${startDate}'`)
+    .andWhere(`DATE(intent.created_at) <= '${endDate}'`)
     .groupBy("DATE(intent.created_at)")
     .orderBy("DATE(intent.created_at)", 'ASC')
     .getRawMany();
-    return result;
+    return query;
  }
 
   private async _updateNeedTraining() {

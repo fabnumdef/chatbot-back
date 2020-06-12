@@ -1,3 +1,4 @@
+import { StatsFilterDto } from './../core/dto/stats-filter.dto';
 import { Injectable } from '@nestjs/common';
 import { IntentService } from "../intent/intent.service";
 import { KnowledgeService } from "../knowledge/knowledge.service";
@@ -14,22 +15,28 @@ export class StatsService {
 
   }
 
-  getNbAskedQuestions(): Promise<Array<string>> {
-    return this._inboxService.findNbInboxByTime();
+  getNbAskedQuestions(filters: StatsFilterDto): Promise<Array<string>> {
+    return this._inboxService.findNbInboxByTime(filters);
   }
 
-  getNbVisitors(): Promise<Array<string>> {
-    return this._inboxService.findNbVisitorsByTime();
+  getNbVisitors(filters: StatsFilterDto): Promise<Array<string>> {
+    return this._inboxService.findNbVisitorsByTime(filters);
   }
   
+  getNbUniqueVisitorsByTime(filters: StatsFilterDto): Promise<string> {
+    return this._inboxService.findNbUniqueVisitorsByTime(filters);
+  }
+
   getNbUniqueVisitors(): Promise<string> {
     return this._inboxService.findNbUniqueVisitors();
   }
 
-  getNbIntent(): Promise<Array<string>> {
-    return this._intentService.findNbIntentByTime();
+  getNbIntent(filters: StatsFilterDto): Promise<Array<string>> {
+    return this._intentService.findNbIntentByTime(filters);
   }
 
-
+  getMostAskedQuestions(filters: StatsFilterDto): Promise<Array<string>> {
+    return this._inboxService.findMostAskedQuestions(filters);
+  }
 
 }
