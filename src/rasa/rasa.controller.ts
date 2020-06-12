@@ -25,10 +25,4 @@ export class RasaController {
     await this._fileService.storeFile();
     return;
   }
-
-  sleep(ms) {
-    return new Promise((resolve) => {
-      setTimeout(resolve, ms);
-    });
-  }
 }

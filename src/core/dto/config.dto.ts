@@ -47,4 +47,8 @@ export class ConfigDto {
   @IsBoolean()
   @IsOptional()
   needTraining: boolean;
+
+  @IsNumber()
+  @IsOptional()
+  lastTrainingAt: number;
 }

@@ -37,4 +37,7 @@ export class ChatbotConfig {
 
   @Column({ nullable: false, default: false })
   need_training: boolean;
+
+  @Column({ nullable: true, type: 'timestamp' })
+  last_training_at: Date;
 }

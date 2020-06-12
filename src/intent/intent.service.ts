@@ -112,11 +112,12 @@ export class IntentService {
   async create(intent: Intent): Promise<Intent> {
     switch (intent.status) {
       case IntentStatus.active:
+      case IntentStatus.in_training:
         intent.status = IntentStatus.active_modified;
         break;
     }
     const intentCreated = await this._intentsRepository.save(intent);
-    this._updateNeedTraining();
+    await this._updateNeedTraining();
     return intentCreated;
   }
 
@@ -125,19 +126,19 @@ export class IntentService {
       throw new HttpException('Impossible de supprimer les phrases de présentation et d\'hors sujet.', HttpStatus.INTERNAL_SERVER_ERROR);
     }
     const intentDeleted = await this._intentsRepository.update({id: intentId}, {status: IntentStatus.to_archive});
-    this._updateNeedTraining();
+    await this._updateNeedTraining();
     return intentDeleted;
   }
 
   async saveMany(intents: IntentModel[]): Promise<Intent[]> {
     const intentsCreated = await this._intentsRepository.save(intents);
-    this._updateNeedTraining();
+    await this._updateNeedTraining();
     return intentsCreated;
   }
 
   async updateManyByCondition(condition: any, params: any): Promise<UpdateResult> {
     const intentsUpdated = await this._intentsRepository.update(condition, params);
-    this._updateNeedTraining();
+    await this._updateNeedTraining();
     return intentsUpdated;
   }
 
@@ -158,6 +159,6 @@ export class IntentService {
 
   private async _updateNeedTraining() {
     const needTraining = await this._intentsRepository.count({status: In([IntentStatus.to_deploy, IntentStatus.active_modified, IntentStatus.to_archive])});
-    this._configService.update(<ChatbotConfig>{need_training: (needTraining > 0)});
+    await this._configService.update(<ChatbotConfig>{need_training: (needTraining > 0)});
   }
 }

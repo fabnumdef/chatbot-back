@@ -12,6 +12,8 @@ import { ChatbotConfig } from "@core/entities/chatbot-config.entity";
 import { In } from "typeorm";
 import { IntentStatus } from "@core/enums/intent-status.enum";
 import * as mkdirp from "mkdirp";
+import { Cron, CronExpression } from "@nestjs/schedule";
+import { FileService } from "../file/file.service";
 
 const fs = require('fs');
 const yaml = require('js-yaml');
@@ -22,14 +24,30 @@ export class RasaService {
   private _chatbotTemplateDir = path.resolve(__dirname, '../../../chatbot-template');
 
   constructor(private readonly _intentService: IntentService,
-              private readonly _configService: ChatbotConfigService) {
+              private readonly _configService: ChatbotConfigService,
+              private _fileService: FileService) {
     // Create folder if it does not exists
     mkdirp(`${this._chatbotTemplateDir}/data`);
   }
 
-  async isRasaTraining() {
-    const chatbotConfig: ChatbotConfig = await this._configService.getChatbotConfig();
-    return chatbotConfig.training_rasa;
+  // Check last events of the chatbot to fill Inbox
+  @Cron(CronExpression.EVERY_10_SECONDS)
+  async updateRasa() {
+    if(await this.isRasaTraining() || !(await this.needRasaTraining())) {
+      return;
+    }
+    await this._configService.update(<ChatbotConfig>{training_rasa: true});
+    await this.generateFiles();
+    await this.trainRasa();
+    await this._fileService.storeFile();
+  }
+
+  async isRasaTraining(): Promise<boolean> {
+    return (await this._configService.getChatbotConfig()).training_rasa;
+  }
+
+  async needRasaTraining(): Promise<boolean> {
+    return (await this._configService.getChatbotConfig()).need_training;
   }
 
   async generateFiles() {
@@ -39,6 +57,7 @@ export class RasaService {
 
   async trainRasa() {
     await this._configService.update(<ChatbotConfig>{training_rasa: true});
+    await this._intentService.updateManyByCondition({status: In([IntentStatus.to_deploy, IntentStatus.active_modified])}, {status: IntentStatus.in_training});
     try {
       await execShellCommand(`rasa train --augmentation 0`, this._chatbotTemplateDir).then(res => {
         console.log(`${new Date().toLocaleString()} - TRAINING RASA`);
@@ -52,10 +71,11 @@ export class RasaService {
         console.log(`${new Date().toLocaleString()} - LAUNCHING SCREEN`);
         console.log(res);
       });
-      await this._intentService.updateManyByCondition({status: In([IntentStatus.to_deploy, IntentStatus.active])}, {status: IntentStatus.active});
+      await this._intentService.updateManyByCondition({status: IntentStatus.in_training}, {status: IntentStatus.active});
       await this._intentService.updateManyByCondition({status: IntentStatus.to_archive}, {status: IntentStatus.archived});
-      await this._configService.update(<ChatbotConfig>{need_training: false});
+      await this._configService.update(<ChatbotConfig>{last_training_at: new Date()});
     } catch(e) {
+      console.error('RASA TRAIN', e);
     }
     await this._configService.update(<ChatbotConfig>{training_rasa: false});
   }
