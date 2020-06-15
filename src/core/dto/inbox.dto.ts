@@ -13,7 +13,7 @@ export class InboxDto {
 
   @IsJSON()
   @IsNotEmpty()
-  intent_ranking: any[];
+  intentRanking: any[];
 
   @IsString()
   @IsNotEmpty()
