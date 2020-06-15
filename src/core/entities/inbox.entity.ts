@@ -14,6 +14,9 @@ export class Inbox {
   @Column({type: 'double precision'})
   confidence: number;
 
+  @Column({type: 'text', nullable: true})
+  intent_ranking: any;
+
   @Column({length: 2000})
   question: string;
 
