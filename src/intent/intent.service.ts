@@ -93,7 +93,12 @@ export class IntentService {
     return this._intentsRepository.createQueryBuilder('intent')
       .leftJoinAndSelect('intent.responses', 'responses')
       .leftJoinAndSelect('intent.knowledges', 'knowledges')
-      .where("intent.status IN (:...status)", {status: [IntentStatus.to_deploy, IntentStatus.active, IntentStatus.active_modified]})
+      .where("intent.status IN (:...status)", {status: [
+        IntentStatus.to_deploy,
+          IntentStatus.active,
+          IntentStatus.active_modified,
+          IntentStatus.in_training
+        ]})
       .orderBy({
         'intent.id': 'ASC',
         'knowledges.id': 'ASC',
