@@ -34,6 +34,7 @@ export class InboxController {
     const inboxes: Pagination<Inbox> = await this._inboxService.paginate(options, filters);
     inboxes.items.map(i => {
       i.response = i.response ? JSON.parse(i.response) : i.response;
+      i.intent_ranking = i.intent_ranking ? JSON.parse(i.intent_ranking) : i.intent_ranking;
       plainToClass(InboxDto, camelcaseKeys(i, {deep: true}))
     });
     // @ts-ignore
