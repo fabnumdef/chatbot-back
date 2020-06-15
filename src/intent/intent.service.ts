@@ -11,8 +11,6 @@ import { KnowledgeService } from "../knowledge/knowledge.service";
 import { ResponseService } from "../response/response.service";
 import { PaginationUtils } from "@core/pagination-utils";
 import { IntentFilterDto } from "@core/dto/intent-filter.dto";
-import { MediaModel } from "@core/models/media.model";
-import { Inbox } from "@core/entities/inbox.entity";
 import { ChatbotConfigService } from "../chatbot-config/chatbot-config.service";
 import { ChatbotConfig } from "@core/entities/chatbot-config.entity";
 
@@ -57,7 +55,14 @@ export class IntentService {
 
   getIntentQueryBuilder(findManyOptions: FindManyOptions, filters?: IntentFilterDto) {
     const query = this._intentsRepository.createQueryBuilder('intent')
-      .where('intent.status IN (:...status)', {status: [IntentStatus.to_deploy, IntentStatus.active, IntentStatus.active_modified]})
+      .where('intent.status IN (:...status)', {
+        status: [
+          IntentStatus.to_deploy,
+          IntentStatus.active,
+          IntentStatus.active_modified,
+          IntentStatus.in_training
+        ]
+      })
       .andWhere(!!findManyOptions.where ? findManyOptions.where.toString() : `'1'`)
       .addOrderBy(`case intent.status 
           when 'to_deploy' then 1
@@ -122,7 +127,7 @@ export class IntentService {
   }
 
   async delete(intentId): Promise<UpdateResult> {
-    if(['phrase_presentation', 'phrase_hors_sujet'].includes(intentId)) {
+    if (['phrase_presentation', 'phrase_hors_sujet'].includes(intentId)) {
       throw new HttpException('Impossible de supprimer les phrases de présentation et d\'hors sujet.', HttpStatus.INTERNAL_SERVER_ERROR);
     }
     const intentDeleted = await this._intentsRepository.update({id: intentId}, {status: IntentStatus.to_archive});
@@ -147,15 +152,15 @@ export class IntentService {
   }
 
   findNbIntentByTime(): Promise<Array<string>> {
-    
-    const result =  this._intentsRepository.createQueryBuilder('intent')
-    .select("DATE(intent.created_at) AS date")
-    .addSelect("COUNT(*) AS count")
-    .groupBy("DATE(intent.created_at)")
-    .orderBy("DATE(intent.created_at)", 'ASC')
-    .getRawMany();
+
+    const result = this._intentsRepository.createQueryBuilder('intent')
+      .select("DATE(intent.created_at) AS date")
+      .addSelect("COUNT(*) AS count")
+      .groupBy("DATE(intent.created_at)")
+      .orderBy("DATE(intent.created_at)", 'ASC')
+      .getRawMany();
     return result;
- }
+  }
 
   private async _updateNeedTraining() {
     const needTraining = await this._intentsRepository.count({status: In([IntentStatus.to_deploy, IntentStatus.active_modified, IntentStatus.to_archive])});
