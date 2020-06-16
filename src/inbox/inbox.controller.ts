@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Put, Query, Req, UseGuards } from '@nestjs/common';
 import { InboxService } from "./inbox.service";
 import { ApiBearerAuth, ApiOperation, ApiTags } from "@nestjs/swagger";
 import { JwtGuard } from "@core/guards/jwt.guard";
@@ -12,6 +12,7 @@ import { InboxFilterDto } from "@core/dto/inbox-filter.dto";
 import { UpdateResult } from "typeorm/query-builder/result/UpdateResult";
 import { InboxUpdateDto } from "@core/dto/inbox-update.dto";
 import snakecaseKeys = require("snakecase-keys");
+import { User } from "@core/entities/user.entity";
 
 @ApiTags('inbox')
 @Controller('inbox')
@@ -45,6 +46,13 @@ export class InboxController {
   @ApiOperation({ summary: 'Validate an inbox' })
   async validateInbox(@Param('inboxId') inboxId: number): Promise<UpdateResult> {
     return this._inboxService.validate(inboxId);
+  }
+
+  @Post(':inboxId/assign/:userEmail')
+  @ApiOperation({ summary: 'Assign an inbox' })
+  async assignInbox(@Param('inboxId') inboxId: number,
+                    @Param('userEmail') userEmail: string): Promise<UpdateResult> {
+    return this._inboxService.assign(inboxId, userEmail);
   }
 
   @Put(':inboxId')
