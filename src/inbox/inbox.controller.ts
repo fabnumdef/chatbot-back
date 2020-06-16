@@ -48,6 +48,12 @@ export class InboxController {
     return this._inboxService.validate(inboxId);
   }
 
+  @Post(':inboxId/assign')
+  @ApiOperation({ summary: 'Assign an inbox' })
+  async unassignInbox(@Param('inboxId') inboxId: number): Promise<UpdateResult> {
+    return this._inboxService.assign(inboxId, null);
+  }
+
   @Post(':inboxId/assign/:userEmail')
   @ApiOperation({ summary: 'Assign an inbox' })
   async assignInbox(@Param('inboxId') inboxId: number,
