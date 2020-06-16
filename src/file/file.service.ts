@@ -158,7 +158,7 @@ export class FileService {
         this._addMessage(templateFileCheckResume.errors, excelIndex, `La réponse et le type de réponse n'est pas renseigné.`);
       }
       if ([ResponseType.quick_reply, ResponseType.image, ResponseType.button].includes(excelRow.response_type)
-      && templateFile[index - 1]?.response_type !== ResponseType.text) {
+      && ((templateFile[index - 1]?.response_type !== ResponseType.text) || (templateFile[index - 1]?.id !== excelRow.id))) {
         this._addMessage(templateFileCheckResume.errors, excelIndex, `Ce type de réponse nécessite d'être précédée d'une réponse de type texte.`);
       }
       // Si il y a une question principale il est censé y avoir une réponse, une catégorie etc ...
