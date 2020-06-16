@@ -24,7 +24,6 @@ import { RolesGuard } from "@core/guards/roles.guard";
 import { UserRole } from "@core/enums/user-role.enum";
 import { Roles } from "@core/decorators/roles.decorator";
 
-
 @ApiTags('file')
 @Controller('file')
 @ApiBearerAuth()
@@ -81,6 +80,8 @@ export class FileController {
     if (errors && Object.keys(errors).length > 0) {
       throw new HttpException('Le fichier contient des erreurs bloquantes.', HttpStatus.INTERNAL_SERVER_ERROR);
     }
+    // @ts-ignore
+    importFile.deleteIntents = (importFile.deleteIntents == 'true');
     return await this._fileService.importFile(file, importFile);
   }
 
