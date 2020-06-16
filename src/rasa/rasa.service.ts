@@ -36,7 +36,6 @@ export class RasaService {
     if(await this.isRasaTraining() || !(await this.needRasaTraining())) {
       return;
     }
-    await this._configService.update(<ChatbotConfig>{training_rasa: true});
     await this.generateFiles();
     await this.trainRasa();
     await this._fileService.storeFile();

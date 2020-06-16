@@ -36,8 +36,4 @@ export class ConfigUpdateDto {
   @IsOptional()
   @MaxLength(200)
   audience: string;
-
-  @IsBoolean()
-  @IsOptional()
-  trainingRasa: boolean;
 }
