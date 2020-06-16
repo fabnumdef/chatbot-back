@@ -66,10 +66,11 @@ export class IntentService {
       .andWhere(!!findManyOptions.where ? findManyOptions.where.toString() : `'1'`)
       .addOrderBy(`case intent.status 
           when 'to_deploy' then 1
-          when 'active_modified' then 2
-          when 'to_archive' then 3
+          when 'in_training' then 2
+          when 'active_modified' then 3
           when 'active' then 4
-          when 'archived' then 5 
+          when 'to_archive' then 5
+          when 'archived' then 6
           end`)
       .addOrderBy('intent.updated_at', 'DESC')
       .addOrderBy('intent.main_question', 'ASC');
