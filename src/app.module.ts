@@ -20,6 +20,8 @@ import { TerminusModule } from '@nestjs/terminus';
 import { HealthController } from './health/health.controller';
 import * as ormconfig from './ormconfig';
 import { TimeoutInterceptor } from "@core/interceptors/timeout.interceptor";
+import { PublicController } from './public/public.controller';
+import { PublicModule } from './public/public.module';
 
 @Module({
   imports: [
@@ -39,9 +41,10 @@ import { TimeoutInterceptor } from "@core/interceptors/timeout.interceptor";
     ScheduleModule.forRoot(),
     RasaModule,
     ChatbotConfigModule,
-    TerminusModule
+    TerminusModule,
+    PublicModule
   ],
-  controllers: [RefDataController, HealthController],
+  controllers: [RefDataController, HealthController, PublicController],
   providers: [
     {
       provide: APP_INTERCEPTOR,
