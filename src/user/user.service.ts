@@ -42,6 +42,11 @@ export class UserService {
     });
   }
 
+  async update(email: string, data: any): Promise<User> {
+    await this._usersRepository.update({email: email}, data);
+    return this.findOne(email);
+  }
+
   async create(user: UserModel): Promise<UserModel> {
     const userExists = await this.findOne(user.email);
     if (!userExists) {

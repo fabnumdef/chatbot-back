@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Put, Req, UseGuards } from '@nestjs/common';
 import { UserService } from "./user.service";
 import { UserDto } from "@core/dto/user.dto";
 import { ApiBearerAuth, ApiBody, ApiOperation, ApiTags } from "@nestjs/swagger";
@@ -12,6 +12,7 @@ import { JwtGuard } from "@core/guards/jwt.guard";
 import { RolesGuard } from "@core/guards/roles.guard";
 import { UserRole } from "@core/enums/user-role.enum";
 import { Roles } from "@core/decorators/roles.decorator";
+import { UpdateUserDto } from "@core/dto/update-user.dto";
 
 @Controller('user')
 @ApiTags('user')
@@ -50,6 +51,21 @@ export class UserController {
   @Roles(UserRole.admin)
   async create(@Body() user: CreateUserDto): Promise<UserDto> {
     const userModel = await this._userService.create(plainToClass(UserModel, snakecaseKeys(user)));
+    return plainToClass(UserDto, camelcaseKeys(userModel, {deep: true}));
+  }
+
+  @Put(':email')
+  @ApiOperation({ summary: 'Edit user' })
+  @ApiBody({
+    description: 'User',
+    type: UpdateUserDto,
+  })
+  @ApiBearerAuth()
+  @UseGuards(JwtGuard, RolesGuard)
+  @Roles(UserRole.admin)
+  async update(@Body() user: UpdateUserDto,
+               @Param('email') email: string): Promise<UserDto> {
+    const userModel = await this._userService.update(email, plainToClass(UserModel, snakecaseKeys(user)));
     return plainToClass(UserDto, camelcaseKeys(userModel, {deep: true}));
   }
 
