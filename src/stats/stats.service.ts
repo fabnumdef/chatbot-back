@@ -22,13 +22,9 @@ export class StatsService {
   getNbVisitors(filters: StatsFilterDto): Promise<Array<string>> {
     return this._inboxService.findNbVisitorsByTime(filters);
   }
-  
-  getNbUniqueVisitorsByTime(filters: StatsFilterDto): Promise<string> {
-    return this._inboxService.findNbUniqueVisitorsByTime(filters);
-  }
 
-  getNbUniqueVisitors(): Promise<string> {
-    return this._inboxService.findNbUniqueVisitors();
+  getNbUniqueVisitors(filters: StatsFilterDto): Promise<string> {
+    return this._inboxService.findNbUniqueVisitors(filters);
   }
 
   getNbIntent(filters: StatsFilterDto): Promise<Array<string>> {
@@ -37,6 +33,18 @@ export class StatsService {
 
   getMostAskedQuestions(filters: StatsFilterDto): Promise<Array<string>> {
     return this._inboxService.findMostAskedQuestions(filters);
+  }
+
+  getNeverAskedQuestions(filters: StatsFilterDto): Promise<Array<string>> {
+    return this._intentService.findNeverUsedIntent(filters);
+  }
+
+  getAvgQuestPerVisitors(filters: StatsFilterDto): Promise<string> {
+    return this._inboxService.findAvgQuestPerVisitor(filters);
+  }
+
+  getAvgResponseTime(filters: StatsFilterDto): Promise<string> {
+    return this._inboxService.findAvgResponseTime(filters);
   }
 
 }

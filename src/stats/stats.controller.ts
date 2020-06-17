@@ -9,7 +9,7 @@ import snakecaseKeys = require("snakecase-keys");
 @ApiTags('stats')
 @Controller('stats')
 @ApiBearerAuth()
-//@UseGuards(JwtGuard)
+@UseGuards(JwtGuard)
 export class StatsController {
   constructor(private readonly _statsService: StatsService) {}
 
@@ -23,14 +23,6 @@ export class StatsController {
     return result;
   }
 
-  @Post('bardata')
-  @ApiOperation({ summary: 'Return data for bar chart' })
-  async sendBarData(@Body() filters: StatsFilterDto) {
-    const result = {};
-    result['askedQuestionsNumber'] = await this._statsService.getNbAskedQuestions(filters);
-    return result;
-  }
-
   @Post('bestdata')
   @ApiOperation({ summary: 'Return the most relevant data' })
   async sendBestData(@Body() filters: StatsFilterDto) {
@@ -39,28 +31,21 @@ export class StatsController {
     return result;
   }
 
-  @Get('worstdata')
+  @Post('worstdata')
   @ApiOperation({ summary: 'Return the less revelant data' })
-  async sendWorstData() {
+  async sendWorstData(@Body() filters: StatsFilterDto) {
     const result = {};
-    result['lessAskedQuestions'] = 0;
+    result['lessAskedQuestions'] = await this._statsService.getNeverAskedQuestions(filters);
     return result;
   }
 
-  @Get('kpidata')
+  @Post('kpidata')
   @ApiOperation({ summary: 'Return kpi indicators' })
-  async sendKPIData() {
+  async sendKPIData(@Body() filters: StatsFilterDto) {
     const result = {};
-    result['uniqueVisitorsNumber'] = await this._statsService.getNbUniqueVisitors();
-    result['avgQuestionPerVisitor'] = 9;
-    result['avgChatbotResponseTime'] = 15;
-    return result;
-  }
-
-  @Post('test')
-  @ApiOperation({ summary: 'test return filters' })
-  async getFilters(@Body() filters: StatsFilterDto) {
-    const result = new Date(moment(filters.endDate).year(), moment(filters.endDate).month(), Number(moment(filters.endDate).format('DD'))).toLocaleDateString();
+    result['uniqueVisitorsNumber'] = await this._statsService.getNbUniqueVisitors(filters);
+    result['avgQuestionPerVisitor'] = await this._statsService.getAvgQuestPerVisitors(filters);
+    result['avgChatbotResponseTime'] = await this._statsService.getAvgResponseTime(filters);
     return result;
   }
 }
