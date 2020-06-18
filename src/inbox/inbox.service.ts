@@ -93,7 +93,6 @@ export class InboxService {
   }
 
   findNbInboxByTime(filters: StatsFilterDto): Promise<Array<string>> {
-    moment.locale('fr');
     const startDate = filters.startDate ? (moment(filters.startDate).format('YYYY-MM-DD')): (moment().subtract(1, 'month').format('YYYY-MM-DD'));
     const endDate = filters.endDate ? moment(filters.endDate).format('YYYY-MM-DD') : moment().format('YYYY-MM-DD');
     const query =  this._inboxesRepository.createQueryBuilder('inbox')
