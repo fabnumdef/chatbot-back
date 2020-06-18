@@ -1,6 +1,6 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
+import { FindOneOptions, Repository } from "typeorm";
 import { ChatbotConfig } from "@core/entities/chatbot-config.entity";
 import { MediaService } from "../media/media.service";
 import { UpdateResult } from "typeorm/query-builder/result/UpdateResult";
@@ -13,8 +13,8 @@ export class ChatbotConfigService {
               private readonly  _mediaService: MediaService) {
   }
 
-  getChatbotConfig(): Promise<ChatbotConfig> {
-    return this._configRepository.findOne(1);
+  getChatbotConfig(options?: FindOneOptions): Promise<ChatbotConfig> {
+    return this._configRepository.findOne(1, options);
   }
 
   update(config: ChatbotConfig): Promise<UpdateResult> {

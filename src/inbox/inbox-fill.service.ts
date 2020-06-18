@@ -76,13 +76,15 @@ export class InboxFillService {
         case 'user':
           inbox.question = data.text;
           inbox.confidence = data.parse_data?.intent?.confidence;
-          inbox.status = (inbox.confidence >= 0.4) ? (inbox.confidence >= 0.95) ? InboxStatus.confirmed : InboxStatus.to_verify : InboxStatus.pending
+          inbox.intent_ranking = data.parse_data?.intent_ranking?.slice(0, 5);
+          inbox.status = (inbox.confidence >= 0.6) ? (inbox.confidence >= 0.95) ? InboxStatus.confirmed : InboxStatus.to_verify : InboxStatus.pending
           inbox.intent = new Intent(data.parse_data?.intent?.name);
           getMessageTimestamp = data.timestamp;
           break;
       }
     }
     inbox.response = JSON.stringify(inbox.response);
+    inbox.intent_ranking = JSON.stringify(inbox.intent_ranking);
     inbox.response_time = Math.round((sendMessageTimestamp - getMessageTimestamp) * 1000);
     return inbox;
   }

@@ -11,6 +11,10 @@ export class InboxDto {
   @IsNotEmpty()
   confidence: number;
 
+  @IsJSON()
+  @IsNotEmpty()
+  intentRanking: any[];
+
   @IsString()
   @IsNotEmpty()
   question: string;

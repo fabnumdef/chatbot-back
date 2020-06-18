@@ -22,7 +22,7 @@ export class EventDataModel {
       name: string;
       confidence: number;
     };
-    intent_raking: {
+    intent_ranking: {
       name: string;
       confidence: number;
     }[]

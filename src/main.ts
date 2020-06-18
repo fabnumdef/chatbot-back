@@ -4,6 +4,7 @@ import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 import { ValidationPipe } from "@nestjs/common";
 import * as compression from 'compression';
 import * as rateLimit from 'express-rate-limit';
+import { urlencoded, json } from 'express';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -14,6 +15,8 @@ async function bootstrap() {
       max: 300, // limit each IP to 300 requests per windowMs
     }),
   );
+  app.use(json({ limit: '100mb' }));
+  app.use(urlencoded({ extended: true, limit: '100mb' }));
   if(process.env.NODE_ENV === 'prod') {
     // app.enableCors({
     //   origin: process.env.HOST_URL

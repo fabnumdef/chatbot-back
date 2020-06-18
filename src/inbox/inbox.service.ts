@@ -14,6 +14,7 @@ import { Knowledge } from "@core/entities/knowledge.entity";
 import { IntentService } from "../intent/intent.service";
 import { IntentStatus } from "@core/enums/intent-status.enum";
 import * as moment from 'moment';
+import { UserService } from "../user/user.service";
 
 @Injectable()
 export class InboxService {
@@ -21,7 +22,8 @@ export class InboxService {
   constructor(@InjectRepository(Inbox)
               private readonly _inboxesRepository: Repository<Inbox>,
               private readonly _knowledgeService: KnowledgeService,
-              private readonly _intentService: IntentService) {
+              private readonly _intentService: IntentService,
+              private readonly _userService: UserService) {
   }
 
   findAll(params = {
@@ -48,8 +50,11 @@ export class InboxService {
   }
 
   getInboxQueryBuilder(findManyOptions: FindManyOptions, filters?: InboxFilterDto) {
-    const query = this._inboxesRepository.createQueryBuilder('inbox')
+    const query = this._inboxesRepository
+      .createQueryBuilder('inbox')
       .leftJoinAndSelect('inbox.intent', 'intent')
+      .leftJoin('inbox.user', 'user')
+      .addSelect(['user.email', 'user.first_name', 'user.last_name', 'user.role'])
       .andWhere(!!findManyOptions.where ? findManyOptions.where.toString() : `'1'`)
       .orderBy({
         'inbox.timestamp': 'DESC'
@@ -70,6 +75,9 @@ export class InboxService {
     if (filters.endDate) {
       query.andWhere(`to_timestamp(inbox.timestamp)::date <= date '${filters.endDate}'`);
     }
+    if (filters.assignedTo) {
+      query.andWhere(`inbox.user.email = '${filters.assignedTo}'`);
+    }
 
     return query;
   }
@@ -86,6 +94,11 @@ export class InboxService {
       await this._intentService.updateManyByCondition({id: inbox.intent.id}, {status: IntentStatus.active_modified});
     }
     return this._inboxesRepository.update({id: inboxId}, {status: InboxStatus.confirmed});
+  }
+
+  async assign(inboxId, userEmail): Promise<UpdateResult> {
+    const user = await this._userService.findOne(userEmail);
+    return this._inboxesRepository.update({id: inboxId}, {user: user});
   }
 
   delete(inboxId): Promise<UpdateResult> {

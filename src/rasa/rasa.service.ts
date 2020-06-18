@@ -36,7 +36,6 @@ export class RasaService {
     if(await this.isRasaTraining() || !(await this.needRasaTraining())) {
       return;
     }
-    await this._configService.update(<ChatbotConfig>{training_rasa: true});
     await this.generateFiles();
     await this.trainRasa();
     await this._fileService.storeFile();
@@ -59,16 +58,16 @@ export class RasaService {
     await this._configService.update(<ChatbotConfig>{training_rasa: true});
     await this._intentService.updateManyByCondition({status: In([IntentStatus.to_deploy, IntentStatus.active_modified])}, {status: IntentStatus.in_training});
     try {
+      console.log(`${new Date().toLocaleString()} - TRAINING RASA`);
       await execShellCommand(`rasa train --augmentation 0`, this._chatbotTemplateDir).then(res => {
-        console.log(`${new Date().toLocaleString()} - TRAINING RASA`);
         console.log(res);
       });
+      console.log(`${new Date().toLocaleString()} - KILLING SCREEN`);
       await execShellCommand(`pkill screen`, this._chatbotTemplateDir).then(res => {
-        console.log(`${new Date().toLocaleString()} - KILLING SCREEN`);
         console.log(res);
       });
+      console.log(`${new Date().toLocaleString()} - LAUNCHING SCREEN`);
       await execShellCommand(`screen -S rasa -dmS rasa run -m models --enable-api --log-file out.log --cors "*" --debug`, this._chatbotTemplateDir).then(res => {
-        console.log(`${new Date().toLocaleString()} - LAUNCHING SCREEN`);
         console.log(res);
       });
       await this._intentService.updateManyByCondition({status: IntentStatus.in_training}, {status: IntentStatus.active});

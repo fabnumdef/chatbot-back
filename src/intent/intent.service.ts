@@ -11,8 +11,6 @@ import { KnowledgeService } from "../knowledge/knowledge.service";
 import { ResponseService } from "../response/response.service";
 import { PaginationUtils } from "@core/pagination-utils";
 import { IntentFilterDto } from "@core/dto/intent-filter.dto";
-import { MediaModel } from "@core/models/media.model";
-import { Inbox } from "@core/entities/inbox.entity";
 import { ChatbotConfigService } from "../chatbot-config/chatbot-config.service";
 import { ChatbotConfig } from "@core/entities/chatbot-config.entity";
 import { StatsFilterDto } from '@core/dto/stats-filter.dto';
@@ -59,14 +57,22 @@ export class IntentService {
 
   getIntentQueryBuilder(findManyOptions: FindManyOptions, filters?: IntentFilterDto) {
     const query = this._intentsRepository.createQueryBuilder('intent')
-      .where('intent.status IN (:...status)', {status: [IntentStatus.to_deploy, IntentStatus.active, IntentStatus.active_modified]})
+      .where('intent.status IN (:...status)', {
+        status: [
+          IntentStatus.to_deploy,
+          IntentStatus.active,
+          IntentStatus.active_modified,
+          IntentStatus.in_training
+        ]
+      })
       .andWhere(!!findManyOptions.where ? findManyOptions.where.toString() : `'1'`)
       .addOrderBy(`case intent.status 
           when 'to_deploy' then 1
-          when 'active_modified' then 2
-          when 'to_archive' then 3
+          when 'in_training' then 2
+          when 'active_modified' then 3
           when 'active' then 4
-          when 'archived' then 5 
+          when 'to_archive' then 5
+          when 'archived' then 6
           end`)
       .addOrderBy('intent.updated_at', 'DESC')
       .addOrderBy('intent.main_question', 'ASC');
@@ -90,7 +96,12 @@ export class IntentService {
     return this._intentsRepository.createQueryBuilder('intent')
       .leftJoinAndSelect('intent.responses', 'responses')
       .leftJoinAndSelect('intent.knowledges', 'knowledges')
-      .where("intent.status IN (:...status)", {status: [IntentStatus.to_deploy, IntentStatus.active, IntentStatus.active_modified]})
+      .where("intent.status IN (:...status)", {status: [
+        IntentStatus.to_deploy,
+          IntentStatus.active,
+          IntentStatus.active_modified,
+          IntentStatus.in_training
+        ]})
       .orderBy({
         'intent.id': 'ASC',
         'knowledges.id': 'ASC',
@@ -124,7 +135,7 @@ export class IntentService {
   }
 
   async delete(intentId): Promise<UpdateResult> {
-    if(['phrase_presentation', 'phrase_hors_sujet'].includes(intentId)) {
+    if (['phrase_presentation', 'phrase_hors_sujet'].includes(intentId)) {
       throw new HttpException('Impossible de supprimer les phrases de présentation et d\'hors sujet.', HttpStatus.INTERNAL_SERVER_ERROR);
     }
     const intentDeleted = await this._intentsRepository.update({id: intentId}, {status: IntentStatus.to_archive});

@@ -1,6 +1,6 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from "@nestjs/typeorm";
-import { DeleteResult, Repository } from "typeorm";
+import { DeleteResult, FindManyOptions, Repository } from "typeorm";
 import { Media } from "@core/entities/media.entity";
 import * as path from "path";
 import * as fs from "fs";
@@ -41,7 +41,10 @@ export class MediaService {
   }
 
   async paginate(options: PaginationQueryDto): Promise<Pagination<MediaModel>> {
-    const results = await paginate<Media>(this._mediasRepository, options, PaginationUtils.setQuery(options, Media.getAttributesToSearch()));
+    const results = await paginate(
+      this.getMediaQueryBuilder(PaginationUtils.setQuery(options, Media.getAttributesToSearch())),
+      options
+    );
 
     // Récupération des intents liés
     return new Pagination(
@@ -54,6 +57,14 @@ export class MediaService {
       results.meta,
       results.links,
     );
+  }
+
+  getMediaQueryBuilder(findManyOptions: FindManyOptions) {
+    const query = this._mediasRepository.createQueryBuilder('media')
+      .where(!!findManyOptions.where ? findManyOptions.where.toString() : `'1'`)
+      .addOrderBy('media.created_at', 'DESC');
+
+    return query;
   }
 
   findOne(id: number): Promise<Media> {
