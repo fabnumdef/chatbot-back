@@ -1,7 +1,9 @@
 import { Body, Controller, Delete, Get, Param, Post, Put, Query, UseGuards } from '@nestjs/common';
 import { StatsService } from "./stats.service";
+import { StatsFilterDto } from "@core/dto/stats-filter.dto";
 import { ApiBearerAuth, ApiOperation, ApiTags } from "@nestjs/swagger";
 import { JwtGuard } from "@core/guards/jwt.guard";
+import * as moment from 'moment';
 import snakecaseKeys = require("snakecase-keys");
 
 @ApiTags('stats')
@@ -11,47 +13,39 @@ import snakecaseKeys = require("snakecase-keys");
 export class StatsController {
   constructor(private readonly _statsService: StatsService) {}
 
-  @Get('linedata')
+  @Post('linedata')
   @ApiOperation({ summary: 'Return data for line chart' })
-  async sendLineData() {
+  async sendLineData(@Body() filters: StatsFilterDto) {
     const result = {};
-    result['askedQuestionsNumber'] = await this._statsService.getNbAskedQuestions();
-    result['visitorNumber'] = await this._statsService.getNbVisitors();
-    result['dbQuestionSize'] = await this._statsService.getNbIntent();
+    result['askedQuestionsNumber'] = await this._statsService.getNbAskedQuestions(filters);
+    result['visitorNumber'] = await this._statsService.getNbVisitors(filters);
+    result['dbQuestionSize'] = await this._statsService.getNbIntent(filters);
     return result;
   }
 
-  @Get('bardata')
-  @ApiOperation({ summary: 'Return data for bar chart' })
-  async sendBarData() {
-    const result = {};
-    result['askedQuestionsNumber'] = await this._statsService.getNbAskedQuestions();
-    return result;
-  }
-
-  @Get('bestdata')
+  @Post('bestdata')
   @ApiOperation({ summary: 'Return the most relevant data' })
-  async sendBestData() {
+  async sendBestData(@Body() filters: StatsFilterDto) {
     const result = {};
-    result['mostAskedQuestions'] = 0;
+    result['mostAskedQuestions'] = await this._statsService.getMostAskedQuestions(filters);
     return result;
   }
 
-  @Get('worstdata')
+  @Post('worstdata')
   @ApiOperation({ summary: 'Return the less revelant data' })
-  async sendWorstData() {
+  async sendWorstData(@Body() filters: StatsFilterDto) {
     const result = {};
-    result['lessAskedQuestions'] = 0;
+    result['lessAskedQuestions'] = await this._statsService.getNeverAskedQuestions(filters);
     return result;
   }
 
-  @Get('kpidata')
+  @Post('kpidata')
   @ApiOperation({ summary: 'Return kpi indicators' })
-  async sendKPIData() {
+  async sendKPIData(@Body() filters: StatsFilterDto) {
     const result = {};
-    result['uniqueVisitorsNumber'] = await this._statsService.getNbUniqueVisitors();
-    result['avgQuestionPerVisitor'] = 9;
-    result['avgChatbotResponseTime'] = 15;
+    result['uniqueVisitorsNumber'] = await this._statsService.getNbUniqueVisitors(filters);
+    result['avgQuestionPerVisitor'] = await this._statsService.getAvgQuestPerVisitors(filters);
+    result['avgChatbotResponseTime'] = await this._statsService.getAvgResponseTime(filters);
     return result;
   }
 }

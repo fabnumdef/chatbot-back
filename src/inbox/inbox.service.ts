@@ -1,3 +1,4 @@
+import { StatsFilterDto } from './../core/dto/stats-filter.dto';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from "@nestjs/typeorm";
 import { FindManyOptions, Repository } from "typeorm";
@@ -12,6 +13,7 @@ import { KnowledgeService } from "../knowledge/knowledge.service";
 import { Knowledge } from "@core/entities/knowledge.entity";
 import { IntentService } from "../intent/intent.service";
 import { IntentStatus } from "@core/enums/intent-status.enum";
+import * as moment from 'moment';
 import { UserService } from "../user/user.service";
 
 @Injectable()
@@ -103,34 +105,110 @@ export class InboxService {
     return this._inboxesRepository.update({id: inboxId}, {status: InboxStatus.archived});
   }
 
-  findNbInboxByTime(): Promise<Array<string>> {
-    
-    const result =  this._inboxesRepository.createQueryBuilder('inbox')
+  findNbInboxByTime(filters: StatsFilterDto): Promise<Array<string>> {
+    const startDate = filters.startDate ? (moment(filters.startDate).format('YYYY-MM-DD')): (moment().subtract(1, 'month').format('YYYY-MM-DD'));
+    const endDate = filters.endDate ? moment(filters.endDate).format('YYYY-MM-DD') : moment().format('YYYY-MM-DD');
+    const query =  this._inboxesRepository.createQueryBuilder('inbox')
     .select("DATE(inbox.created_at) AS date")
     .addSelect("COUNT(*) AS count")
+    .where(`DATE(inbox.created_at) >= '${startDate}'`)
+    .andWhere(`DATE(inbox.created_at) <= '${endDate}'`)
     .groupBy("DATE(inbox.created_at)")
-    .orderBy("DATE(inbox.created_at)", 'ASC')
-    .getRawMany();
-    return result;
+    .orderBy("DATE(inbox.created_at)", 'ASC');
+    return query.getRawMany();
  }
 
-  findNbVisitorsByTime(): Promise<Array<string>> {
+  findNbVisitorsByTime(filters: StatsFilterDto): Promise<Array<string>> {
+
+    const startDate = filters.startDate ? (moment(filters.startDate).format('YYYY-MM-DD')): (moment().subtract(1, 'month').format('YYYY-MM-DD'));
+    const endDate = filters.endDate ? moment(filters.endDate).format('YYYY-MM-DD') : moment().format('YYYY-MM-DD');
     
-    const result =  this._inboxesRepository.createQueryBuilder('inbox')
+    const query =  this._inboxesRepository.createQueryBuilder('inbox')
     .select("DATE(inbox.created_at) AS date")
     .addSelect("COUNT(DISTINCT sender_id) AS count")
+    .where(`DATE(inbox.created_at) >= '${startDate}'`)
+    .andWhere(`DATE(inbox.created_at) <= '${endDate}'`)
     .groupBy("DATE(inbox.created_at)")
-    .orderBy("DATE(inbox.created_at)", 'ASC')
-    .getRawMany();
-    return result;
+    .orderBy("DATE(inbox.created_at)", 'ASC');
+    return query.getRawMany();
   }
 
-  findNbUniqueVisitors(): Promise<string> {
+  findNbUniqueVisitors(filters: StatsFilterDto): Promise<string> {
+    const startDate = filters.startDate ? (moment(filters.startDate).format('YYYY-MM-DD')): null;
+    const endDate = filters.endDate ? moment(filters.endDate).format('YYYY-MM-DD') : null;
     
-    const result =  this._inboxesRepository.createQueryBuilder('inbox')
-    .select("COUNT(DISTINCT sender_id) AS visitors")
-    .getRawOne();
-    return result;
+    const query =  this._inboxesRepository.createQueryBuilder('inbox')
+    .select("COUNT(DISTINCT sender_id) AS visitors");
+    if(startDate) {
+      query.where(`DATE(inbox.created_at) >= '${startDate}'`)
+    }
+    if(endDate) {
+      query.andWhere(`DATE(inbox.created_at) <= '${endDate}'`)
+    }
+    return query.getRawOne();
+  }
+
+  findMostAskedQuestions(filters: StatsFilterDto): Promise<Array<string>> {
+    const startDate = filters.startDate ? (moment(filters.startDate).format('YYYY-MM-DD')): null;
+    const endDate = filters.endDate ? moment(filters.endDate).format('YYYY-MM-DD') : null;
+    
+    const query =  this._inboxesRepository.createQueryBuilder('inbox')
+    .select('int.main_question AS question')
+    .addSelect("COUNT(inbox.intent) AS count")
+    .innerJoin("intent", "int", 'int.id = inbox.intent')
+    if(startDate) {
+      query.where(`DATE(inbox.created_at) >= '${startDate}'`)
+    }
+    if(endDate) {
+      query.andWhere(`DATE(inbox.created_at) <= '${endDate}'`)
+    }
+    query.groupBy('int.main_question')
+    .limit(7);
+    return query.getRawMany();
+  }
+
+  findAvgQuestPerVisitor(filters: StatsFilterDto): Promise<string> {
+    const startDate = filters.startDate ? (moment(filters.startDate).format('YYYY-MM-DD')): null;
+    const endDate = filters.endDate ? moment(filters.endDate).format('YYYY-MM-DD') : null;
+
+    const subquery = this._inboxesRepository
+      .createQueryBuilder('inbox')
+      .select("inbox.sender_id")
+      .addSelect("DATE(inbox.created_at)")
+      .addSelect("count(*) as count")
+      if(startDate) {
+        subquery.where(`DATE(inbox.created_at) >= '${startDate}'`)
+      }
+      if(endDate) {
+        subquery.andWhere(`DATE(inbox.created_at) <= '${endDate}'`)
+      }
+      subquery.groupBy("(DATE(inbox.created_at)), inbox.sender_id");
+
+    const query = this._inboxesRepository
+      .createQueryBuilder()
+      .select("ROUND(AVG(count), 2) as averageQuestions")
+      .from("(" + subquery.getQuery() + ")", "t1")
+      .setParameters(subquery.getParameters());
+
+    return query.getRawOne();
+  }
+
+  findAvgResponseTime(filters: StatsFilterDto): Promise<string> {
+    const startDate = filters.startDate ? (moment(filters.startDate).format('YYYY-MM-DD')): null;
+    const endDate = filters.endDate ? moment(filters.endDate).format('YYYY-MM-DD') : null;
+    
+    const query =  this._inboxesRepository.createQueryBuilder('inbox')
+    .select('ROUND(avg(inbox.response_time), 0) as averageResponse');
+    if(startDate) {
+      query.where(`DATE(inbox.created_at) >= '${startDate}'`)
+    }
+    if(endDate) {
+      query.andWhere(`DATE(inbox.created_at) <= '${endDate}'`)
+    }
+    //.where(`DATE(inbox.created_at) >= '${startDate}'`)
+    //.andWhere(`DATE(inbox.created_at) <= '${endDate}'`)
+    
+    return query.getRawOne();
   }
 
 }

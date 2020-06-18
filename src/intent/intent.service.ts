@@ -13,6 +13,8 @@ import { PaginationUtils } from "@core/pagination-utils";
 import { IntentFilterDto } from "@core/dto/intent-filter.dto";
 import { ChatbotConfigService } from "../chatbot-config/chatbot-config.service";
 import { ChatbotConfig } from "@core/entities/chatbot-config.entity";
+import { StatsFilterDto } from '@core/dto/stats-filter.dto';
+import * as moment from 'moment';
 
 @Injectable()
 export class IntentService {
@@ -157,15 +159,44 @@ export class IntentService {
     return this._intentsRepository;
   }
 
-  findNbIntentByTime(): Promise<Array<string>> {
+  findNbIntentByTime(filters: StatsFilterDto): Promise<Array<string>> {
+    const startDate = filters.startDate ? (moment(filters.startDate).format('YYYY-MM-DD')): (moment().subtract(1, 'month').format('YYYY-MM-DD'));
+    const endDate = filters.endDate ? moment(filters.endDate).format('YYYY-MM-DD') : moment().format('YYYY-MM-DD');   
+    const query =  this._intentsRepository.createQueryBuilder('intent')
+    .select("DATE(intent.created_at) AS date")
+    .addSelect("COUNT(*) AS count")
+    .where(`DATE(intent.created_at) >= '${startDate}'`)
+    .andWhere(`DATE(intent.created_at) <= '${endDate}'`)
+    .groupBy("DATE(intent.created_at)")
+    .orderBy("DATE(intent.created_at)", 'ASC');
+    return query.getRawMany();
+ }
 
-    const result = this._intentsRepository.createQueryBuilder('intent')
-      .select("DATE(intent.created_at) AS date")
-      .addSelect("COUNT(*) AS count")
-      .groupBy("DATE(intent.created_at)")
-      .orderBy("DATE(intent.created_at)", 'ASC')
-      .getRawMany();
-    return result;
+  findNeverUsedIntent(filters: StatsFilterDto): Promise<Array<string>> {
+    const startDate = filters.startDate ? (moment(filters.startDate).format('YYYY-MM-DD')): null;
+    const endDate = filters.endDate ? moment(filters.endDate).format('YYYY-MM-DD') : null;
+
+
+    const query = this._intentsRepository
+      .createQueryBuilder('intent')
+      .select("intent.main_question as question")
+      .leftJoin(subq => {
+        subq.from('intent', 'intent')
+        .select("intent.id AS intentid")
+        .innerJoin("inbox", "inbox", "inbox.intent = intent.id");
+        if(startDate) {
+          subq.where(`DATE(inbox.created_at) >= '${startDate}'`)
+        }
+        if(endDate) {
+          subq.andWhere(`DATE(inbox.created_at) <= '${endDate}'`)
+        }
+        return subq
+      }, 't1', 't1.intentid = intent.id')
+      .groupBy("intent.main_question")
+      .having("COUNT(t1.intentid) = 0")
+      .orderBy("intent.main_question", 'ASC');
+    
+    return query.getRawMany();
   }
 
   private async _updateNeedTraining() {
