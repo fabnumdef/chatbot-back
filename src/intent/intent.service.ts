@@ -96,12 +96,14 @@ export class IntentService {
     return this._intentsRepository.createQueryBuilder('intent')
       .leftJoinAndSelect('intent.responses', 'responses')
       .leftJoinAndSelect('intent.knowledges', 'knowledges')
-      .where("intent.status IN (:...status)", {status: [
-        IntentStatus.to_deploy,
+      .where("intent.status IN (:...status)", {
+        status: [
+          IntentStatus.to_deploy,
           IntentStatus.active,
           IntentStatus.active_modified,
           IntentStatus.in_training
-        ]})
+        ]
+      })
       .orderBy({
         'intent.id': 'ASC',
         'knowledges.id': 'ASC',
@@ -160,20 +162,20 @@ export class IntentService {
   }
 
   findNbIntentByTime(filters: StatsFilterDto): Promise<Array<string>> {
-    const startDate = filters.startDate ? (moment(filters.startDate).format('YYYY-MM-DD')): (moment().subtract(1, 'month').format('YYYY-MM-DD'));
-    const endDate = filters.endDate ? moment(filters.endDate).format('YYYY-MM-DD') : moment().format('YYYY-MM-DD');   
-    const query =  this._intentsRepository.createQueryBuilder('intent')
-    .select("DATE(intent.created_at) AS date")
-    .addSelect("COUNT(*) AS count")
-    .where(`DATE(intent.created_at) >= '${startDate}'`)
-    .andWhere(`DATE(intent.created_at) <= '${endDate}'`)
-    .groupBy("DATE(intent.created_at)")
-    .orderBy("DATE(intent.created_at)", 'ASC');
+    const startDate = filters.startDate ? (moment(filters.startDate).format('YYYY-MM-DD')) : (moment().subtract(1, 'month').format('YYYY-MM-DD'));
+    const endDate = filters.endDate ? moment(filters.endDate).format('YYYY-MM-DD') : moment().format('YYYY-MM-DD');
+    const query = this._intentsRepository.createQueryBuilder('intent')
+      .select("DATE(intent.created_at) AS date")
+      .addSelect("COUNT(*) AS count")
+      .where(`DATE(intent.created_at) >= '${startDate}'`)
+      .andWhere(`DATE(intent.created_at) <= '${endDate}'`)
+      .groupBy("DATE(intent.created_at)")
+      .orderBy("DATE(intent.created_at)", 'ASC');
     return query.getRawMany();
- }
+  }
 
   findNeverUsedIntent(filters: StatsFilterDto): Promise<Array<string>> {
-    const startDate = filters.startDate ? (moment(filters.startDate).format('YYYY-MM-DD')): null;
+    const startDate = filters.startDate ? (moment(filters.startDate).format('YYYY-MM-DD')) : null;
     const endDate = filters.endDate ? moment(filters.endDate).format('YYYY-MM-DD') : null;
 
 
@@ -182,12 +184,12 @@ export class IntentService {
       .select("intent.main_question as question")
       .leftJoin(subq => {
         subq.from('intent', 'intent')
-        .select("intent.id AS intentid")
-        .innerJoin("inbox", "inbox", "inbox.intent = intent.id");
-        if(startDate) {
+          .select("intent.id AS intentid")
+          .innerJoin("inbox", "inbox", "inbox.intent = intent.id");
+        if (startDate) {
           subq.where(`DATE(inbox.created_at) >= '${startDate}'`)
         }
-        if(endDate) {
+        if (endDate) {
           subq.andWhere(`DATE(inbox.created_at) <= '${endDate}'`)
         }
         return subq
@@ -195,7 +197,7 @@ export class IntentService {
       .groupBy("intent.main_question")
       .having("COUNT(t1.intentid) = 0")
       .orderBy("intent.main_question", 'ASC');
-    
+
     return query.getRawMany();
   }
 

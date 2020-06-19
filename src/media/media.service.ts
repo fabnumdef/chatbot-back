@@ -91,8 +91,8 @@ export class MediaService {
 
   async update(mediaId: number, file: any, user: User): Promise<Media> {
     const fileName = escape(file.originalname.trim());
-    if (fileName.length > 50) {
-      throw new HttpException('Le nom du fichier ne doit pas dépasser 50 caractères.', HttpStatus.INTERNAL_SERVER_ERROR);
+    if (fileName.length > 255) {
+      throw new HttpException('Le nom du fichier ne doit pas dépasser 255 caractères.', HttpStatus.INTERNAL_SERVER_ERROR);
     }
     const fileExists = await this.findOneWithParam({file: fileName});
     if (fileExists && fileExists.id !== mediaId) {
@@ -135,8 +135,8 @@ export class MediaService {
 
   async storeFile(file): Promise<string> {
     const fileName = escape(file.originalname.trim());
-    if (fileName.length > 50) {
-      throw new HttpException('Le nom du fichier ne doit pas dépasser 50 caractères.', HttpStatus.INTERNAL_SERVER_ERROR);
+    if (fileName.length > 255) {
+      throw new HttpException('Le nom du fichier ne doit pas dépasser 255 caractères.', HttpStatus.INTERNAL_SERVER_ERROR);
     }
     const fileExists = await this.findOneWithParam({file: fileName});
     if (fileExists) {
