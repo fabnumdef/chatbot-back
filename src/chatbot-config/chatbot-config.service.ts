@@ -46,7 +46,7 @@ export class ChatbotConfigService {
   };
 
   async updateFrontManifest() {
-    const frontDir = path.resolve(__dirname, '../../../chatbot-front/dist/chatbot-front');
+    const frontDir = path.resolve(__dirname, '../../../chatbot-front');
     const botConfig = await this.getChatbotConfig();
     // @ts-ignore
     const manifest = JSON.parse(fs.readFileSync(path.resolve(frontDir, 'manifest.webmanifest')));
