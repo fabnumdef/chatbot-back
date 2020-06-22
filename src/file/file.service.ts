@@ -21,6 +21,9 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { FileHistoric } from "@core/entities/file.entity";
 import * as mkdirp from "mkdirp";
 import snakecaseKeys = require("snakecase-keys");
+import { Cron, CronExpression } from "@nestjs/schedule";
+import * as moment from 'moment';
+import { ChatbotConfigService } from "../chatbot-config/chatbot-config.service";
 
 const XLSX = require('xlsx');
 const uuid = require('uuid');
@@ -33,6 +36,7 @@ export class FileService {
   constructor(private readonly _intentService: IntentService,
               private readonly _knowledgeService: KnowledgeService,
               private readonly _responseService: ResponseService,
+              private readonly _configService: ChatbotConfigService,
               @InjectRepository(FileHistoric)
               private readonly _fileHistoricRepository: Repository<FileHistoric>) {
     // Create folder if it does not exists
@@ -84,7 +88,12 @@ export class FileService {
     });
   }
 
-  async storeFile() {
+  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
+  async storeHistoricFile() {
+    const botConfig = await this._configService.getChatbotConfig();
+    if(botConfig.last_training_at && moment().diff(moment(botConfig.last_training_at), 'hours') > 24) {
+      return;
+    }
     const workbook = await this._generateWorkbook();
 
     const timestamp = Date.now();

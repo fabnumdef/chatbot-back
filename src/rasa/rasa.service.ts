@@ -38,7 +38,6 @@ export class RasaService {
     }
     await this.generateFiles();
     await this.trainRasa();
-    await this._fileService.storeFile();
   }
 
   async isRasaTraining(): Promise<boolean> {

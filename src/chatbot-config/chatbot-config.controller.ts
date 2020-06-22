@@ -22,6 +22,7 @@ export class ChatbotConfigController {
 
   constructor(private readonly _configService: ChatbotConfigService,
               private readonly _mediaService: MediaService) {
+    this._configService.updateFrontManifest();
   }
 
   @Get('')
@@ -53,6 +54,7 @@ export class ChatbotConfigController {
     await this._configService.delete();
     const iconName = await this._mediaService.storeFile(icon);
     const configEntity = await this._configService.save(plainToClass(ChatbotConfig, snakecaseKeys({...chatbotConfig, ...{icon: iconName}})));
+    await this._configService.updateFrontManifest();
     return plainToClass(ConfigDto, camelcaseKeys(configEntity, {deep: true}));
   }
 
@@ -82,6 +84,9 @@ export class ChatbotConfigController {
       botConfig = {...chatbotConfig, ...{icon: iconName}};
     }
     const configEntity = await this._configService.update(plainToClass(ChatbotConfig, snakecaseKeys(botConfig)));
+    if (icon || botConfig.name) {
+      await this._configService.updateFrontManifest();
+    }
     return plainToClass(ConfigDto, camelcaseKeys(configEntity, {deep: true}));
   }
 }

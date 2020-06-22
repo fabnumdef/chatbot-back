@@ -4,6 +4,8 @@ import { FindOneOptions, Repository } from "typeorm";
 import { ChatbotConfig } from "@core/entities/chatbot-config.entity";
 import { MediaService } from "../media/media.service";
 import { UpdateResult } from "typeorm/query-builder/result/UpdateResult";
+import * as path from "path";
+import * as fs from "fs";
 
 @Injectable()
 export class ChatbotConfigService {
@@ -42,5 +44,16 @@ export class ChatbotConfigService {
     }
     return callback(null, true);
   };
+
+  async updateFrontManifest() {
+    const frontDir = path.resolve(__dirname, '../../../chatbot-front/dist/chatbot-front');
+    const botConfig = await this.getChatbotConfig();
+    // @ts-ignore
+    const manifest = JSON.parse(fs.readFileSync(path.resolve(frontDir, 'manifest.webmanifest')));
+    manifest.name = botConfig.name;
+    manifest.short_name = botConfig.name;
+    fs.writeFileSync(path.resolve(frontDir, 'manifest.webmanifest'), JSON.stringify(manifest));
+    fs.copyFileSync(path.resolve(__dirname, '../../mediatheque', botConfig.icon), path.resolve(frontDir, 'assets/icons/icon.png'));
+  }
 
 }

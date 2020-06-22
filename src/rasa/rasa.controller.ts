@@ -22,7 +22,6 @@ export class RasaController {
 
     await this._rasaService.generateFiles();
     await this._rasaService.trainRasa();
-    await this._fileService.storeFile();
     return;
   }
 }
