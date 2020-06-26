@@ -111,11 +111,23 @@ export class IntentService {
       })
   }
 
-  async findAllCategories(): Promise<string[]> {
-    const intents: Intent[] = await this._intentsRepository.createQueryBuilder('intent')
+  async findAllCategories(active = false): Promise<string[]> {
+    const query = this._intentsRepository.createQueryBuilder('intent')
       .select('DISTINCT category', 'category')
-      .orderBy('category', 'ASC')
-      .getRawMany();
+      .orderBy('category', 'ASC');
+
+    if(active) {
+      query.where("intent.status IN (:...status)", {
+        status: [
+          IntentStatus.to_deploy,
+          IntentStatus.active,
+          IntentStatus.active_modified,
+          IntentStatus.in_training
+        ]
+      });
+    }
+
+    const intents: Intent[] = await query.getRawMany();
 
     return intents.filter(i => !!i.category).map(i => i.category);
   }

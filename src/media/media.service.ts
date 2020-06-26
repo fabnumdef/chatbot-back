@@ -187,7 +187,7 @@ export class MediaService {
       select: ['id', 'main_question', 'category'],
       join: {alias: 'intents', innerJoin: {responses: 'intents.responses'}},
       where: qb => {
-        qb.where(`responses.response like '%/${media.file}%'`)
+        qb.where(`responses.response like '%/${encodeURI(media.file)}%'`)
       },
     });
   }
