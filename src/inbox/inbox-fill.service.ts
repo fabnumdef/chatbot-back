@@ -7,13 +7,15 @@ import { Inbox } from "@core/entities/inbox.entity";
 import { EventActionTypeEnum } from "@core/enums/event-action-type.enum";
 import { Intent } from "@core/entities/intent.entity";
 import { InboxStatus } from "@core/enums/inbox-status.enum";
+import { IntentService } from "../intent/intent.service";
 
 @Injectable()
 export class InboxFillService {
   constructor(@InjectRepository(Events)
               private readonly _eventsRepository: Repository<Events>,
               @InjectRepository(Inbox)
-              private readonly _inboxesRepository: Repository<Inbox>) {
+              private readonly _inboxesRepository: Repository<Inbox>,
+              private readonly _intentService: IntentService) {
   }
 
   // Check last events of the chatbot to fill Inbox
@@ -44,7 +46,10 @@ export class InboxFillService {
       const conversationIdx = events.findIndex(e => e.action_name === EventActionTypeEnum.action_listen);
       const eventsSlice = events.slice(0, conversationIdx + 1);
       if(this._canGenerateInbox(eventsSlice)) {
-        inboxes.push(this._getNextInbox(eventsSlice));
+        const inbox = this._getNextInbox(eventsSlice);
+        if(await this._intentService.intentExists(inbox.intent.id)) {
+          inboxes.push(this._getNextInbox(eventsSlice));
+        }
       }
       events.splice(0, conversationIdx + 1);
     }

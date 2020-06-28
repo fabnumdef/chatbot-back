@@ -136,6 +136,10 @@ export class IntentService {
     return this._intentsRepository.findOne(id);
   }
 
+  async intentExists(id: string): Promise<boolean> {
+    return !!(await this.findOne(id));
+  }
+
   async create(intent: Intent): Promise<Intent> {
     switch (intent.status) {
       case IntentStatus.active:
