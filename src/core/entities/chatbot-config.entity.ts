@@ -40,4 +40,13 @@ export class ChatbotConfig {
 
   @Column({ nullable: true, type: 'timestamp' })
   last_training_at: Date;
+
+  @Column({ nullable: true, length: 50 })
+  embedded_icon: string;
+
+  @Column({ nullable: true, length: 255 })
+  description: string;
+
+  @Column({ nullable: true, length: 500 })
+  help: string;
 }

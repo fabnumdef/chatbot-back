@@ -16,7 +16,8 @@ export class PublicController {
   @ApiOperation({summary: 'Return the chatbot chatbot-config'})
   async getChabotConfig(): Promise<PublicConfigDto> {
     const config: ChatbotConfig = await this._configService.getChatbotConfig(
-      {select: ['name', 'icon', 'function', 'primary_color', 'secondary_color', 'problematic', 'audience']}
+      {select: ['name', 'icon', 'function', 'primary_color', 'secondary_color', 'problematic', 'audience',
+        'embedded_icon', 'description', 'help']}
       );
     return config ? plainToClass(PublicConfigDto, camelcaseKeys(config, {deep: true})) : null;
   }

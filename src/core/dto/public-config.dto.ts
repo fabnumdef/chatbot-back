@@ -35,4 +35,17 @@ export class PublicConfigDto {
   @IsNotEmpty()
   @MaxLength(200)
   audience: string;
+
+  @ApiProperty({type: 'string', format: 'binary'})
+  embeddedIcon: FileUploadDto;
+
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(255)
+  description: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(500)
+  help: string;
 }
