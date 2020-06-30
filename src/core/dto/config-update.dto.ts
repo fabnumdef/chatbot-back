@@ -37,16 +37,17 @@ export class ConfigUpdateDto {
   @MaxLength(200)
   audience: string;
 
+  @IsOptional()
   @ApiProperty({type: 'string', format: 'binary'})
   embeddedIcon: FileUploadDto;
 
   @IsString()
-  @IsNotEmpty()
+  @IsOptional()
   @MaxLength(255)
   description: string;
 
   @IsString()
-  @IsNotEmpty()
+  @IsOptional()
   @MaxLength(500)
   help: string;
 }
