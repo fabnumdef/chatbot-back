@@ -92,7 +92,7 @@ export class IntentService {
     return query;
   }
 
-  getFullIntentQueryBuilder() {
+  getFullIntentQueryBuilder(id?: string) {
     return this._intentsRepository.createQueryBuilder('intent')
       .leftJoinAndSelect('intent.responses', 'responses')
       .leftJoinAndSelect('intent.knowledges', 'knowledges')
@@ -104,6 +104,7 @@ export class IntentService {
           IntentStatus.in_training
         ]
       })
+      .andWhere(id ? `intent.id = '${id}'` : `'1'`)
       .orderBy({
         'intent.id': 'ASC',
         'knowledges.id': 'ASC',
@@ -133,7 +134,7 @@ export class IntentService {
   }
 
   findOne(id: string): Promise<Intent> {
-    return this._intentsRepository.findOne(id);
+    return this.getFullIntentQueryBuilder(id).getOne();
   }
 
   async intentExists(id: string): Promise<boolean> {

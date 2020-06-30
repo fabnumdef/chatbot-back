@@ -27,6 +27,13 @@ export class IntentController {
     return plainToClass(IntentDto, camelcaseKeys(intents, {deep: true}));
   }
 
+  @Get(':intentId')
+  @ApiOperation({summary: 'Return specific intent'})
+  async getIntent(@Param('intentId') intentId: string): Promise<IntentDto> {
+    const intent: Intent = await this._intentService.findOne(intentId);
+    return plainToClass(IntentDto, camelcaseKeys(intent, {deep: true}));
+  }
+
   @Post('search')
   @ApiOperation({summary: 'Return intents paginated'})
   async getIntentsPagination(@Query() options: PaginationQueryDto,
