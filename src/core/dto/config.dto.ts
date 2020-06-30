@@ -51,4 +51,17 @@ export class ConfigDto {
   @IsNumber()
   @IsOptional()
   lastTrainingAt: number;
+
+  @ApiProperty({type: 'string', format: 'binary'})
+  embeddedIcon: FileUploadDto;
+
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(255)
+  description: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(500)
+  help: string;
 }

@@ -1,4 +1,4 @@
-import { IsBoolean, IsHexColor, IsOptional, IsString, MaxLength } from "class-validator";
+import { IsBoolean, IsHexColor, IsNotEmpty, IsOptional, IsString, MaxLength } from "class-validator";
 import { ApiProperty } from "@nestjs/swagger";
 import { FileUploadDto } from "@core/dto/file-upload.dto";
 
@@ -36,4 +36,17 @@ export class ConfigUpdateDto {
   @IsOptional()
   @MaxLength(200)
   audience: string;
+
+  @ApiProperty({type: 'string', format: 'binary'})
+  embeddedIcon: FileUploadDto;
+
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(255)
+  description: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(500)
+  help: string;
 }
