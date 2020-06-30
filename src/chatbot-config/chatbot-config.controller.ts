@@ -69,6 +69,16 @@ export class ChatbotConfigController {
         },
         fileFilter: ChatbotConfigService.imageFileFilter,
       }
+    ),
+    FileInterceptor(
+      'embeddedIcon',
+      {
+        limits: {
+          // 5Mb
+          fileSize: 5e+6
+        },
+        fileFilter: ChatbotConfigService.imageFileFilter,
+      }
     )
   )
   @ApiConsumes('multipart/form-data')
@@ -76,12 +86,18 @@ export class ChatbotConfigController {
   @UseGuards(JwtGuard, RolesGuard)
   @Roles(UserRole.admin)
   async updateChatbotConfig(@UploadedFile() icon,
+                            @UploadedFile() embeddedIcon,
                             @Body() chatbotConfig: ConfigUpdateDto): Promise<ConfigDto> {
     let botConfig: any = chatbotConfig;
     if (icon) {
       await this._configService.delete(false);
       const iconName = await this._mediaService.storeFile(icon);
       botConfig = {...chatbotConfig, ...{icon: iconName}};
+    }
+    if (embeddedIcon) {
+      await this._configService.delete(false);
+      const embeddedIconName = await this._mediaService.storeFile(icon);
+      botConfig = {...chatbotConfig, ...{embeddedIcon: embeddedIconName}};
     }
     const configEntity = await this._configService.update(plainToClass(ChatbotConfig, snakecaseKeys(botConfig)));
     if (icon || botConfig.name) {

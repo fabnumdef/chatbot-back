@@ -27,10 +27,16 @@ export class ChatbotConfigService {
     return this._configRepository.save(config);
   }
 
-  async delete(fromDb = true) {
+  async delete(fromDb = true, embedded = false) {
     try {
-      const currentConfig = await this.getChatbotConfig();
-      await this._mediaService.deleteFile(currentConfig.icon);
+      if(fromDb || !embedded) {
+        const currentConfig = await this.getChatbotConfig();
+        await this._mediaService.deleteFile(currentConfig.icon);
+      }
+      if(fromDb || embedded) {
+        const currentConfig = await this.getChatbotConfig();
+        await this._mediaService.deleteFile(currentConfig.embedded_icon);
+      }
       if(fromDb) {
         await this._configRepository.delete(1);
       }
