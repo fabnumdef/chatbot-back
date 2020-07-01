@@ -1,4 +1,14 @@
-import { Body, Controller, Get, Post, Put, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Post,
+  Put,
+  UploadedFile,
+  UploadedFiles,
+  UseGuards,
+  UseInterceptors
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiConsumes, ApiOperation, ApiTags } from "@nestjs/swagger";
 import { JwtGuard } from "@core/guards/jwt.guard";
 import { ChatbotConfigService } from "./chatbot-config.service";
@@ -7,7 +17,7 @@ import { ChatbotConfig } from "@core/entities/chatbot-config.entity";
 import { ConfigDto } from "@core/dto/config.dto";
 import camelcaseKeys = require("camelcase-keys");
 import snakecaseKeys = require("snakecase-keys");
-import { FileInterceptor } from "@nestjs/platform-express";
+import { FileFieldsInterceptor, FileInterceptor } from "@nestjs/platform-express";
 import { MediaService } from "../media/media.service";
 import { ConfigUpdateDto } from "@core/dto/config-update.dto";
 import { RolesGuard } from "@core/guards/roles.guard";
@@ -60,35 +70,26 @@ export class ChatbotConfigController {
 
   @Put('')
   @UseInterceptors(
-    FileInterceptor(
-      'icon',
-      {
-        limits: {
-          // 5Mb
-          fileSize: 5e+6
-        },
-        fileFilter: ChatbotConfigService.imageFileFilter,
-      }
-    ),
-    FileInterceptor(
-      'embeddedIcon',
-      {
-        limits: {
-          // 5Mb
-          fileSize: 5e+6
-        },
-        fileFilter: ChatbotConfigService.imageFileFilter,
-      }
-    )
+    FileFieldsInterceptor([
+      {name: 'icon', maxCount: 1},
+      {name: 'embeddedIcon', maxCount: 1},
+    ], {
+      limits: {
+        // 5Mb
+        fileSize: 5e+6
+      },
+      fileFilter: ChatbotConfigService.imageFileFilter,
+    })
   )
   @ApiConsumes('multipart/form-data')
   @ApiOperation({summary: 'Update the chatbot config'})
   @UseGuards(JwtGuard, RolesGuard)
   @Roles(UserRole.admin)
-  async updateChatbotConfig(@UploadedFile() icon,
-                            @UploadedFile() embeddedIcon,
+  async updateChatbotConfig(@UploadedFiles() files,
                             @Body() chatbotConfig: ConfigUpdateDto): Promise<ConfigDto> {
     let botConfig: any = chatbotConfig;
+    const icon = files.icon ? files.icon[0] : null;
+    const embeddedIcon = files.embeddedIcon ? files.embeddedIcon[0] : null;
     if (icon) {
       await this._configService.delete(false);
       const iconName = await this._mediaService.storeFile(icon);
@@ -96,7 +97,7 @@ export class ChatbotConfigController {
     }
     if (embeddedIcon) {
       await this._configService.delete(false);
-      const embeddedIconName = await this._mediaService.storeFile(icon);
+      const embeddedIconName = await this._mediaService.storeFile(embeddedIcon);
       botConfig = {...chatbotConfig, ...{embeddedIcon: embeddedIconName}};
     }
     const configEntity = await this._configService.update(plainToClass(ChatbotConfig, snakecaseKeys(botConfig)));
