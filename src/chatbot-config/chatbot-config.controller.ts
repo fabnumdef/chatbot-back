@@ -96,7 +96,7 @@ export class ChatbotConfigController {
       botConfig = {...chatbotConfig, ...{icon: iconName}};
     }
     if (embeddedIcon) {
-      await this._configService.delete(false);
+      await this._configService.delete(false, true);
       const embeddedIconName = await this._mediaService.storeFile(embeddedIcon);
       botConfig = {...chatbotConfig, ...{embeddedIcon: embeddedIconName}};
     }
