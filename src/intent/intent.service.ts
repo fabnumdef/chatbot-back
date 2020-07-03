@@ -117,7 +117,7 @@ export class IntentService {
       .select('DISTINCT category', 'category')
       .orderBy('category', 'ASC');
 
-    if(active) {
+    if (active) {
       query.where("intent.status IN (:...status)", {
         status: [
           IntentStatus.to_deploy,
@@ -141,16 +141,19 @@ export class IntentService {
     return !!(await this.findOne(id));
   }
 
-  async create(intent: Intent): Promise<Intent> {
+  async createEdit(intent: Intent, id?: string): Promise<Intent> {
     switch (intent.status) {
       case IntentStatus.active:
       case IntentStatus.in_training:
         intent.status = IntentStatus.active_modified;
         break;
     }
-    const intentCreated = await this._intentsRepository.save(intent);
+    if (id) {
+      await this.delete(id);
+    }
+    const intentCreatedEdited = await this._intentsRepository.save(intent);
     await this._updateNeedTraining();
-    return intentCreated;
+    return intentCreatedEdited;
   }
 
   async delete(intentId): Promise<UpdateResult> {

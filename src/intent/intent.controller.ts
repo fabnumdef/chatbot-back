@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Put, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from "@nestjs/swagger";
 import { JwtGuard } from "@core/guards/jwt.guard";
 import { IntentService } from "./intent.service";
@@ -61,7 +61,28 @@ export class IntentController {
         delete k.id;
       }
     });
-    intent = await this._intentService.create(intent);
+    intent = await this._intentService.createEdit(intent);
+    return plainToClass(IntentDto, camelcaseKeys(intent, {deep: true}));
+  }
+
+  @Put(':id')
+  @ApiOperation({summary: 'Edit an intent'})
+  async editIntent(@Param('id') intentId: string, @Body() intentDto: IntentDto): Promise<IntentDto> {
+    let intent: Intent = plainToClass(Intent, snakecaseKeys(intentDto));
+    intent.responses.map(r => {
+      r.intent = <Intent>{id: intent.id};
+      if (!r.id) {
+        delete r.id;
+      }
+    });
+    intent.knowledges = intent.knowledges.filter(k => !!k.question.trim());
+    intent.knowledges.map(k => {
+      k.intent = <Intent>{id: intent.id};
+      if (!k.id) {
+        delete k.id;
+      }
+    });
+    intent = await this._intentService.createEdit(intent, intentId);
     return plainToClass(IntentDto, camelcaseKeys(intent, {deep: true}));
   }
 
