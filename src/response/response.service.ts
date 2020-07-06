@@ -37,6 +37,15 @@ export class ResponseService {
       .where(`response LIKE '%${oldFile}%'`);
   }
 
+  async updateIntentResponses(oldIntentId: string, newIntentId: string) {
+    this._responsesRepository.createQueryBuilder('response')
+      .update()
+      .set({
+        response: `REPLACE(response, '${oldIntentId}', '${newIntentId}')`
+      })
+      .where(`response LIKE '%<${oldIntentId}>%'`);
+  }
+
   async deleteByIntent(intent: Intent): Promise<void> {
     await this._responsesRepository.delete({
       intent: intent

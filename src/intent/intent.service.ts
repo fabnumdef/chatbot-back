@@ -148,10 +148,11 @@ export class IntentService {
         intent.status = IntentStatus.active_modified;
         break;
     }
+    const intentCreatedEdited = await this._intentsRepository.save(intent);
     if (id) {
       await this.delete(id);
+      await this._responseService.updateIntentResponses(id, intent.id);
     }
-    const intentCreatedEdited = await this._intentsRepository.save(intent);
     await this._updateNeedTraining();
     return intentCreatedEdited;
   }
