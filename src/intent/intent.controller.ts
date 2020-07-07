@@ -47,20 +47,7 @@ export class IntentController {
   @Post('')
   @ApiOperation({summary: 'Create or edit an intent'})
   async createEditIntent(@Body() intentDto: IntentDto): Promise<IntentDto> {
-    let intent: Intent = plainToClass(Intent, snakecaseKeys(intentDto));
-    intent.responses.map(r => {
-      r.intent = <Intent>{id: intent.id};
-      if (!r.id) {
-        delete r.id;
-      }
-    });
-    intent.knowledges = intent.knowledges.filter(k => !!k.question.trim());
-    intent.knowledges.map(k => {
-      k.intent = <Intent>{id: intent.id};
-      if (!k.id) {
-        delete k.id;
-      }
-    });
+    let intent = this._formatIntent(intentDto);
     intent = await this._intentService.createEdit(intent);
     return plainToClass(IntentDto, camelcaseKeys(intent, {deep: true}));
   }
@@ -68,6 +55,18 @@ export class IntentController {
   @Put(':id')
   @ApiOperation({summary: 'Edit an intent'})
   async editIntent(@Param('id') intentId: string, @Body() intentDto: IntentDto): Promise<IntentDto> {
+    let intent = this._formatIntent(intentDto);
+    intent = await this._intentService.createEdit(intent, intentId);
+    return plainToClass(IntentDto, camelcaseKeys(intent, {deep: true}));
+  }
+
+  @Delete(':intentId')
+  @ApiOperation({summary: 'Archive an intent'})
+  async deleteIntent(@Param('intentId') intentId: string): Promise<UpdateResult> {
+    return this._intentService.delete(intentId);
+  }
+
+  private _formatIntent(intentDto: IntentDto): Intent {
     let intent: Intent = plainToClass(Intent, snakecaseKeys(intentDto));
     intent.responses.map(r => {
       r.intent = <Intent>{id: intent.id};
@@ -85,14 +84,7 @@ export class IntentController {
     // Filter several knowledges with same questions
     intent.knowledges = intent.knowledges.filter((value, index, self) => {
       return self.findIndex(k => k.question === value.question) === index;
-    })
-    intent = await this._intentService.createEdit(intent, intentId);
-    return plainToClass(IntentDto, camelcaseKeys(intent, {deep: true}));
-  }
-
-  @Delete(':intentId')
-  @ApiOperation({summary: 'Archive an intent'})
-  async deleteIntent(@Param('intentId') intentId: string): Promise<UpdateResult> {
-    return this._intentService.delete(intentId);
+    });
+    return intent;
   }
 }
