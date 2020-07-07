@@ -6,6 +6,7 @@ import { AuthController } from './auth.controller';
 import { JwtModule } from "@nestjs/jwt";
 import { JwtStrategy } from "./jwt.strategy";
 import { ConfigModule } from "@nestjs/config";
+import { SharedModule } from "../shared/shared.module";
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { ConfigModule } from "@nestjs/config";
       signOptions: { expiresIn: '1d' },
     }),
     UserModule,
+    SharedModule
   ],
   providers: [AuthService, JwtStrategy],
   controllers: [AuthController],

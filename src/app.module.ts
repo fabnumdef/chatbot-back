@@ -22,6 +22,10 @@ import * as ormconfig from './ormconfig';
 import { TimeoutInterceptor } from "@core/interceptors/timeout.interceptor";
 import { PublicController } from './public/public.controller';
 import { PublicModule } from './public/public.module';
+import { SharedModule } from './shared/shared.module';
+import * as path from "path";
+import { MailerModule } from "@nestjs-modules/mailer";
+import { HandlebarsAdapter } from "@nestjs-modules/mailer/dist/adapters/handlebars.adapter";
 
 @Module({
   imports: [
@@ -29,6 +33,28 @@ import { PublicModule } from './public/public.module';
       isGlobal: true,
     }),
     TypeOrmModule.forRoot(ormconfig),
+    MailerModule.forRoot({
+      transport: {
+        host: `${process.env.MAIL_HOST}`,
+        port: `${process.env.MAIL_PORT}`,
+        secure: true, // true for 465, false for other ports
+        auth: {
+          user: `${process.env.MAIL_USER}`,
+          pass: `${process.env.MAIL_PASSWORD}`
+        },
+        tls: {
+          // do not fail on invalid certs
+          rejectUnauthorized: false
+        }
+      },
+      template: {
+        dir: path.resolve(__dirname, '..', 'templates'),
+        adapter: new HandlebarsAdapter(),
+        options: {
+          strict: true,
+        },
+      },
+    }),
     AuthModule,
     UserModule,
     IntentModule,
@@ -42,7 +68,8 @@ import { PublicModule } from './public/public.module';
     RasaModule,
     ChatbotConfigModule,
     TerminusModule,
-    PublicModule
+    PublicModule,
+    SharedModule
   ],
   controllers: [RefDataController, HealthController, PublicController],
   providers: [

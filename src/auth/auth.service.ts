@@ -5,6 +5,7 @@ import { LoginUserDto } from "@core/dto/login-user.dto";
 import { AuthResponseDto } from "@core/dto/auth-response.dto";
 import { ResetPasswordDto } from "@core/dto/reset-password.dto";
 import { MoreThan } from "typeorm";
+import { MailService } from "../shared/services/mail.service";
 
 const bcrypt = require('bcrypt');
 
@@ -13,7 +14,8 @@ export class AuthService {
   private saltRounds = 10;
 
   constructor(private readonly _userService: UserService,
-              private readonly _jwtService: JwtService) {
+              private readonly _jwtService: JwtService,
+              private _mailService: MailService) {
   }
 
   async login(user: LoginUserDto): Promise<AuthResponseDto> {
@@ -34,15 +36,15 @@ export class AuthService {
     }
     const userUpdated = await this._userService.setPasswordResetToken(userWithoutPassword);
 
-    // await this._mailService.sendEmail(userUpdated.email,
-    //   'Fabrique à Chatbots - Réinitialisation de mot de passe',
-    //   'forgot-password',
-    //   {  // Data to be sent to template engine.
-    //     firstName: userUpdated.first_name,
-    //     url: `${process.env.HOST_URL}/auth/reset-password?token=${userUpdated.reset_password_token}`
-    //   })
-    //   .then(() => {
-    //   });
+    await this._mailService.sendEmail(userUpdated.email,
+      'Fabrique à Chatbots - Réinitialisation de mot de passe',
+      'forgot-password',
+      {  // Data to be sent to template engine.
+        firstName: userUpdated.first_name,
+        url: `${process.env.HOST_URL}/auth/reset-password?token=${userUpdated.reset_password_token}`
+      })
+      .then(() => {
+      });
   }
 
   async resetPassword(resetPassword: ResetPasswordDto) {
