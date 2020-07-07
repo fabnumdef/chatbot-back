@@ -82,6 +82,10 @@ export class IntentController {
         delete k.id;
       }
     });
+    // Filter several knowledges with same questions
+    intent.knowledges = intent.knowledges.filter((value, index, self) => {
+      return self.findIndex(k => k.question === value.question) === index;
+    })
     intent = await this._intentService.createEdit(intent, intentId);
     return plainToClass(IntentDto, camelcaseKeys(intent, {deep: true}));
   }
