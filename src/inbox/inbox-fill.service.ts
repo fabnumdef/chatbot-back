@@ -91,6 +91,9 @@ export class InboxFillService {
     inbox.response = JSON.stringify(inbox.response);
     inbox.intent_ranking = JSON.stringify(inbox.intent_ranking);
     inbox.response_time = Math.round((sendMessageTimestamp - getMessageTimestamp) * 1000);
+    if(isNaN(inbox.response_time)) {
+      inbox.response_time = 100;
+    }
     return inbox;
   }
 
