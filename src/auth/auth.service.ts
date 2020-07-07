@@ -63,15 +63,15 @@ export class AuthService {
     };
     const userUpdated = await this._userService.findAndUpdate(userWithoutPassword.email, valuesToUpdate);
 
-    // await this._mailService.sendEmail(userUpdated.email,
-    //   'Fabrique à Chatbots - Mot de passe modifié',
-    //   'reset-password',
-    //   {  // Data to be sent to template engine.
-    //     firstName: userUpdated.first_name,
-    //     url: `${process.env.HOST_URL}/auth/login`
-    //   })
-    //   .then(() => {
-    //   });
+    await this._mailService.sendEmail(userUpdated.email,
+      'Fabrique à Chatbots - Mot de passe modifié',
+      'reset-password',
+      {  // Data to be sent to template engine.
+        firstName: userUpdated.first_name,
+        url: `${process.env.HOST_URL}/auth/login`
+      })
+      .then(() => {
+      });
   }
 
   /**

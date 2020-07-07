@@ -4,13 +4,15 @@ import { Repository } from "typeorm";
 import { User } from "@core/entities/user.entity";
 import { UserModel } from "@core/models/user.model";
 import { UserRole } from "@core/enums/user-role.enum";
+import { MailService } from "../shared/services/mail.service";
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 
 @Injectable()
 export class UserService {
   constructor(@InjectRepository(User)
-              private readonly _usersRepository: Repository<User>) {
+              private readonly _usersRepository: Repository<User>,
+              private readonly _mailService: MailService) {
   }
 
   findAll(): Promise<User[]> {
@@ -76,15 +78,15 @@ export class UserService {
 
   async sendEmailPasswordToken(user: User) {
     const userUpdated = await this.setPasswordResetToken(user);
-    // await this._mailService.sendEmail(userUpdated.email,
-    //   'Fabrique à Chatbots - Création de compte',
-    //   'create-account',
-    //   {  // Data to be sent to template engine.
-    //     firstName: userUpdated.first_name,
-    //     url: `${process.env.HOST_URL}/auth/reset-password?token=${userUpdated.reset_password_token}`
-    //   })
-    //   .then(() => {
-    //   });
+    await this._mailService.sendEmail(userUpdated.email,
+      'Fabrique à Chatbots - Création de compte',
+      'create-account',
+      {  // Data to be sent to template engine.
+        firstName: userUpdated.first_name,
+        url: `${process.env.HOST_URL}/auth/reset-password?token=${userUpdated.reset_password_token}`
+      })
+      .then(() => {
+      });
   }
 
   async setPasswordResetToken(user: User) {
