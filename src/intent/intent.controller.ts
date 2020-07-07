@@ -82,7 +82,7 @@ export class IntentController {
       }
     });
     // Filter several knowledges with same questions
-    intent.knowledges = intent.knowledges.filter((value, index, self) => {
+    intent.knowledges = intent.knowledges.reverse().filter((value, index, self) => {
       return self.findIndex(k => k.question === value.question) === index;
     });
     return intent;
