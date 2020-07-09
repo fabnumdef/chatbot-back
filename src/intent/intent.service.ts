@@ -139,7 +139,7 @@ export class IntentService {
 
   findIntentsMatching(query: string, intentsNumber = 10): Promise<Intent[]> {
     return this.getIntentQueryBuilder(PaginationUtils.setQuery(<PaginationQueryDto> {query: query}, Intent.getAttributesToSearch()), null)
-      .select(['intent.id', 'intent.main_question', 'intent.category'])
+      .select(['id', 'main_question', 'category'])
       .take(intentsNumber)
       .getRawMany();
   }
