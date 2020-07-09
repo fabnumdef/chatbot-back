@@ -137,6 +137,13 @@ export class IntentService {
     return this.getFullIntentQueryBuilder(id).getOne();
   }
 
+  async findIntentsMatching(query: string, intentsNumber = 10): Promise<Intent[]> {
+    return this.getIntentQueryBuilder(PaginationUtils.setQuery(<PaginationQueryDto> {query: query}, Intent.getAttributesToSearch()), null)
+      .select(['intent.id', 'intent.question', 'intent.category'])
+      .take(intentsNumber)
+      .getRawMany();
+  }
+
   async intentExists(id: string): Promise<boolean> {
     return !!(await this.findOne(id));
   }

@@ -1,15 +1,19 @@
-import { Controller, Get } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { ChatbotConfigService } from "../chatbot-config/chatbot-config.service";
 import { ApiOperation, ApiTags } from "@nestjs/swagger";
 import { ChatbotConfig } from "@core/entities/chatbot-config.entity";
 import { plainToClass } from "class-transformer";
 import camelcaseKeys = require("camelcase-keys");
 import { PublicConfigDto } from "@core/dto/public-config.dto";
+import { IntentDto } from "@core/dto/intent.dto";
+import { IntentService } from "../intent/intent.service";
+import { Intent } from "@core/entities/intent.entity";
 
 @ApiTags('public')
 @Controller('public')
 export class PublicController {
-  constructor(private readonly _configService: ChatbotConfigService) {
+  constructor(private readonly _configService: ChatbotConfigService,
+              private readonly _intentService: IntentService) {
   }
 
   @Get('')
@@ -20,5 +24,12 @@ export class PublicController {
         'embedded_icon', 'description', 'help']}
       );
     return config ? plainToClass(PublicConfigDto, camelcaseKeys(config, {deep: true})) : null;
+  }
+
+  @Get('/intents/:query')
+  @ApiOperation({summary: 'Return the 10 firsts matching intents'})
+  async getIntents(@Param('query') query: string): Promise<IntentDto[]> {
+    const intents: Intent[] = await this._intentService.findIntentsMatching(query, 10);
+    return plainToClass(IntentDto, camelcaseKeys(intents, {deep: true}));
   }
 }
