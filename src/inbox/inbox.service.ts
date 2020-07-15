@@ -197,7 +197,7 @@ export class InboxService {
   }
 
   findAvgResponseTime(filters: StatsFilterDto): Promise<string> {
-    const startDate = filters.startDate ? (moment(filters.startDate).format('YYYY-MM-DD')) : null;
+    const startDate = filters.startDate ? moment(filters.startDate).format('YYYY-MM-DD') : null;
     const endDate = filters.endDate ? moment(filters.endDate).format('YYYY-MM-DD') : null;
 
     const query = this._inboxesRepository.createQueryBuilder('inbox')
@@ -208,8 +208,22 @@ export class InboxService {
     if (endDate) {
       query.andWhere(`DATE(inbox.created_at) <= '${endDate}'`)
     }
-    //.where(`DATE(inbox.created_at) >= '${startDate}'`)
-    //.andWhere(`DATE(inbox.created_at) <= '${endDate}'`)
+
+    return query.getRawOne();
+  }
+
+  findAvgResponseOk(filters: StatsFilterDto): Promise<string> {
+    const startDate = filters.startDate ? moment(filters.startDate).format('YYYY-MM-DD') : null;
+    const endDate = filters.endDate ? moment(filters.endDate).format('YYYY-MM-DD') : null;
+
+    const query = this._inboxesRepository.createQueryBuilder('inbox')
+      .select(`100 * (SELECT COUNT(inbox.id) from inbox WHERE confidence >= 60)/COUNT(inbox.id)`);
+    if (startDate) {
+      query.where(`DATE(inbox.created_at) >= '${startDate}'`)
+    }
+    if (endDate) {
+      query.andWhere(`DATE(inbox.created_at) <= '${endDate}'`)
+    }
 
     return query.getRawOne();
   }
