@@ -3,6 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { IntentService } from "../intent/intent.service";
 import { KnowledgeService } from "../knowledge/knowledge.service";
 import { InboxService } from "../inbox/inbox.service";
+import { StatsMostAskedQuestionsDto } from "@core/dto/stats-most-asked-questions.dto";
 
 
 
@@ -31,7 +32,7 @@ export class StatsService {
     return this._intentService.findNbIntentByTime(filters);
   }
 
-  getMostAskedQuestions(filters: StatsFilterDto): Promise<Array<string>> {
+  getMostAskedQuestions(filters: StatsFilterDto): Promise<StatsMostAskedQuestionsDto[]> {
     return this._inboxService.findMostAskedQuestions(filters);
   }
 

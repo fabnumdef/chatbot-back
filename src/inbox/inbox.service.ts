@@ -15,6 +15,7 @@ import { IntentService } from "../intent/intent.service";
 import { IntentStatus } from "@core/enums/intent-status.enum";
 import * as moment from 'moment';
 import { UserService } from "../user/user.service";
+import { StatsMostAskedQuestionsDto } from "@core/dto/stats-most-asked-questions.dto";
 
 @Injectable()
 export class InboxService {
@@ -148,7 +149,7 @@ export class InboxService {
     return query.getRawOne();
   }
 
-  findMostAskedQuestions(filters: StatsFilterDto): Promise<Array<string>> {
+  findMostAskedQuestions(filters: StatsFilterDto): Promise<StatsMostAskedQuestionsDto[]> {
     const startDate = filters.startDate ? (moment(filters.startDate).format('YYYY-MM-DD')): null;
     const endDate = filters.endDate ? moment(filters.endDate).format('YYYY-MM-DD') : null;
     

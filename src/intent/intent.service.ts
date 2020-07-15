@@ -15,6 +15,7 @@ import { ChatbotConfigService } from "../chatbot-config/chatbot-config.service";
 import { ChatbotConfig } from "@core/entities/chatbot-config.entity";
 import { StatsFilterDto } from '@core/dto/stats-filter.dto';
 import * as moment from 'moment';
+import { StatsMostAskedQuestionsDto } from "@core/dto/stats-most-asked-questions.dto";
 
 @Injectable()
 export class IntentService {

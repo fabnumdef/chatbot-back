@@ -11,8 +11,6 @@ import { Pagination } from "nestjs-typeorm-paginate/index";
 import { InboxFilterDto } from "@core/dto/inbox-filter.dto";
 import { UpdateResult } from "typeorm/query-builder/result/UpdateResult";
 import { InboxUpdateDto } from "@core/dto/inbox-update.dto";
-import snakecaseKeys = require("snakecase-keys");
-import { User } from "@core/entities/user.entity";
 
 @ApiTags('inbox')
 @Controller('inbox')

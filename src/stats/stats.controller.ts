@@ -1,10 +1,10 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Post, UseGuards } from '@nestjs/common';
 import { StatsService } from "./stats.service";
 import { StatsFilterDto } from "@core/dto/stats-filter.dto";
 import { ApiBearerAuth, ApiOperation, ApiTags } from "@nestjs/swagger";
 import { JwtGuard } from "@core/guards/jwt.guard";
-import * as moment from 'moment';
-import snakecaseKeys = require("snakecase-keys");
+import { plainToClass } from "class-transformer";
+import { StatsMostAskedQuestionsDto } from "@core/dto/stats-most-asked-questions.dto";
 
 @ApiTags('stats')
 @Controller('stats')
@@ -27,7 +27,7 @@ export class StatsController {
   @ApiOperation({ summary: 'Return the most relevant data' })
   async sendBestData(@Body() filters: StatsFilterDto) {
     const result = {};
-    result['mostAskedQuestions'] = await this._statsService.getMostAskedQuestions(filters);
+    result['mostAskedQuestions'] = plainToClass(StatsMostAskedQuestionsDto, await this._statsService.getMostAskedQuestions(filters));
     return result;
   }
 
