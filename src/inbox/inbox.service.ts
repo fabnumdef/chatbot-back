@@ -212,12 +212,12 @@ export class InboxService {
     return query.getRawOne();
   }
 
-  findRatioResponseOk(filters: StatsFilterDto): Promise<string> {
+  async findRatioResponseOk(filters: StatsFilterDto): Promise<string> {
     const startDate = filters.startDate ? moment(filters.startDate).format('YYYY-MM-DD') : null;
     const endDate = filters.endDate ? moment(filters.endDate).format('YYYY-MM-DD') : null;
 
     const query = this._inboxesRepository.createQueryBuilder('inbox')
-      .select(`(100 * (SELECT COUNT(inbox.id) from inbox WHERE confidence >= 60)/COUNT(inbox.id)) as ratioResponseOk`);
+      .select(`100 * (SELECT COUNT(inbox.id) from inbox WHERE inbox.confidence >= 0.6)/COUNT(inbox.id) as ratioResponseOk`);
     if (startDate) {
       query.where(`DATE(inbox.created_at) >= '${startDate}'`)
     }
