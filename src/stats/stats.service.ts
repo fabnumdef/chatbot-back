@@ -48,8 +48,8 @@ export class StatsService {
     return this._inboxService.findAvgResponseTime(filters);
   }
 
-  getAvgResponseOk(filters: StatsFilterDto): Promise<string> {
-    return this._inboxService.findAvgResponseOk(filters);
+  getRatioResponseOk(filters: StatsFilterDto): Promise<string> {
+    return this._inboxService.findRatioResponseOk(filters);
   }
 
 }
