@@ -157,8 +157,9 @@ export class InboxService {
       .select('int.main_question AS question')
       .addSelect("COUNT(inbox.intent) AS count")
       .innerJoin("intent", "int", 'int.id = inbox.intent')
+      .where(`int.id NOT IN ('phrase_presentation', 'phrase_hors_sujet')`)
     if (startDate) {
-      query.where(`DATE(inbox.created_at) >= '${startDate}'`)
+      query.andWhere(`DATE(inbox.created_at) >= '${startDate}'`)
     }
     if (endDate) {
       query.andWhere(`DATE(inbox.created_at) <= '${endDate}'`)
