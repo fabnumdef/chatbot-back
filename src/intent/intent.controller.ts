@@ -68,11 +68,13 @@ export class IntentController {
 
   private _formatIntent(intentDto: IntentDto): Intent {
     let intent: Intent = plainToClass(Intent, snakecaseKeys(intentDto));
+    if(intent.responses.findIndex(r => !r.id) >= 0) {
+      intent.responses.map(r => {
+        delete r.id;
+      });
+    }
     intent.responses.map(r => {
       r.intent = <Intent>{id: intent.id};
-      if (!r.id) {
-        delete r.id;
-      }
     });
     intent.knowledges = intent.knowledges.filter(k => !!k.question.trim());
     intent.knowledges.map(k => {
