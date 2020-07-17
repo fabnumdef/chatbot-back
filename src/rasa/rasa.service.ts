@@ -38,6 +38,7 @@ export class RasaService {
     }
     await this.generateFiles();
     await this.trainRasa();
+    await this._deleteOldModels();
   }
 
   async isRasaTraining(): Promise<boolean> {
@@ -164,5 +165,19 @@ export class RasaService {
     });
     story += `\n\n`;
     return story;
+  }
+
+  /**
+   * Delete previous models
+   */
+  private async _deleteOldModels() {
+    try {
+      console.log(`${new Date().toLocaleString()} - DELETING OLD MODELS, KEEP 5 FOR SECURITY`);
+      await execShellCommand("rm `ls -t | awk 'NR>5'`", path.resolve(this._chatbotTemplateDir, 'models')).then(res => {
+        console.log(res);
+      });
+    } catch(e) {
+      console.error('DELETE OLD MODELS', e);
+    }
   }
 }
