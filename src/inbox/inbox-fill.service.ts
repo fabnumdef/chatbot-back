@@ -47,7 +47,7 @@ export class InboxFillService {
       const eventsSlice = events.slice(0, conversationIdx + 1);
       if(this._canGenerateInbox(eventsSlice)) {
         const inbox = this._getNextInbox(eventsSlice);
-        if(await this._intentService.intentExists(inbox.intent.id)) {
+        if(await this._intentService.intentExists(inbox.intent?.id)) {
           inboxes.push(this._getNextInbox(eventsSlice));
         }
       }

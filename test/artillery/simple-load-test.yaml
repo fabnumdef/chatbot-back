@@ -1,0 +1,32 @@
+config:
+  target: "https://dev.chatbot.fabnum.fr"
+  socketio:
+    path: "/socket-chatbot"
+  phases:
+    - duration: 1
+      arrivalRate: 1
+
+scenarios:
+  - name: "Connect and send a bunch of messages"
+    engine: "socketio"
+    flow:
+      - think: 1
+      - emit:
+          channel: "session_request"
+          data: {session_id: null}
+          response:
+            channel: "session_confirm"
+            capture:
+                regexp: '[\s\S]+'
+                transform: "this.sessionId.replace(/\"/g, '')"
+                as: "sessionId"
+      - think: 1
+      - log: "Session id is {{ sessionId }}"
+      - loop:
+          - emit:
+              channel: "user_uttered"
+              data: {"message": "Bonjour", "session_id": "{{ sessionId }}"}
+              response:
+                channel: "bot_uttered"
+          - think: 1
+        count: 1
