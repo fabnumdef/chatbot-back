@@ -91,7 +91,7 @@ export class FileService {
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
   async storeHistoricFile() {
     const botConfig = await this._configService.getChatbotConfig();
-    if(botConfig.last_training_at && moment().diff(moment(botConfig.last_training_at), 'hours') > 24) {
+    if (botConfig.last_training_at && moment().diff(moment(botConfig.last_training_at), 'hours') > 24) {
       return;
     }
     const workbook = await this._generateWorkbook();
@@ -128,13 +128,13 @@ export class FileService {
     const excelJson = this._xlsx.utils.sheet_to_json(worksheet, options);
     return excelJson.map((t: TemplateFileDto, idx: number) => {
       for (let key of Object.keys(t)) {
-        if(!!headers[key]) {
+        if (!!headers[key]) {
           t[headers[key]] = t[key];
         }
         delete t[key];
       }
       t.id = t.id?.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\W/g, '_');
-      if(!t.id) {
+      if (!t.id) {
         t.id = excelJson[idx - 1].id;
       }
       t.category = t.category?.trim();
@@ -167,7 +167,7 @@ export class FileService {
         this._addMessage(templateFileCheckResume.errors, excelIndex, `La réponse et le type de réponse n'est pas renseigné.`);
       }
       if ([ResponseType.quick_reply, ResponseType.image, ResponseType.button].includes(excelRow.response_type)
-      && ((templateFile[index - 1]?.response_type !== ResponseType.text) || (templateFile[index - 1]?.id !== excelRow.id))) {
+        && ((templateFile[index - 1]?.response_type !== ResponseType.text) || (templateFile[index - 1]?.id !== excelRow.id))) {
         this._addMessage(templateFileCheckResume.errors, excelIndex, `Ce type de réponse nécessite d'être précédée d'une réponse de type texte.`);
       }
       // Si il y a une question principale il est censé y avoir une réponse, une catégorie etc ...
@@ -234,7 +234,7 @@ export class FileService {
     });
     const intentsSaved: Intent[] = await this._intentService.saveMany(plainToClass(IntentModel, snakecaseKeys(intents)));
 
-    if(deleteIntents) {
+    if (deleteIntents) {
       this._intentService.updateManyByCondition({id: Not(In([...intentsSaved.map(i => i.id), ...['phrase_presentation', 'phrase_hors_sujet']]))},
         {status: IntentStatus.to_archive});
     }
@@ -289,14 +289,15 @@ export class FileService {
       .createQueryBuilder('intent')
       .leftJoinAndSelect('intent.responses', 'response')
       .leftJoinAndSelect('intent.knowledges', 'knowledge')
-      .where('intent.status IN (:...status)', {status: [IntentStatus.to_deploy, IntentStatus.active, IntentStatus.active_modified]})
+      .where('intent.status IN (:...status)', {status: [IntentStatus.to_deploy, IntentStatus.active, IntentStatus.in_training, IntentStatus.active_modified]})
       .orderBy({
-        'intent.id': 'ASC',
+        'intent.updated_at': 'DESC',
+        'intent.main_question': 'ASC',
         'response.id': 'ASC'
       })
       .getMany();
     let idx = 1;
-    const rows = [['ID', 'Catégorie', 'Question', 'Type de réponse', 'Réponse(s)', '', 'Questions synonymes (à séparer par un point-virgule ;)']];
+    const rows = [['ID', 'Catégorie', 'Question', 'Type de réponse', 'Réponse(s)', '', 'Questions synonymes (à séparer par un point-virgule ;)', 'Date de dernière mise à jour']];
     intents.forEach((intent: Intent) => {
       intent.responses.forEach((r, idxResponse) => {
         idx += 1;
@@ -333,7 +334,8 @@ export class FileService {
       ResponseType_Fr[intent.responses[idxResponse]?.response_type],
       intent.responses[idxResponse]?.response,
       '',
-      intent.knowledges && idxResponse === 0 ? intent.knowledges?.map(k => k.question).join('; ') : ''
+      intent.knowledges && idxResponse === 0 ? intent.knowledges?.map(k => k.question).join('; ') : '',
+      intent.updated_at.toString(10)
     ]
   }
 

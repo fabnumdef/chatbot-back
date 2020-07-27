@@ -6,6 +6,7 @@ config:
   target: "https://dev.chatbot.fabnum.fr"
   socketio:
     path: "/socket-chatbot"
+    transports: ["websocket"]
   phases:
     - duration: 60
       arrivalRate: 1

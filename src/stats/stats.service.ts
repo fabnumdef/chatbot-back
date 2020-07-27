@@ -52,4 +52,8 @@ export class StatsService {
     return this._inboxService.findRatioResponseOk(filters);
   }
 
+  getRatioResponseSure(filters: StatsFilterDto): Promise<string> {
+    return this._inboxService.findRatioResponseOk(filters, 0.95);
+  }
+
 }

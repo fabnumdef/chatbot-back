@@ -47,6 +47,7 @@ export class StatsController {
     result['avgQuestionPerVisitor'] = await this._statsService.getAvgQuestPerVisitors(filters);
     result['avgChatbotResponseTime'] = await this._statsService.getAvgResponseTime(filters);
     result['ratioChatbotResponseOk'] = await this._statsService.getRatioResponseOk(filters);
+    result['ratioChatbotResponseSure'] = await this._statsService.getRatioResponseSure(filters);
     return result;
   }
 }
