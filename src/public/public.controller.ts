@@ -8,12 +8,18 @@ import { PublicConfigDto } from "@core/dto/public-config.dto";
 import { IntentDto } from "@core/dto/intent.dto";
 import { IntentService } from "../intent/intent.service";
 import { Intent } from "@core/entities/intent.entity";
+import { FeedbackDto } from "@core/dto/feedback.dto";
+import { FeedbackService } from "../feedback/feedback.service";
+import { KnowledgeModel } from "@core/models/knowledge.model";
+import snakecaseKeys = require("snakecase-keys/index");
+import { Feedback } from "@core/entities/feedback.entity";
 
 @ApiTags('public')
 @Controller('public')
 export class PublicController {
   constructor(private readonly _configService: ChatbotConfigService,
-              private readonly _intentService: IntentService) {
+              private readonly _intentService: IntentService,
+              private readonly _feedbackService: FeedbackService) {
   }
 
   @Get('')
@@ -31,5 +37,11 @@ export class PublicController {
   async getIntents(@Param('query') query: string): Promise<IntentDto[]> {
     const intents: Intent[] = await this._intentService.findIntentsMatching(query, 10);
     return plainToClass(IntentDto, camelcaseKeys(intents, {deep: true}));
+  }
+
+  @Post('/feedback')
+  @ApiOperation({summary: 'Set a feedback from a chatbot response'})
+  createFeedback(@Body() feedback: FeedbackDto) {
+    this._feedbackService.createSafe(plainToClass(Feedback, snakecaseKeys(feedback)));
   }
 }

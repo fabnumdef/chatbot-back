@@ -26,6 +26,7 @@ import { SharedModule } from './shared/shared.module';
 import * as path from "path";
 import { MailerModule } from "@nestjs-modules/mailer";
 import { HandlebarsAdapter } from "@nestjs-modules/mailer/dist/adapters/handlebars.adapter";
+import { FeedbackModule } from './feedback/feedback.module';
 
 @Module({
   imports: [
@@ -69,7 +70,8 @@ import { HandlebarsAdapter } from "@nestjs-modules/mailer/dist/adapters/handleba
     ChatbotConfigModule,
     TerminusModule,
     PublicModule,
-    SharedModule
+    SharedModule,
+    FeedbackModule
   ],
   controllers: [RefDataController, HealthController, PublicController],
   providers: [
