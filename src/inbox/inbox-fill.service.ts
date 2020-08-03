@@ -100,8 +100,6 @@ export class InboxFillService {
   }
 
   private _canGenerateInbox(events: Events[]): boolean {
-    return events.findIndex(e => {
-      return e.type_name === 'user' || e.type_name === 'bot';
-    }) >= 0;
+    return events.findIndex(e => e.type_name === 'user') >= 0 && events.findIndex(e => e.type_name === 'bot') >= 0;
   }
 }
