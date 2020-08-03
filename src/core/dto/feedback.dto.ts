@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString } from "class-validator";
+import { IsNotEmpty, IsNumber, IsString } from "class-validator";
 import { FeedbackStatus } from "@core/enums/feedback-status.enum";
 
 export class FeedbackDto {
@@ -10,9 +10,9 @@ export class FeedbackDto {
   @IsNotEmpty()
   botResponse: string;
 
-  @IsString()
+  @IsNumber()
   @IsNotEmpty()
-  timestamp: string;
+  timestamp: number;
 
   @IsString()
   @IsNotEmpty()

@@ -10,7 +10,6 @@ import { IntentService } from "../intent/intent.service";
 import { Intent } from "@core/entities/intent.entity";
 import { FeedbackDto } from "@core/dto/feedback.dto";
 import { FeedbackService } from "../feedback/feedback.service";
-import { KnowledgeModel } from "@core/models/knowledge.model";
 import snakecaseKeys = require("snakecase-keys/index");
 import { Feedback } from "@core/entities/feedback.entity";
 
@@ -42,6 +41,7 @@ export class PublicController {
   @Post('/feedback')
   @ApiOperation({summary: 'Set a feedback from a chatbot response'})
   createFeedback(@Body() feedback: FeedbackDto) {
+    console.log('Create feedback', feedback);
     this._feedbackService.createSafe(plainToClass(Feedback, snakecaseKeys(feedback)));
   }
 }
