@@ -40,8 +40,9 @@ export class PublicController {
 
   @Post('/feedback')
   @ApiOperation({summary: 'Set a feedback from a chatbot response'})
-  createFeedback(@Body() feedback: FeedbackDto) {
-    console.log('Create feedback', feedback);
-    this._feedbackService.createSafe(plainToClass(Feedback, snakecaseKeys(feedback)));
+  async createFeedback(@Body() feedbackDto: FeedbackDto): Promise<FeedbackDto> {
+    console.log('Create feedback', feedbackDto);
+    const feedback = await this._feedbackService.createSafe(plainToClass(Feedback, snakecaseKeys(feedbackDto)));
+    return plainToClass(FeedbackDto, camelcaseKeys(feedback, {deep: true}));
   }
 }
