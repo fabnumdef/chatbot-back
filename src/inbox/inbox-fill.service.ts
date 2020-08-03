@@ -33,6 +33,7 @@ export class InboxFillService {
         timestamp: MoreThan(maxTimestamp ? maxTimestamp : 0)
       },
       order: {
+        sender_id: 'ASC',
         timestamp: 'ASC'
       }
     });
