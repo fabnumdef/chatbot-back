@@ -94,6 +94,7 @@ export class FileService {
     if (botConfig.last_training_at && moment().diff(moment(botConfig.last_training_at), 'hours') > 24) {
       return;
     }
+    console.log(`${new Date().toLocaleString()} - Storing historic file`);
     const workbook = await this._generateWorkbook();
 
     const timestamp = Date.now();
@@ -101,6 +102,7 @@ export class FileService {
     XLSX.writeFile(workbook, path.resolve(this._historicDir, pathNameWithGuid));
 
     await this._fileHistoricRepository.save({name: pathNameWithGuid});
+    console.log(`${new Date().toLocaleString()} - Finish storing historic file`);
   }
 
   async findAll() {

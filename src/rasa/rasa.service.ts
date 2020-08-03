@@ -30,15 +30,16 @@ export class RasaService {
     mkdirp(`${this._chatbotTemplateDir}/data`);
   }
 
-  // Check last events of the chatbot to fill Inbox
   @Cron(CronExpression.EVERY_10_SECONDS)
   async updateRasa() {
     if(await this.isRasaTraining() || !(await this.needRasaTraining())) {
       return;
     }
+    console.log(`${new Date().toLocaleString()} - Updating Rasa`);
     await this.generateFiles();
     await this.trainRasa();
     await this._deleteOldModels();
+    console.log(`${new Date().toLocaleString()} - Finish updating Rasa`);
   }
 
   async isRasaTraining(): Promise<boolean> {

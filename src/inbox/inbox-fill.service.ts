@@ -41,6 +41,7 @@ export class InboxFillService {
       return;
     }
 
+    console.log(`${new Date().toLocaleString()} - Updating inbox`);
     const inboxes: Inbox[] = [];
     while (events.length > 0) {
       const conversationIdx = events.findIndex(e => e.action_name === EventActionTypeEnum.action_listen);
@@ -54,6 +55,7 @@ export class InboxFillService {
       events.splice(0, conversationIdx + 1);
     }
     this._inboxesRepository.save(inboxes);
+    console.log(`${new Date().toLocaleString()} - Finishing updating inbox`);
   }
 
   private _getNextInbox(events: Events[]): Inbox {
