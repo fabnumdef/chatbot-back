@@ -16,6 +16,9 @@ import { IntentStatus } from "@core/enums/intent-status.enum";
 import * as moment from 'moment';
 import { UserService } from "../user/user.service";
 import { StatsMostAskedQuestionsDto } from "@core/dto/stats-most-asked-questions.dto";
+import { Feedback } from "@core/entities/feedback.entity";
+import { Intent } from "@core/entities/intent.entity";
+import { Between, MoreThan } from "typeorm/index";
 
 @Injectable()
 export class InboxService {
@@ -226,6 +229,31 @@ export class InboxService {
     }
 
     return query.getRawOne();
+  }
+
+  /**
+   * Update inbox status with feedback
+   * @param feedback
+   * Return true if inbox has been found / updated or false if it has not been found
+   */
+  public async updateInboxWithFeedback(feedback: Feedback): Promise<boolean> {
+    const tenMinutes = 10*600*1000;
+    // We search the right inbox +- 10 minutes
+    const inbox: Inbox = await this._inboxesRepository.findOne({
+      where: {
+        timestamp: Between(feedback.timestamp - tenMinutes, feedback.timestamp + tenMinutes),
+        sender_id: feedback.sender_id,
+        question: feedback.user_question
+      },
+    });
+
+    if(!inbox) {
+      return false;
+    }
+
+    // @ts-ignore
+    this._inboxesRepository.update(inbox.id, {status: feedback.status});
+    return true;
   }
 
 }

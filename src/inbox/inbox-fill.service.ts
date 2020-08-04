@@ -47,16 +47,16 @@ export class InboxFillService {
     while (events.length > 0) {
       const conversationIdx = events.findIndex(e => e.action_name === EventActionTypeEnum.action_listen);
       const eventsSlice = events.slice(0, conversationIdx + 1);
-      if(this._canGenerateInbox(eventsSlice)) {
+      if (this._canGenerateInbox(eventsSlice)) {
         const inbox = this._getNextInbox(eventsSlice);
-        if(await this._intentService.intentExists(inbox.intent?.id)) {
+        if (await this._intentService.intentExists(inbox.intent?.id)) {
           inboxes.push(this._getNextInbox(eventsSlice));
         }
       }
       conversationIdx > 0 ? events.splice(0, conversationIdx + 1) : events.splice(0, events.length);
     }
     this._inboxesRepository.save(inboxes);
-    console.log(`${new Date().toLocaleString()} - Finishing updating inbox`);
+    console.log(`${new Date().toLocaleString()} - Finishing updating ${inboxes.length} inbox`);
   }
 
   private _getNextInbox(events: Events[]): Inbox {
@@ -94,7 +94,7 @@ export class InboxFillService {
     inbox.response = JSON.stringify(inbox.response);
     inbox.intent_ranking = JSON.stringify(inbox.intent_ranking);
     inbox.response_time = Math.round((sendMessageTimestamp - getMessageTimestamp) * 1000);
-    if(isNaN(inbox.response_time)) {
+    if (isNaN(inbox.response_time)) {
       inbox.response_time = 100;
     }
     return inbox;

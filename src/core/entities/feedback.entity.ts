@@ -12,6 +12,9 @@ export class Feedback {
   @Column({length: 2000})
   user_question: string;
 
+  @Column({length: 255})
+  sender_id: string;
+
   @Column({length: 2000})
   bot_response: string;
 
