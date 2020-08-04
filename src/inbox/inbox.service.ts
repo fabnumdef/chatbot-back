@@ -237,7 +237,7 @@ export class InboxService {
    * Return true if inbox has been found / updated or false if it has not been found
    */
   public async updateInboxWithFeedback(feedback: Feedback): Promise<boolean> {
-    const tenMinutes = 10*600*1000;
+    const tenMinutes = 10*600;
     // We search the right inbox +- 10 minutes
     const inbox: Inbox = await this._inboxesRepository.findOne({
       where: {
