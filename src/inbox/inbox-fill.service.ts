@@ -53,7 +53,7 @@ export class InboxFillService {
           inboxes.push(this._getNextInbox(eventsSlice));
         }
       }
-      conversationIdx > 0 ? events.splice(0, conversationIdx + 1) : events.splice(0, events.length);
+      conversationIdx >= 0 ? events.splice(0, conversationIdx + 1) : events.splice(0, events.length);
     }
     this._inboxesRepository.save(inboxes);
     console.log(`${new Date().toLocaleString()} - Finishing updating ${inboxes.length} inbox`);
