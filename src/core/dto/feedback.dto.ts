@@ -10,6 +10,10 @@ export class FeedbackDto {
   @IsNotEmpty()
   botResponse: string;
 
+  @IsString()
+  @IsNotEmpty()
+  senderId: string;
+
   @IsNumber()
   @IsNotEmpty()
   timestamp: number;
