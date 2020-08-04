@@ -113,12 +113,12 @@ export class InboxService {
     const startDate = filters.startDate ? (moment(filters.startDate).format('YYYY-MM-DD')) : (moment().subtract(1, 'month').format('YYYY-MM-DD'));
     const endDate = filters.endDate ? moment(filters.endDate).format('YYYY-MM-DD') : moment().format('YYYY-MM-DD');
     const query = this._inboxesRepository.createQueryBuilder('inbox')
-      .select("DATE(inbox.created_at) AS date")
+      .select("DATE(to_timestamp(inbox.timestamp)) AS date")
       .addSelect("COUNT(*) AS count")
-      .where(`DATE(inbox.created_at) >= '${startDate}'`)
-      .andWhere(`DATE(inbox.created_at) <= '${endDate}'`)
-      .groupBy("DATE(inbox.created_at)")
-      .orderBy("DATE(inbox.created_at)", 'ASC');
+      .where(`DATE(to_timestamp(inbox.timestamp)) >= '${startDate}'`)
+      .andWhere(`DATE(to_timestamp(inbox.timestamp)) <= '${endDate}'`)
+      .groupBy("DATE(to_timestamp(inbox.timestamp))")
+      .orderBy("DATE(to_timestamp(inbox.timestamp))", 'ASC');
     return query.getRawMany();
   }
 
@@ -128,12 +128,12 @@ export class InboxService {
     const endDate = filters.endDate ? moment(filters.endDate).format('YYYY-MM-DD') : moment().format('YYYY-MM-DD');
 
     const query = this._inboxesRepository.createQueryBuilder('inbox')
-      .select("DATE(inbox.created_at) AS date")
+      .select("DATE(to_timestamp(inbox.timestamp)) AS date")
       .addSelect("COUNT(DISTINCT sender_id) AS count")
-      .where(`DATE(inbox.created_at) >= '${startDate}'`)
-      .andWhere(`DATE(inbox.created_at) <= '${endDate}'`)
-      .groupBy("DATE(inbox.created_at)")
-      .orderBy("DATE(inbox.created_at)", 'ASC');
+      .where(`DATE(to_timestamp(inbox.timestamp)) >= '${startDate}'`)
+      .andWhere(`DATE(to_timestamp(inbox.timestamp)) <= '${endDate}'`)
+      .groupBy("DATE(to_timestamp(inbox.timestamp))")
+      .orderBy("DATE(to_timestamp(inbox.timestamp))", 'ASC');
     return query.getRawMany();
   }
 
@@ -144,10 +144,10 @@ export class InboxService {
     const query = this._inboxesRepository.createQueryBuilder('inbox')
       .select("COUNT(DISTINCT sender_id) AS visitors");
     if (startDate) {
-      query.where(`DATE(inbox.created_at) >= '${startDate}'`)
+      query.where(`DATE(to_timestamp(inbox.timestamp)) >= '${startDate}'`)
     }
     if (endDate) {
-      query.andWhere(`DATE(inbox.created_at) <= '${endDate}'`)
+      query.andWhere(`DATE(to_timestamp(inbox.timestamp)) <= '${endDate}'`)
     }
     return query.getRawOne();
   }
@@ -162,10 +162,10 @@ export class InboxService {
       .innerJoin("intent", "int", 'int.id = inbox.intent')
       .where(`int.id NOT IN ('phrase_presentation', 'phrase_hors_sujet')`)
     if (startDate) {
-      query.andWhere(`DATE(inbox.created_at) >= '${startDate}'`)
+      query.andWhere(`DATE(to_timestamp(inbox.timestamp)) >= '${startDate}'`)
     }
     if (endDate) {
-      query.andWhere(`DATE(inbox.created_at) <= '${endDate}'`)
+      query.andWhere(`DATE(to_timestamp(inbox.timestamp)) <= '${endDate}'`)
     }
     query.groupBy('int.main_question')
       .orderBy('count', 'DESC', 'NULLS LAST')
@@ -180,15 +180,15 @@ export class InboxService {
     const subquery = this._inboxesRepository
       .createQueryBuilder('inbox')
       .select("inbox.sender_id")
-      .addSelect("DATE(inbox.created_at)")
+      .addSelect("DATE(to_timestamp(inbox.timestamp))")
       .addSelect("count(*) as count")
     if (startDate) {
-      subquery.where(`DATE(inbox.created_at) >= '${startDate}'`)
+      subquery.where(`DATE(to_timestamp(inbox.timestamp)) >= '${startDate}'`)
     }
     if (endDate) {
-      subquery.andWhere(`DATE(inbox.created_at) <= '${endDate}'`)
+      subquery.andWhere(`DATE(to_timestamp(inbox.timestamp)) <= '${endDate}'`)
     }
-    subquery.groupBy("(DATE(inbox.created_at)), inbox.sender_id");
+    subquery.groupBy("(DATE(to_timestamp(inbox.timestamp))), inbox.sender_id");
 
     const query = this._inboxesRepository
       .createQueryBuilder()
@@ -206,10 +206,10 @@ export class InboxService {
     const query = this._inboxesRepository.createQueryBuilder('inbox')
       .select('ROUND(avg(inbox.response_time), 0) as averageResponse');
     if (startDate) {
-      query.where(`DATE(inbox.created_at) >= '${startDate}'`)
+      query.where(`DATE(to_timestamp(inbox.timestamp)) >= '${startDate}'`)
     }
     if (endDate) {
-      query.andWhere(`DATE(inbox.created_at) <= '${endDate}'`)
+      query.andWhere(`DATE(to_timestamp(inbox.timestamp)) <= '${endDate}'`)
     }
 
     return query.getRawOne();
@@ -222,10 +222,10 @@ export class InboxService {
     const query = this._inboxesRepository.createQueryBuilder('inbox')
       .select(`100 * (SELECT COUNT(inbox.id) from inbox WHERE inbox.confidence >= ${confidence.toString(10)})/COUNT(inbox.id) as ratioResponseOk`);
     if (startDate) {
-      query.where(`DATE(inbox.created_at) >= '${startDate}'`)
+      query.where(`DATE(to_timestamp(inbox.timestamp)) >= '${startDate}'`)
     }
     if (endDate) {
-      query.andWhere(`DATE(inbox.created_at) <= '${endDate}'`)
+      query.andWhere(`DATE(to_timestamp(inbox.timestamp)) <= '${endDate}'`)
     }
 
     return query.getRawOne();
