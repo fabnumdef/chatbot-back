@@ -50,9 +50,11 @@ export class FeedbackService {
         toDelete.push(feedback.id);
       }
     }
-    await this._feedbacksRepository.delete({
-      id: In(toDelete)
-    });
+    if(toDelete && toDelete.length > 0) {
+      await this._feedbacksRepository.delete({
+        id: In(toDelete)
+      });
+    }
     console.log(`${new Date().toLocaleString()} - Finishing updating ${toDelete.length} feedbacks`);
   }
 }
