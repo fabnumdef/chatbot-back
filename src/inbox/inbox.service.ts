@@ -244,7 +244,7 @@ export class InboxService {
         timestamp: Between(feedback.timestamp - tenMinutes, feedback.timestamp + tenMinutes),
         sender_id: feedback.sender_id
       })
-      .andWhere(escape(`unaccent(upper(question)) like unaccent(${feedback.user_question.toUpperCase()})`))
+      .andWhere(escape(`unaccent(upper(%I)) like unaccent(%L)`, 'question', feedback.user_question.toUpperCase()))
       .getOne();
 
     if(!inbox) {
