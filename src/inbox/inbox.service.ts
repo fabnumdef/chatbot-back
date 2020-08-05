@@ -17,8 +17,8 @@ import * as moment from 'moment';
 import { UserService } from "../user/user.service";
 import { StatsMostAskedQuestionsDto } from "@core/dto/stats-most-asked-questions.dto";
 import { Feedback } from "@core/entities/feedback.entity";
-import { Intent } from "@core/entities/intent.entity";
-import { Between, MoreThan } from "typeorm/index";
+import * as escape from "pg-escape";
+import { Between } from "typeorm/index";
 
 @Injectable()
 export class InboxService {
@@ -237,15 +237,15 @@ export class InboxService {
    * Return true if inbox has been found / updated or false if it has not been found
    */
   public async updateInboxWithFeedback(feedback: Feedback): Promise<boolean> {
-    const tenMinutes = 10*600;
+    const tenMinutes = 10*60;
     // We search the right inbox +- 10 minutes
-    const inbox: Inbox = await this._inboxesRepository.findOne({
-      where: {
+    const inbox: Inbox = await this._inboxesRepository.createQueryBuilder('inbox')
+      .where({
         timestamp: Between(feedback.timestamp - tenMinutes, feedback.timestamp + tenMinutes),
-        sender_id: feedback.sender_id,
-        question: feedback.user_question
-      },
-    });
+        sender_id: feedback.sender_id
+      })
+      .andWhere(escape(`unaccent(upper(question)) like unaccent(${feedback.user_question.toUpperCase()})`))
+      .getOne();
 
     if(!inbox) {
       return false;
