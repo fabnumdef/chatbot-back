@@ -245,7 +245,6 @@ export class InboxService {
         sender_id: feedback.sender_id
       })
       .andWhere(escape(`unaccent(upper(%I)) like unaccent(%L)`, 'question', feedback.user_question.toUpperCase()))
-      .printSql()
       .getOne();
 
     if(!inbox) {
