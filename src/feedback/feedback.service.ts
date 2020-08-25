@@ -34,7 +34,7 @@ export class FeedbackService {
   async clearFeedbacks() {
     const deleted = await this._feedbacksRepository.createQueryBuilder()
       .delete()
-      .from('feedbacks')
+      .from('feedback')
       .where(`DATE(created_at) <= ${moment().subtract(1, 'months').format('YYYY-MM-DD')}`)
       .execute();
     console.log(`${new Date().toLocaleString()} - Deleting ${deleted.affected} feedbacks`);
