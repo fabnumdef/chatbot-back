@@ -30,7 +30,7 @@ export class FeedbackService {
   }
 
   // Remove old feedbacks
-  @Cron(CronExpression.EVERY_MINUTE)
+  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
   async clearFeedbacks() {
     const oneMonthAgo = moment().subtract(1, 'months').format('YYYY-MM-DD');
     const deleted = await this._feedbacksRepository.createQueryBuilder()
