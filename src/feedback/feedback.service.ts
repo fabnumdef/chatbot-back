@@ -5,6 +5,7 @@ import { Repository } from "typeorm";
 import { Cron, CronExpression } from "@nestjs/schedule";
 import { InboxService } from "../inbox/inbox.service";
 import { In } from "typeorm/index";
+import * as moment from 'moment';
 
 @Injectable()
 export class FeedbackService {
@@ -26,6 +27,15 @@ export class FeedbackService {
       this._feedbacksRepository.update({id: fEntity.id}, {status: feedback.status});
     }
     return feedback;
+  }
+
+  // Remove old feedbacks
+  @Cron(CronExpression.EVERY_MINUTE)
+  async clearFeedbacks() {
+    const deleted = await this._feedbacksRepository.delete(
+      `DATE(created_at) <= ${moment().subtract(1, 'months').format('YYYY-MM-DD')}`
+    );
+    console.log(`${new Date().toLocaleString()} - Deleting ${deleted.affected} feedbacks`);
   }
 
   // Check last feedbacks to update Inbox
