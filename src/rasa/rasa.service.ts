@@ -99,13 +99,13 @@ export class RasaService {
     intents.forEach(intent => {
       // Fill NLU
       nlu.push(new RasaNluModel(intent.id));
-      const examples = nlu[nlu.length - 1].examples;
-      examples.push(intent.id);
+      let examples = nlu[nlu.length - 1].examples;
+      examples += `- ${intent.id}\n`;
       if (intent.main_question) {
-        examples.push(intent.main_question);
+        examples += `- ${intent.main_question}\n`;
       }
       intent.knowledges.forEach(knowledge => {
-        examples.push(knowledge.question);
+        examples += `- ${knowledge.question}\n`;
       });
 
       // Fill DOMAINS
