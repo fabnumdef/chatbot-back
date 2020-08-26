@@ -1,14 +1,23 @@
+import { RasaNluModel } from "@core/models/rasa-nlu.model";
+import { RasaStoryModel } from "@core/models/rasa-story.model";
+
 export class RasaDomainModel {
+  version: string;
   intents: string[];
   responses: { [key: string]: RasaUtterResponseModel[] };
   session_config: {
     session_expiration_time: number;
     carry_over_slots_to_new_session: boolean
   };
+  nlu: RasaNluModel[];
+  stories: RasaStoryModel[];
 
   constructor() {
+    this.version = '2.0';
     this.intents = [];
     this.responses = {};
+    this.nlu = [];
+    this.stories = [];
     this.session_config = {
       session_expiration_time: 60,
       carry_over_slots_to_new_session: true

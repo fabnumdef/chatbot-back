@@ -14,6 +14,7 @@ import { IntentStatus } from "@core/enums/intent-status.enum";
 import * as mkdirp from "mkdirp";
 import { Cron, CronExpression } from "@nestjs/schedule";
 import { FileService } from "../file/file.service";
+import { RasaStoryModel } from "@core/models/rasa-story.model";
 
 const fs = require('fs');
 const yaml = require('js-yaml');
@@ -90,31 +91,41 @@ export class RasaService {
    * @private
    */
   private _intentsToRasa(intents: Intent[]) {
-    const nlu = new RasaNluModel();
+    console.log(intents[0]);
+    console.log(intents[1]);
     const domain = new RasaDomainModel();
-    let stories: string = '';
+    const nlu = domain.nlu;
+    const stories = domain.stories;
 
     domain.intents = intents.map(i => i.id);
     intents.forEach(intent => {
       // Fill NLU
-      const commonExamples = nlu.rasa_nlu_data.common_examples;
-      commonExamples.push({intent: intent.id, text: intent.id});
+      nlu.push(new RasaNluModel(intent.id));
+      const examples = nlu[nlu.length - 1].examples;
+      examples.push(intent.id);
       if (intent.main_question) {
-        commonExamples.push({intent: intent.id, text: intent.main_question});
+        examples.push(intent.main_question);
       }
       intent.knowledges.forEach(knowledge => {
-        commonExamples.push({intent: intent.id, text: knowledge.question});
+        examples.push(knowledge.question);
       });
 
-      // Fill DOMAINS & STORIES
+      // Fill DOMAINS
       const responses = this._generateDomainUtter(intent);
-      stories += this._generateStory(Object.keys(responses), intent.id);
+
+      // Fill STORIES
+      stories.push(new RasaStoryModel(intent.id));
+      const steps = stories[stories.length - 1].steps;
+      steps.push({intent: intent.id});
+      Object.keys(responses).forEach(utter => {
+        steps.push({action: utter});
+      });
       domain.responses = Object.assign(responses, domain.responses);
     });
 
-    fs.writeFileSync(`${this._chatbotTemplateDir}/data/nlu.json`, JSON.stringify(nlu), 'utf8');
-    fs.writeFileSync(`${this._chatbotTemplateDir}/domain.yml`, yaml.safeDump(domain), 'utf8');
-    fs.writeFileSync(`${this._chatbotTemplateDir}/data/stories.md`, stories, 'utf8');
+    console.log(domain);
+
+    // fs.writeFileSync(`${this._chatbotTemplateDir}/domain.yml`, yaml.safeDump(domain), 'utf8');
   }
 
   /**
@@ -151,21 +162,6 @@ export class RasaService {
       }
     });
     return responses;
-  }
-
-  /**
-   * Generate a story in Markdown format from utters of an intent
-   * @param utters
-   * @param intentId
-   */
-  private _generateStory(utters: string[], intentId: string): string {
-    let story = `## ${intentId}`;
-    story += `\n* ${intentId}`;
-    utters.forEach(utter => {
-      story += `\n  - ${utter}`;
-    });
-    story += `\n\n`;
-    return story;
   }
 
   /**
