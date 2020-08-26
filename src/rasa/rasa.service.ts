@@ -91,8 +91,6 @@ export class RasaService {
    * @private
    */
   private _intentsToRasa(intents: Intent[]) {
-    console.log(intents[0]);
-    console.log(intents[1]);
     const domain = new RasaDomainModel();
     const nlu = domain.nlu;
     const stories = domain.stories;
@@ -123,9 +121,7 @@ export class RasaService {
       domain.responses = Object.assign(responses, domain.responses);
     });
 
-    console.log(domain);
-
-    // fs.writeFileSync(`${this._chatbotTemplateDir}/domain.yml`, yaml.safeDump(domain), 'utf8');
+    fs.writeFileSync(`${this._chatbotTemplateDir}/domain.yml`, yaml.safeDump(domain), 'utf8');
   }
 
   /**
