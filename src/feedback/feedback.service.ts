@@ -29,18 +29,6 @@ export class FeedbackService {
     return feedback;
   }
 
-  // Remove old feedbacks
-  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
-  async clearFeedbacks() {
-    const oneMonthAgo = moment().subtract(1, 'months').format('YYYY-MM-DD');
-    const deleted = await this._feedbacksRepository.createQueryBuilder()
-      .delete()
-      .from('feedback')
-      .where(`DATE(created_at) <= '${oneMonthAgo}'`)
-      .execute();
-    console.log(`${new Date().toLocaleString()} - Deleting ${deleted.affected} feedbacks`);
-  }
-
   // Check last feedbacks to update Inbox
   @Cron(CronExpression.EVERY_10_SECONDS)
   async checkFeedbacks() {
