@@ -61,7 +61,7 @@ export class RasaService {
     await this._intentService.updateManyByCondition({status: In([IntentStatus.to_deploy, IntentStatus.active_modified])}, {status: IntentStatus.in_training});
     try {
       console.log(`${new Date().toLocaleString()} - TRAINING RASA`);
-      await execShellCommand(`rasa train --augmentation 50`, this._chatbotTemplateDir).then(res => {
+      await execShellCommand(`rasa train --augmentation 50 --num-threads 4`, this._chatbotTemplateDir).then(res => {
         console.log(res);
       });
       console.log(`${new Date().toLocaleString()} - KILLING SCREEN`);
@@ -124,8 +124,8 @@ export class RasaService {
     fs.writeFileSync(`${this._chatbotTemplateDir}/domain.yml`, yaml.safeDump(domain), 'utf8');
 
     // TODO DELETE WHEN RASA 2.0
-    fs.writeFileSync(`${this._chatbotTemplateDir}/data/nlu.yml`, yaml.safeDump(nlu), 'utf8');
-    fs.writeFileSync(`${this._chatbotTemplateDir}/data/stories.yml`, yaml.safeDump(stories), 'utf8');
+    fs.writeFileSync(`${this._chatbotTemplateDir}/data/nlu.yml`, yaml.safeDump({version: "2.0", nlu: nlu}), 'utf8');
+    fs.writeFileSync(`${this._chatbotTemplateDir}/data/stories.yml`, yaml.safeDump({version: "2.0", stories: stories}), 'utf8');
   }
 
   /**
