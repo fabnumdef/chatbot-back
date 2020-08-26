@@ -141,6 +141,7 @@ export class IntentService {
   findIntentsMatching(query: string, intentsNumber = 10): Promise<Intent[]> {
     return this.getIntentQueryBuilder(PaginationUtils.setQuery(<PaginationQueryDto> {query: query}, Intent.getAttributesToSearch()), null)
       .select(['id', 'main_question', 'category'])
+      .orderBy('main_question', 'ASC', 'NULLS LAST')
       .take(intentsNumber)
       .getRawMany();
   }
