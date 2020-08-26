@@ -4,6 +4,7 @@ import { IntentService } from "../intent/intent.service";
 import { KnowledgeService } from "../knowledge/knowledge.service";
 import { InboxService } from "../inbox/inbox.service";
 import { StatsMostAskedQuestionsDto } from "@core/dto/stats-most-asked-questions.dto";
+import { FeedbackService } from "../feedback/feedback.service";
 
 
 
@@ -12,7 +13,8 @@ export class StatsService {
 
   constructor(private readonly _intentService: IntentService,
               private readonly _knowledgeService: KnowledgeService,
-              private readonly _inboxService: InboxService) {
+              private readonly _inboxService: InboxService,
+              private readonly _feedbackService: FeedbackService) {
 
   }
 
@@ -30,6 +32,10 @@ export class StatsService {
 
   getNbIntent(filters: StatsFilterDto): Promise<Array<string>> {
     return this._intentService.findNbIntentByTime(filters);
+  }
+
+  getNbFeedbacks(filters: StatsFilterDto): Promise<Array<string>> {
+    return this._feedbackService.findNbFeedbackByTime(filters);
   }
 
   getMostAskedQuestions(filters: StatsFilterDto): Promise<StatsMostAskedQuestionsDto[]> {

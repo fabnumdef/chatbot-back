@@ -167,7 +167,7 @@ export class IntentService {
   }
 
   async delete(intentId): Promise<UpdateResult> {
-    if (['phrase_presentation', 'phrase_hors_sujet'].includes(intentId)) {
+    if (['phrase_presentation', 'phrase_hors_sujet', 'phrase_feedback'].includes(intentId)) {
       throw new HttpException('Impossible de supprimer les phrases de présentation et d\'hors sujet.', HttpStatus.INTERNAL_SERVER_ERROR);
     }
     const intentDeleted = await this._intentsRepository.update({id: intentId}, {status: IntentStatus.to_archive});

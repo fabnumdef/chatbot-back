@@ -20,6 +20,7 @@ export class StatsController {
     result['askedQuestionsNumber'] = await this._statsService.getNbAskedQuestions(filters);
     result['visitorNumber'] = await this._statsService.getNbVisitors(filters);
     result['dbQuestionSize'] = await this._statsService.getNbIntent(filters);
+    result['feedbacksNumber'] = await this._statsService.getNbFeedbacks(filters);
     return result;
   }
 

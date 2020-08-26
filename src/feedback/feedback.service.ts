@@ -6,6 +6,7 @@ import { Cron, CronExpression } from "@nestjs/schedule";
 import { InboxService } from "../inbox/inbox.service";
 import { In } from "typeorm/index";
 import * as moment from 'moment';
+import { StatsFilterDto } from "@core/dto/stats-filter.dto";
 
 @Injectable()
 export class FeedbackService {
@@ -57,5 +58,18 @@ export class FeedbackService {
       });
     }
     console.log(`${new Date().toLocaleString()} - Finishing updating ${toDelete.length} feedbacks`);
+  }
+
+  findNbFeedbackByTime(filters: StatsFilterDto): Promise<Array<string>> {
+    const startDate = filters.startDate ? (moment(filters.startDate).format('YYYY-MM-DD')) : (moment().subtract(1, 'month').format('YYYY-MM-DD'));
+    const endDate = filters.endDate ? moment(filters.endDate).format('YYYY-MM-DD') : moment().format('YYYY-MM-DD');
+    const query = this._feedbacksRepository.createQueryBuilder('feedback')
+      .select("DATE(feedback.created_at) AS date")
+      .addSelect("COUNT(*) AS count")
+      .where(`DATE(feedback.created_at) >= '${startDate}'`)
+      .andWhere(`DATE(feedback.created_at) <= '${endDate}'`)
+      .groupBy("DATE(feedback.created_at)")
+      .orderBy("DATE(feedback.created_at)", 'ASC');
+    return query.getRawMany();
   }
 }
