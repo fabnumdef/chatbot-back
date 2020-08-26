@@ -122,6 +122,10 @@ export class RasaService {
     });
 
     fs.writeFileSync(`${this._chatbotTemplateDir}/domain.yml`, yaml.safeDump(domain), 'utf8');
+
+    // TODO DELETE WHEN RASA 2.0
+    fs.writeFileSync(`${this._chatbotTemplateDir}/data/nlu.yml`, yaml.safeDump(nlu), 'utf8');
+    fs.writeFileSync(`${this._chatbotTemplateDir}/data/stories.yml`, yaml.safeDump(stories), 'utf8');
   }
 
   /**
