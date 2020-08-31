@@ -34,7 +34,7 @@ export class PublicController {
   @Get('/intents')
   @ApiOperation({summary: 'Return the 10 firsts matching intents'})
   async getIntents(@Query('query') query: string): Promise<IntentDto[]> {
-    const intents: Intent[] = await this._intentService.findIntentsMatching(query, 10);
+    const intents: Intent[] = await this._intentService.findIntentsMatching(decodeURIComponent(query), 10);
     return plainToClass(IntentDto, camelcaseKeys(intents, {deep: true}));
   }
 
