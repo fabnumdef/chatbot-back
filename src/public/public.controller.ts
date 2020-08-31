@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { ChatbotConfigService } from "../chatbot-config/chatbot-config.service";
 import { ApiOperation, ApiTags } from "@nestjs/swagger";
 import { ChatbotConfig } from "@core/entities/chatbot-config.entity";
@@ -31,9 +31,9 @@ export class PublicController {
     return config ? plainToClass(PublicConfigDto, camelcaseKeys(config, {deep: true})) : null;
   }
 
-  @Get('/intents/:query')
+  @Get('/intents')
   @ApiOperation({summary: 'Return the 10 firsts matching intents'})
-  async getIntents(@Param('query') query: string): Promise<IntentDto[]> {
+  async getIntents(@Query('query') query: string): Promise<IntentDto[]> {
     const intents: Intent[] = await this._intentService.findIntentsMatching(query, 10);
     return plainToClass(IntentDto, camelcaseKeys(intents, {deep: true}));
   }
