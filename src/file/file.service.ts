@@ -24,6 +24,7 @@ import snakecaseKeys = require("snakecase-keys");
 import { Cron, CronExpression } from "@nestjs/schedule";
 import * as moment from 'moment';
 import { ChatbotConfigService } from "../chatbot-config/chatbot-config.service";
+import { AppConstants } from "@core/constant";
 
 const XLSX = require('xlsx');
 const uuid = require('uuid');
@@ -183,7 +184,7 @@ export class FileService {
         }
         // Si il n'y a pas de question principale, c'est censé être une suite de réponse (et donc avoir une question principale relié ou un lien vers cet id)
       } else {
-        const excludedIds = ['phrase_presentation', 'phrase_hors_sujet', 'phrase_feedback'];
+        const excludedIds = AppConstants.General.excluded_Ids;
         const mainQuestion = templateFile.find(t =>
           (t.id === excelRow.id && !!t.main_question) || (t.response && t.response.includes(`<${excelRow.id}>`))
         );
@@ -224,7 +225,7 @@ export class FileService {
     const intents: IntentModel[] = [];
     templateFile.forEach(t => {
       if (t.id
-        && (!!t.main_question || ['phrase_presentation', 'phrase_hors_sujet', 'phrase_feedback'].includes(t.id))
+        && (!!t.main_question || AppConstants.General.excluded_Ids.includes(t.id))
         && !intents.find(i => i.id === t.id)) {
         intents.push({
           id: t.id,
@@ -237,7 +238,7 @@ export class FileService {
     const intentsSaved: Intent[] = await this._intentService.saveMany(plainToClass(IntentModel, snakecaseKeys(intents)));
 
     if (deleteIntents) {
-      this._intentService.updateManyByCondition({id: Not(In([...intentsSaved.map(i => i.id), ...['phrase_presentation', 'phrase_hors_sujet', 'phrase_feedback']]))},
+      this._intentService.updateManyByCondition({id: Not(In([...intentsSaved.map(i => i.id), ...AppConstants.General.excluded_Ids]))},
         {status: IntentStatus.to_archive});
     }
 

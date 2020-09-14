@@ -19,6 +19,7 @@ import { StatsMostAskedQuestionsDto } from "@core/dto/stats-most-asked-questions
 import { Feedback } from "@core/entities/feedback.entity";
 import * as escape from "pg-escape";
 import { Between } from "typeorm/index";
+import { AppConstants } from "@core/constant";
 
 @Injectable()
 export class InboxService {
@@ -160,7 +161,7 @@ export class InboxService {
       .select('int.main_question AS question')
       .addSelect("COUNT(inbox.intent) AS count")
       .innerJoin("intent", "int", 'int.id = inbox.intent')
-      .where(`int.id NOT IN ('phrase_presentation', 'phrase_hors_sujet', 'phrase_feedback')`)
+      .where('int.id NOT IN (:...excludedIds)', {excludedIds: AppConstants.General.excluded_Ids})
     if (startDate) {
       query.andWhere(`DATE(to_timestamp(inbox.timestamp)) >= '${startDate}'`)
     }
