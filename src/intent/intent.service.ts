@@ -225,6 +225,7 @@ export class IntentService {
         }
         return subq
       }, 't1', 't1.intentid = intent.id')
+      .where("intent.id NOT LIKE 'ST_%'")
       .groupBy("intent.main_question")
       .having("COUNT(t1.intentid) = 0")
       .orderBy("intent.main_question", 'ASC');
