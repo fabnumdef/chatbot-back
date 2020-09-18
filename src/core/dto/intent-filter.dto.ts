@@ -5,6 +5,9 @@ export class IntentFilterDto {
   categories: string[];
 
   @IsOptional()
+  intentInError: boolean;
+
+  @IsOptional()
   expiresAt: string;
 
   @IsOptional()

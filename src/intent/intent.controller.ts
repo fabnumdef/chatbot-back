@@ -39,7 +39,7 @@ export class IntentController {
   async getIntentsPagination(@Query() options: PaginationQueryDto,
                              @Body() filters: IntentFilterDto): Promise<IntentDto[]> {
     const intents: Pagination<Intent> = await this._intentService.paginate(options, filters);
-    intents.items.map(i => plainToClass(IntentDto, camelcaseKeys(i, {deep: true})));
+    intents.items.filter(i => !!i).map(i => plainToClass(IntentDto, camelcaseKeys(i, {deep: true})));
     // @ts-ignore
     return camelcaseKeys(intents, {deep: true});
   }

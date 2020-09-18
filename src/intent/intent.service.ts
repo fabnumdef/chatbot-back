@@ -90,6 +90,9 @@ export class IntentService {
     } else if (filters.expires) {
       query.andWhere('intent.expires_at is not null');
     }
+    if(filters.intentInError) {
+      query.andWhere('(SELECT count(*) FROM "knowledge" WHERE "knowledge"."intentId" = "intent"."id") < 2');
+    }
 
     return query;
   }
@@ -140,7 +143,7 @@ export class IntentService {
   }
 
   findIntentsMatching(query: string, intentsNumber = 10): Promise<Intent[]> {
-    return this.getIntentQueryBuilder(PaginationUtils.setQuery(<PaginationQueryDto> {query: query}, Intent.getAttributesToSearch()), null)
+    return this.getIntentQueryBuilder(PaginationUtils.setQuery(<PaginationQueryDto>{query: query}, Intent.getAttributesToSearch()), null)
       .select(['id', 'main_question', 'category'])
       .orderBy('main_question', 'ASC', 'NULLS LAST')
       .take(intentsNumber)
