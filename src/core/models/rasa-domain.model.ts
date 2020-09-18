@@ -13,6 +13,7 @@ export class RasaDomainModel {
   // nlu: RasaNluModel[];
   // stories: RasaStoryModel[];
   // rules: RasaRuleModel[];
+  actions: string[];
 
   constructor() {
     this.version = "2.0";
@@ -21,6 +22,7 @@ export class RasaDomainModel {
     // this.nlu = [];
     // this.stories = [];
     // this.rules = [];
+    this.actions = [];
     this.session_config = {
       session_expiration_time: 60,
       carry_over_slots_to_new_session: true
