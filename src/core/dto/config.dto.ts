@@ -64,4 +64,8 @@ export class ConfigDto {
   @IsNotEmpty()
   @MaxLength(500)
   help: string;
+
+  @IsBoolean()
+  @IsOptional()
+  storage: boolean;
 }
