@@ -1,7 +1,7 @@
 import { StatsFilterDto } from './../core/dto/stats-filter.dto';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from "@nestjs/typeorm";
-import { FindManyOptions, Repository } from "typeorm";
+import { FindManyOptions, LessThan, Repository } from "typeorm";
 import { Inbox } from "@core/entities/inbox.entity";
 import { InboxStatus } from "@core/enums/inbox-status.enum";
 import { PaginationQueryDto } from "@core/dto/pagination-query.dto";
@@ -20,6 +20,8 @@ import { Feedback } from "@core/entities/feedback.entity";
 import * as escape from "pg-escape";
 import { Between } from "typeorm/index";
 import { AppConstants } from "@core/constant";
+import { Cron, CronExpression } from "@nestjs/schedule";
+import { Events } from "@core/entities/events.entity";
 
 @Injectable()
 export class InboxService {
@@ -28,7 +30,16 @@ export class InboxService {
               private readonly _inboxesRepository: Repository<Inbox>,
               private readonly _knowledgeService: KnowledgeService,
               private readonly _intentService: IntentService,
-              private readonly _userService: UserService) {
+              private readonly _userService: UserService,
+              @InjectRepository(Events)
+              private readonly _eventsRepository: Repository<Events>,) {
+  }
+
+  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
+  private _clearOldValues() {
+    const threeYearsAgo = moment().subtract(3, 'years').unix();
+    this._clearInboxes(threeYearsAgo);
+    this._clearEvents(threeYearsAgo);
   }
 
   findAll(params = {
@@ -238,7 +249,7 @@ export class InboxService {
    * Return true if inbox has been found / updated or false if it has not been found
    */
   public async updateInboxWithFeedback(feedback: Feedback): Promise<boolean> {
-    const tenMinutes = 10*60;
+    const tenMinutes = 10 * 60;
     // We search the right inbox +- 10 minutes
     const inbox: Inbox = await this._inboxesRepository.createQueryBuilder('inbox')
       .where({
@@ -248,13 +259,26 @@ export class InboxService {
       .andWhere(escape(`unaccent(upper(%I)) like unaccent(%L)`, 'question', feedback.user_question.toUpperCase()))
       .getOne();
 
-    if(!inbox) {
+    if (!inbox) {
       return false;
     }
 
     // @ts-ignore
     this._inboxesRepository.update(inbox.id, {status: feedback.status});
     return true;
+  }
+
+  private async _clearInboxes(timestamp: number) {
+    await this._inboxesRepository.update({
+      timestamp: LessThan(timestamp)
+    }, {question: null, response: null});
+  }
+
+  private async _clearEvents(timestamp: number) {
+    await this._eventsRepository.update({
+      timestamp: LessThan(timestamp),
+      type_name: 'user'
+    }, {data: null});
   }
 
 }

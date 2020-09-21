@@ -49,4 +49,7 @@ export class ChatbotConfig {
 
   @Column({ nullable: true, length: 500 })
   help: string;
+
+  @Column({ default: false })
+  storage: boolean;
 }
