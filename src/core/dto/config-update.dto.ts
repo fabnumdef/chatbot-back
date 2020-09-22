@@ -50,4 +50,8 @@ export class ConfigUpdateDto {
   @IsOptional()
   @MaxLength(500)
   help: string;
+
+  @IsString()
+  @IsOptional()
+  storage: string;
 }
