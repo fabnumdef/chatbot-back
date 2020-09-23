@@ -100,7 +100,6 @@ export class RasaService {
       // Fill NLU
       nlu.push(new RasaNluModel(intent.id));
       let examples = '';
-      examples += `- ${intent.id}\n`;
       if (intent.main_question) {
         examples += `- ${intent.main_question}\n`;
       }
