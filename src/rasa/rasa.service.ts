@@ -143,20 +143,12 @@ export class RasaService {
           responses[`utter_${intent.id}_${index - 1}`][0].image = response.response;
           break;
         case ResponseType.button:
+        case ResponseType.quick_reply:
           const buttons: string[] = response.response.split(';');
           responses[`utter_${intent.id}_${index - 1}`][0].buttons = [];
           let utter_buttons = responses[`utter_${intent.id}_${index - 1}`][0].buttons;
           buttons.forEach(button => {
             utter_buttons.push(new RasaButtonModel(button));
-          });
-          responses[`utter_${intent.id}_${index - 1}`][0].buttons = [new RasaButtonModel(response.response)];
-          break;
-        case ResponseType.quick_reply:
-          const quick_replies: string[] = response.response.split(';');
-          responses[`utter_${intent.id}_${index - 1}`][0].buttons = [];
-          let utter_buttons_bis = responses[`utter_${intent.id}_${index - 1}`][0].buttons;
-          quick_replies.forEach(quick_reply => {
-            utter_buttons_bis.push(new RasaButtonModel(quick_reply));
           });
           break;
       }
