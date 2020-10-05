@@ -45,8 +45,6 @@ export class ChatbotConfigService {
   }
 
   static imageFileFilter = (req, file, callback) => {
-    console.log('FILTER');
-    console.log(file);
     if (!file.originalname.match(/\.(jpg|png|svg)$/)) {
       return callback(new HttpException('Seul les fichiers en .jpg, .png et .svg sont acceptés.', HttpStatus.BAD_REQUEST), false);
     }

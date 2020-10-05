@@ -66,10 +66,8 @@ export class ChatbotConfigController {
   async setChatbotConfig(@UploadedFiles() files,
                          @Body() chatbotConfig: ConfigUpdateDto): Promise<ConfigDto> {
     const icon = files.icon ? files.icon[0] : null;
-    console.log('CONTROLLER');
-    console.log(icon);
     await this._configService.delete();
-    const iconName = await this._mediaService.storeFile(icon);
+    const iconName = icon ? await this._mediaService.storeFile(icon) : '';
     const configEntity = await this._configService.save(plainToClass(ChatbotConfig, snakecaseKeys({...chatbotConfig, ...{icon: iconName}})));
     await this._configService.updateFrontManifest();
     return plainToClass(ConfigDto, camelcaseKeys(configEntity, {deep: true}));
