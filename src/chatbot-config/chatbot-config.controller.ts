@@ -9,7 +9,7 @@ import {
   UseGuards,
   UseInterceptors
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiConsumes, ApiOperation, ApiTags } from "@nestjs/swagger";
+import { ApiBearerAuth, ApiBody, ApiConsumes, ApiOperation, ApiTags } from "@nestjs/swagger";
 import { JwtGuard } from "@core/guards/jwt.guard";
 import { ChatbotConfigService } from "./chatbot-config.service";
 import { plainToClass } from "class-transformer";
@@ -45,7 +45,7 @@ export class ChatbotConfigController {
   @Post('')
   @UseInterceptors(
     FileInterceptor(
-      'icon',
+      'file',
       {
         limits: {
           // 5Mb
@@ -56,13 +56,17 @@ export class ChatbotConfigController {
     )
   )
   @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    description: 'Set the chatbot config',
+    type: ConfigUpdateDto,
+  })
   @ApiOperation({summary: 'Set the chatbot config'})
   @UseGuards(JwtGuard, RolesGuard)
   @Roles(UserRole.admin)
-  async setChatbotConfig(@UploadedFile() icon,
+  async setChatbotConfig(@UploadedFile() file,
                          @Body() chatbotConfig: ConfigUpdateDto): Promise<ConfigDto> {
     await this._configService.delete();
-    const iconName = await this._mediaService.storeFile(icon);
+    const iconName = await this._mediaService.storeFile(file);
     const configEntity = await this._configService.save(plainToClass(ChatbotConfig, snakecaseKeys({...chatbotConfig, ...{icon: iconName}})));
     await this._configService.updateFrontManifest();
     return plainToClass(ConfigDto, camelcaseKeys(configEntity, {deep: true}));
