@@ -10,7 +10,7 @@ export class ConfigUpdateDto {
 
   @IsOptional()
   @ApiProperty({type: 'string', format: 'binary'})
-  icon: FileUploadDto;
+  icon: any;
 
   @IsString()
   @IsOptional()
@@ -39,7 +39,7 @@ export class ConfigUpdateDto {
 
   @IsOptional()
   @ApiProperty({type: 'string', format: 'binary'})
-  embeddedIcon: FileUploadDto;
+  embeddedIcon: any;
 
   @IsString()
   @IsOptional()

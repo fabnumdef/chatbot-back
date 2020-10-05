@@ -47,11 +47,11 @@ export class ChatbotConfigController {
     FileInterceptor(
       'icon',
       {
+        fileFilter: ChatbotConfigService.imageFileFilter,
         limits: {
           // 5Mb
           fileSize: 5e+6
         },
-        fileFilter: ChatbotConfigService.imageFileFilter,
       }
     )
   )
@@ -65,7 +65,7 @@ export class ChatbotConfigController {
   @Roles(UserRole.admin)
   async setChatbotConfig(@UploadedFile() file,
                          @Body() chatbotConfig: ConfigUpdateDto): Promise<ConfigDto> {
-    console.log('FILTER');
+    console.log('CONTROLLER');
     console.log(file);
     await this._configService.delete();
     const iconName = await this._mediaService.storeFile(file);
