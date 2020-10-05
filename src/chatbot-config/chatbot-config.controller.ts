@@ -44,16 +44,16 @@ export class ChatbotConfigController {
 
   @Post('')
   @UseInterceptors(
-    FileInterceptor(
-      'icon',
-      {
-        fileFilter: ChatbotConfigService.imageFileFilter,
-        limits: {
-          // 5Mb
-          fileSize: 5e+6
-        },
-      }
-    )
+    FileFieldsInterceptor([
+      {name: 'icon', maxCount: 1},
+      {name: 'embeddedIcon', maxCount: 1},
+    ], {
+      limits: {
+        // 5Mb
+        fileSize: 5e+6
+      },
+      fileFilter: ChatbotConfigService.imageFileFilter,
+    })
   )
   @ApiConsumes('multipart/form-data')
   @ApiBody({
@@ -63,12 +63,13 @@ export class ChatbotConfigController {
   @ApiOperation({summary: 'Set the chatbot config'})
   @UseGuards(JwtGuard, RolesGuard)
   @Roles(UserRole.admin)
-  async setChatbotConfig(@UploadedFile() file,
+  async setChatbotConfig(@UploadedFiles() files,
                          @Body() chatbotConfig: ConfigUpdateDto): Promise<ConfigDto> {
+    const icon = files.icon ? files.icon[0] : null;
     console.log('CONTROLLER');
-    console.log(file);
+    console.log(icon);
     await this._configService.delete();
-    const iconName = await this._mediaService.storeFile(file);
+    const iconName = await this._mediaService.storeFile(icon);
     const configEntity = await this._configService.save(plainToClass(ChatbotConfig, snakecaseKeys({...chatbotConfig, ...{icon: iconName}})));
     await this._configService.updateFrontManifest();
     return plainToClass(ConfigDto, camelcaseKeys(configEntity, {deep: true}));
