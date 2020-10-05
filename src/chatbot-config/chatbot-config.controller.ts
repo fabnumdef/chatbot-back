@@ -45,7 +45,7 @@ export class ChatbotConfigController {
   @Post('')
   @UseInterceptors(
     FileInterceptor(
-      'file',
+      'icon',
       {
         limits: {
           // 5Mb
@@ -65,6 +65,8 @@ export class ChatbotConfigController {
   @Roles(UserRole.admin)
   async setChatbotConfig(@UploadedFile() file,
                          @Body() chatbotConfig: ConfigUpdateDto): Promise<ConfigDto> {
+    console.log('FILTER');
+    console.log(file);
     await this._configService.delete();
     const iconName = await this._mediaService.storeFile(file);
     const configEntity = await this._configService.save(plainToClass(ChatbotConfig, snakecaseKeys({...chatbotConfig, ...{icon: iconName}})));
