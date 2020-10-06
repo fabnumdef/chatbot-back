@@ -53,13 +53,20 @@ export class ChatbotConfigService {
 
   async updateFrontManifest() {
     const frontDir = path.resolve(__dirname, '../../../chatbot-front');
+    const webchatDir = path.resolve(__dirname, '../../../webchat');
     const botConfig = await this.getChatbotConfig();
     // @ts-ignore
     const manifest = JSON.parse(fs.readFileSync(path.resolve(frontDir, 'manifest.webmanifest')));
+    // @ts-ignore
+    const manifestWebchat = JSON.parse(fs.readFileSync(path.resolve(webchatDir, 'manifest.webmanifest')));
     manifest.name = botConfig.name;
     manifest.short_name = botConfig.name;
+    manifestWebchat.name = botConfig.name;
+    manifestWebchat.short_name = botConfig.name;
     fs.writeFileSync(path.resolve(frontDir, 'manifest.webmanifest'), JSON.stringify(manifest));
+    fs.writeFileSync(path.resolve(webchatDir, 'manifest.webmanifest'), JSON.stringify(manifestWebchat));
     fs.copyFileSync(path.resolve(__dirname, '../../mediatheque', botConfig.icon), path.resolve(frontDir, 'assets/icons/icon.png'));
+    fs.copyFileSync(path.resolve(__dirname, '../../mediatheque', botConfig.icon), path.resolve(webchatDir, 'assets/icons/icon.png'));
   }
 
 }

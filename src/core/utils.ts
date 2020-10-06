@@ -1,3 +1,5 @@
+import { ExecOptions } from "child_process";
+
 /**
  * Executes a shell command and return it as a Promise.
  * @param cmd {string}
@@ -5,7 +7,7 @@
  * @return {Promise<string>}
  */
 export function execShellCommand(cmd, curDir?: string) {
-  const execOptions = {
+  const execOptions: ExecOptions = {
     cwd: curDir,
     env: {
       DEBUG: '',
