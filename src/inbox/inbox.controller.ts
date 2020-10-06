@@ -38,11 +38,12 @@ export class InboxController {
     return plainToClass(InboxDto, camelcaseKeys(inboxes, {deep: true}));
   }
 
-  @Get('export')
-  async exportFile(@Body() filters: InboxFilterDto,
+  @Post('export')
+  async exportFile(@Query() options: PaginationQueryDto,
+                   @Body() filters: InboxFilterDto,
                    @Res() res): Promise<any> {
     try{
-      const streamFile = await this._inboxService.exportXls(filters);
+      const streamFile = await this._inboxService.exportXls(options, filters);
       res.setHeader("Content-disposition", `attachment;`);
       res.contentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
       streamFile.pipe(res);

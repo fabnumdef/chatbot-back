@@ -22,8 +22,7 @@ import { Between } from "typeorm";
 import { AppConstants } from "@core/constant";
 import { Cron, CronExpression } from "@nestjs/schedule";
 import { Events } from "@core/entities/events.entity";
-// @ts-ignore
-import fs from "fs";
+import * as fs from "fs";
 import { WorkBook } from "xlsx";
 
 const XLSX = require('xlsx');
@@ -274,9 +273,9 @@ export class InboxService {
     return true;
   }
 
-  exportXls(filters: InboxFilterDto): Promise<fs.ReadStream> {
+  exportXls(options: PaginationQueryDto, filters: InboxFilterDto): Promise<fs.ReadStream> {
     return new Promise<fs.ReadStream>(async (resolve, reject) => {
-      const workbook = await this._generateWorkbook(filters);
+      const workbook = await this._generateWorkbook(options, filters);
 
       const guidForClient = uuid.v1();
       let pathNameWithGuid = `${guidForClient}_result.xlsx`;
@@ -294,16 +293,16 @@ export class InboxService {
     });
   }
 
-  private async _generateWorkbook(filters: InboxFilterDto): Promise<WorkBook> {
+  private async _generateWorkbook(options: PaginationQueryDto, filters: InboxFilterDto): Promise<WorkBook> {
     const workbook = XLSX.utils.book_new();
-    const worksheet_data = await this._generateWorksheet(filters);
+    const worksheet_data = await this._generateWorksheet(options, filters);
     const worksheet = XLSX.utils.aoa_to_sheet(worksheet_data);
     XLSX.utils.book_append_sheet(workbook, worksheet);
     return workbook;
   }
 
-  private async _generateWorksheet(filters: InboxFilterDto) {
-    const inboxes = await this.getInboxQueryBuilder({}, filters).getMany();
+  private async _generateWorksheet(options: PaginationQueryDto, filters: InboxFilterDto) {
+    const inboxes = await this.getInboxQueryBuilder(PaginationUtils.setQuery(options, Inbox.getAttributesToSearch()), filters).getMany();
     let idx = 1;
     const rows = [['Question', 'Statut', 'Date de la question']];
     inboxes.forEach((inbox: Inbox) => {
