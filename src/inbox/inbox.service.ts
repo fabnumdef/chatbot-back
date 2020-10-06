@@ -5,7 +5,7 @@ import { FindManyOptions, LessThan, Repository } from "typeorm";
 import { Inbox } from "@core/entities/inbox.entity";
 import { InboxStatus } from "@core/enums/inbox-status.enum";
 import { PaginationQueryDto } from "@core/dto/pagination-query.dto";
-import { paginate, Pagination } from "nestjs-typeorm-paginate/index";
+import { paginate, Pagination } from "nestjs-typeorm-paginate";
 import { PaginationUtils } from "@core/pagination-utils";
 import { InboxFilterDto } from "@core/dto/inbox-filter.dto";
 import { UpdateResult } from "typeorm/query-builder/result/UpdateResult";
@@ -18,10 +18,16 @@ import { UserService } from "../user/user.service";
 import { StatsMostAskedQuestionsDto } from "@core/dto/stats-most-asked-questions.dto";
 import { Feedback } from "@core/entities/feedback.entity";
 import * as escape from "pg-escape";
-import { Between } from "typeorm/index";
+import { Between } from "typeorm";
 import { AppConstants } from "@core/constant";
 import { Cron, CronExpression } from "@nestjs/schedule";
 import { Events } from "@core/entities/events.entity";
+// @ts-ignore
+import fs from "fs";
+import { WorkBook } from "xlsx";
+
+const XLSX = require('xlsx');
+const uuid = require('uuid');
 
 @Injectable()
 export class InboxService {
@@ -266,6 +272,59 @@ export class InboxService {
     // @ts-ignore
     this._inboxesRepository.update(inbox.id, {status: feedback.status});
     return true;
+  }
+
+  exportXls(filters: InboxFilterDto): Promise<fs.ReadStream> {
+    return new Promise<fs.ReadStream>(async (resolve, reject) => {
+      const workbook = await this._generateWorkbook(filters);
+
+      const guidForClient = uuid.v1();
+      let pathNameWithGuid = `${guidForClient}_result.xlsx`;
+      XLSX.writeFile(workbook, pathNameWithGuid);
+      let stream = fs.createReadStream(pathNameWithGuid);
+      stream.on("close", () => {
+        fs.unlink(pathNameWithGuid, (error) => {
+          if (error) {
+            throw error;
+          }
+        });
+      });
+      resolve(stream);
+      return;
+    });
+  }
+
+  private async _generateWorkbook(filters: InboxFilterDto): Promise<WorkBook> {
+    const workbook = XLSX.utils.book_new();
+    const worksheet_data = await this._generateWorksheet(filters);
+    const worksheet = XLSX.utils.aoa_to_sheet(worksheet_data);
+    XLSX.utils.book_append_sheet(workbook, worksheet);
+    return workbook;
+  }
+
+  private async _generateWorksheet(filters: InboxFilterDto) {
+    const inboxes = await this.getInboxQueryBuilder({}, filters).getMany();
+    let idx = 1;
+    const rows = [['Question', 'Statut', 'Date de la question']];
+    inboxes.forEach((inbox: Inbox) => {
+      idx += 1;
+      rows.push(this._generateRow(inbox, idx));
+    });
+    return rows;
+  }
+  /**
+   * Generate row for a worksheet
+   * @param intent
+   * @param idx
+   * @param idxResponse
+   * @private
+   */
+  private _generateRow(inbox: Inbox, idx: number) {
+    return [
+      inbox.question,
+      inbox.status,
+      inbox.created_at.toString(10)
+    ]
   }
 
   private async _clearInboxes(timestamp: number) {
