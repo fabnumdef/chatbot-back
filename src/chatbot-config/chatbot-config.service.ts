@@ -6,6 +6,7 @@ import { MediaService } from "../media/media.service";
 import { UpdateResult } from "typeorm/query-builder/result/UpdateResult";
 import * as path from "path";
 import * as fs from "fs";
+import * as mkdirp from "mkdirp";
 
 @Injectable()
 export class ChatbotConfigService {
@@ -55,6 +56,12 @@ export class ChatbotConfigService {
     console.log('UPDATING MANIFESTS');
     const frontDir = path.resolve(__dirname, '../../../chatbot-front');
     const webchatDir = path.resolve(__dirname, '../../../webchat');
+
+
+    // Create folder if it does not exists
+    mkdirp(`${frontDir}/assets/icons`);
+    mkdirp(`${webchatDir}/assets/icons`);
+
     const botConfig = await this.getChatbotConfig();
     // @ts-ignore
     const manifest = JSON.parse(fs.readFileSync(path.resolve(frontDir, 'manifest.webmanifest')));
