@@ -42,7 +42,6 @@ export class InboxFillService {
       return;
     }
 
-    console.log(`${new Date().toLocaleString()} - Updating inbox`);
     const inboxes: Inbox[] = [];
     while (events.length > 0) {
       const conversationIdx = events.findIndex(e => e.action_name === EventActionTypeEnum.action_listen);
@@ -55,8 +54,10 @@ export class InboxFillService {
       }
       conversationIdx >= 0 ? events.splice(0, conversationIdx + 1) : events.splice(0, events.length);
     }
-    this._inboxesRepository.save(inboxes);
-    console.log(`${new Date().toLocaleString()} - Finishing updating ${inboxes.length} inbox`);
+    if (inboxes.length > 0) {
+      await this._inboxesRepository.save(inboxes);
+      console.log(`${new Date().toLocaleString()} - Finishing updating ${inboxes.length} inbox`);
+    }
   }
 
   private _getNextInbox(events: Events[]): Inbox {

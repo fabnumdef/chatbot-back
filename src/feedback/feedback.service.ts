@@ -43,7 +43,6 @@ export class FeedbackService {
       return;
     }
 
-    console.log(`${new Date().toLocaleString()} - Updating feedbacks`);
     const toDelete = [];
     for(let i = 0; i < feedbacks.length; i++) {
       const feedback = feedbacks[i];
@@ -56,8 +55,8 @@ export class FeedbackService {
       await this._feedbacksRepository.delete({
         id: In(toDelete)
       });
+      console.log(`${new Date().toLocaleString()} - Finishing updating ${toDelete.length} feedbacks`);
     }
-    console.log(`${new Date().toLocaleString()} - Finishing updating ${toDelete.length} feedbacks`);
   }
 
   findNbFeedbackByTime(filters: StatsFilterDto): Promise<Array<string>> {
