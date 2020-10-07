@@ -7,6 +7,7 @@ import { UpdateResult } from "typeorm/query-builder/result/UpdateResult";
 import * as path from "path";
 import * as fs from "fs";
 import * as mkdirp from "mkdirp";
+import { Cron, CronExpression } from "@nestjs/schedule";
 
 @Injectable()
 export class ChatbotConfigService {
@@ -30,15 +31,15 @@ export class ChatbotConfigService {
 
   async delete(fromDb = true, embedded = false) {
     try {
-      if(fromDb || !embedded) {
+      if (fromDb || !embedded) {
         const currentConfig = await this.getChatbotConfig();
         await this._mediaService.deleteFile(currentConfig.icon);
       }
-      if(fromDb || embedded) {
+      if (fromDb || embedded) {
         const currentConfig = await this.getChatbotConfig();
         await this._mediaService.deleteFile(currentConfig.embedded_icon);
       }
-      if(fromDb) {
+      if (fromDb) {
         await this._configRepository.delete(1);
       }
     } catch (e) {
@@ -57,7 +58,6 @@ export class ChatbotConfigService {
     const frontDir = path.resolve(__dirname, '../../../chatbot-front');
     const webchatDir = path.resolve(__dirname, '../../../webchat');
 
-
     // Create folder if it does not exists
     mkdirp(`${frontDir}/assets/icons`);
     mkdirp(`${webchatDir}/assets/icons`);
@@ -67,14 +67,23 @@ export class ChatbotConfigService {
     const manifest = JSON.parse(fs.readFileSync(path.resolve(frontDir, 'manifest.webmanifest')));
     // @ts-ignore
     const manifestWebchat = JSON.parse(fs.readFileSync(path.resolve(webchatDir, 'manifest.webmanifest')));
-    manifest.name = botConfig.name;
-    manifest.short_name = botConfig.name;
+    manifest.name = `BACKOFFICE - ${botConfig.name}`;
+    manifest.short_name = `BACKOFFICE - ${botConfig.name}`;
     manifestWebchat.name = botConfig.name;
     manifestWebchat.short_name = botConfig.name;
     fs.writeFileSync(path.resolve(frontDir, 'manifest.webmanifest'), JSON.stringify(manifest));
     fs.writeFileSync(path.resolve(webchatDir, 'manifest.webmanifest'), JSON.stringify(manifestWebchat));
     fs.copyFileSync(path.resolve(__dirname, '../../mediatheque', botConfig.icon), path.resolve(frontDir, 'assets/icons/icon.png'));
     fs.copyFileSync(path.resolve(__dirname, '../../mediatheque', botConfig.icon), path.resolve(webchatDir, 'assets/icons/icon.png'));
+  }
+
+  // Check icons to update manifests
+  @Cron(CronExpression.EVERY_30_SECONDS)
+  private async _checkIcons() {
+    const frontDir = path.resolve(__dirname, '../../../chatbot-front');
+    if (!fs.existsSync(path.resolve(frontDir, 'assets/icons/icon.png'))) {
+      this.updateFrontManifest();
+    }
   }
 
 }

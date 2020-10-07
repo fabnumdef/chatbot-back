@@ -4,7 +4,6 @@ import {
   Get,
   Post,
   Put,
-  UploadedFile,
   UploadedFiles,
   UseGuards,
   UseInterceptors
@@ -17,7 +16,7 @@ import { ChatbotConfig } from "@core/entities/chatbot-config.entity";
 import { ConfigDto } from "@core/dto/config.dto";
 import camelcaseKeys = require("camelcase-keys");
 import snakecaseKeys = require("snakecase-keys");
-import { FileFieldsInterceptor, FileInterceptor } from "@nestjs/platform-express";
+import { FileFieldsInterceptor } from "@nestjs/platform-express";
 import { MediaService } from "../media/media.service";
 import { ConfigUpdateDto } from "@core/dto/config-update.dto";
 import { RolesGuard } from "@core/guards/roles.guard";
