@@ -3,7 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from "@nestjs/typeorm";
 import { FindManyOptions, LessThan, Repository } from "typeorm";
 import { Inbox } from "@core/entities/inbox.entity";
-import { InboxStatus } from "@core/enums/inbox-status.enum";
+import { InboxStatus, InboxStatus_Fr } from "@core/enums/inbox-status.enum";
 import { PaginationQueryDto } from "@core/dto/pagination-query.dto";
 import { paginate, Pagination } from "nestjs-typeorm-paginate";
 import { PaginationUtils } from "@core/pagination-utils";
@@ -321,7 +321,7 @@ export class InboxService {
   private _generateRow(inbox: Inbox, idx: number) {
     return [
       inbox.question,
-      inbox.status,
+      InboxStatus_Fr[inbox.status],
       inbox.created_at.toString(10)
     ]
   }
