@@ -73,7 +73,9 @@ export class UserService {
     user.role = UserRole.admin;
     user.password = bcrypt.hashSync(user.password, 10);
 
-    return await this._usersRepository.save(user);
+    const userUpdated = await this._usersRepository.save(user);
+    await this.sendEmailPasswordToken(userUpdated);
+    return userUpdated;
   }
 
   async sendEmailPasswordToken(user: User) {

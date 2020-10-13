@@ -7,4 +7,5 @@ export interface TemplateFileDto {
   response_type: ResponseType;
   response: string;
   questions: string [];
+  expires_at: any;
 }

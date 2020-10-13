@@ -76,8 +76,11 @@ export class IntentService {
           when 'to_archive' then 5
           when 'archived' then 6
           end`)
+      .addOrderBy(`case when intent.expires_at::date >= now() - interval '1 month' then intent.expires_at end`)
       .addOrderBy('intent.updated_at', 'DESC')
       .addOrderBy('intent.main_question', 'ASC');
+
+    console.log(query.getSql());
 
     if (!filters) {
       return query;

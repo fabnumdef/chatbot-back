@@ -125,7 +125,7 @@ export class FileService {
       'Type de réponse': 'response_type',
       'Réponse(s)': 'response',
       'Questions synonymes (à séparer par un point-virgule ;)': 'questions',
-      'Expire le': 'expires_at'
+      'Contenu variable (DD/MM/YYYY)': 'expires_at'
     };
     const options: Sheet2JSONOpts = {};
     const excelJson = this._xlsx.utils.sheet_to_json(worksheet, options);
@@ -144,6 +144,7 @@ export class FileService {
       t.main_question = t.main_question?.trim();
       t.questions = t.questions ? (<any>t.questions).split(';').map(q => q.trim()).filter(q => !!q) : [];
       t.response_type = ResponseType[ResponseType_ReverseFr[t.response_type]];
+      t.expires_at = t.expires_at ? moment(t.expires_at, 'DD/MM/YYYY') : null;
       return t;
     });
   }
@@ -231,7 +232,8 @@ export class FileService {
           id: t.id,
           category: t.category,
           main_question: t.main_question,
-          status: IntentStatus.to_deploy
+          status: IntentStatus.to_deploy,
+          expires_at: t.expires_at ? t.expires_at.toDate() : null
         });
       }
     });
@@ -300,7 +302,7 @@ export class FileService {
       })
       .getMany();
     let idx = 1;
-    const rows = [['ID', 'Catégorie', 'Question', 'Type de réponse', 'Réponse(s)', '', 'Questions synonymes (à séparer par un point-virgule ;)', 'Date de dernière mise à jour']];
+    const rows = [['ID', 'Catégorie', 'Question', 'Type de réponse', 'Réponse(s)', '', 'Questions synonymes (à séparer par un point-virgule ;)', 'Contenu variable (DD/MM/YYYY)',  'Date de dernière mise à jour']];
     intents.forEach((intent: Intent) => {
       intent.responses.forEach((r, idxResponse) => {
         idx += 1;
@@ -338,7 +340,8 @@ export class FileService {
       intent.responses[idxResponse]?.response,
       '',
       intent.knowledges && idxResponse === 0 ? intent.knowledges?.map(k => k.question).join('; ') : '',
-      intent.updated_at.toString(10)
+      intent.expires_at ? moment(intent.expires_at).format('DD/MM/YYYY') : '',
+      intent.updated_at ? moment(intent.updated_at).format('DD/MM/YYYY HH:mm:ss') : ''
     ]
   }
 
