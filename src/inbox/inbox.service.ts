@@ -91,10 +91,12 @@ export class InboxService {
       query.andWhere('inbox.status IN (:...statutes)', {statutes: filters.statutes});
     }
     if (filters.startDate) {
-      query.andWhere(`to_timestamp(inbox.timestamp)::date >= date '${filters.startDate}'`);
+      const startDate = moment(filters.startDate, 'DD/MM/YYYY').format('YYYY-MM-DD');
+      query.andWhere(`to_timestamp(inbox.timestamp)::date >= '${startDate}'`);
     }
     if (filters.endDate) {
-      query.andWhere(`to_timestamp(inbox.timestamp)::date <= date '${filters.endDate}'`);
+      const endDate = moment(filters.endDate, 'DD/MM/YYYY').format('YYYY-MM-DD');
+      query.andWhere(`to_timestamp(inbox.timestamp)::date <= '${endDate}'`);
     }
     if (filters.assignedTo) {
       query.andWhere(`inbox.user.email = '${filters.assignedTo}'`);
@@ -127,8 +129,8 @@ export class InboxService {
   }
 
   findNbInboxByTime(filters: StatsFilterDto): Promise<Array<string>> {
-    const startDate = filters.startDate ? (moment(filters.startDate).format('YYYY-MM-DD')) : (moment().subtract(1, 'month').format('YYYY-MM-DD'));
-    const endDate = filters.endDate ? moment(filters.endDate).format('YYYY-MM-DD') : moment().format('YYYY-MM-DD');
+    const startDate = filters.startDate ? (moment(filters.startDate, 'DD/MM/YYYY').format('YYYY-MM-DD')) : (moment().subtract(1, 'month').format('YYYY-MM-DD'));
+    const endDate = filters.endDate ? moment(filters.endDate, 'DD/MM/YYYY').format('YYYY-MM-DD') : moment().format('YYYY-MM-DD');
     const query = this._inboxesRepository.createQueryBuilder('inbox')
       .select("DATE(to_timestamp(inbox.timestamp)) AS date")
       .addSelect("COUNT(*) AS count")
@@ -141,8 +143,8 @@ export class InboxService {
 
   findNbVisitorsByTime(filters: StatsFilterDto): Promise<Array<string>> {
 
-    const startDate = filters.startDate ? (moment(filters.startDate).format('YYYY-MM-DD')) : (moment().subtract(1, 'month').format('YYYY-MM-DD'));
-    const endDate = filters.endDate ? moment(filters.endDate).format('YYYY-MM-DD') : moment().format('YYYY-MM-DD');
+    const startDate = filters.startDate ? (moment(filters.startDate, 'DD/MM/YYYY').format('YYYY-MM-DD')) : (moment().subtract(1, 'month').format('YYYY-MM-DD'));
+    const endDate = filters.endDate ? moment(filters.endDate, 'DD/MM/YYYY').format('YYYY-MM-DD') : moment().format('YYYY-MM-DD');
 
     const query = this._inboxesRepository.createQueryBuilder('inbox')
       .select("DATE(to_timestamp(inbox.timestamp)) AS date")
@@ -155,8 +157,8 @@ export class InboxService {
   }
 
   findNbUniqueVisitors(filters: StatsFilterDto): Promise<string> {
-    const startDate = filters.startDate ? (moment(filters.startDate).format('YYYY-MM-DD')) : null;
-    const endDate = filters.endDate ? moment(filters.endDate).format('YYYY-MM-DD') : null;
+    const startDate = filters.startDate ? (moment(filters.startDate, 'DD/MM/YYYY').format('YYYY-MM-DD')) : null;
+    const endDate = filters.endDate ? moment(filters.endDate, 'DD/MM/YYYY').format('YYYY-MM-DD') : null;
 
     const query = this._inboxesRepository.createQueryBuilder('inbox')
       .select("COUNT(DISTINCT sender_id) AS visitors");
@@ -170,8 +172,8 @@ export class InboxService {
   }
 
   findMostAskedQuestions(filters: StatsFilterDto): Promise<StatsMostAskedQuestionsDto[]> {
-    const startDate = filters.startDate ? (moment(filters.startDate).format('YYYY-MM-DD')) : null;
-    const endDate = filters.endDate ? moment(filters.endDate).format('YYYY-MM-DD') : null;
+    const startDate = filters.startDate ? (moment(filters.startDate, 'DD/MM/YYYY').format('YYYY-MM-DD')) : null;
+    const endDate = filters.endDate ? moment(filters.endDate, 'DD/MM/YYYY').format('YYYY-MM-DD') : null;
 
     const query = this._inboxesRepository.createQueryBuilder('inbox')
       .select('int.main_question AS question')
@@ -191,8 +193,8 @@ export class InboxService {
   }
 
   findAvgQuestPerVisitor(filters: StatsFilterDto): Promise<string> {
-    const startDate = filters.startDate ? (moment(filters.startDate).format('YYYY-MM-DD')) : null;
-    const endDate = filters.endDate ? moment(filters.endDate).format('YYYY-MM-DD') : null;
+    const startDate = filters.startDate ? (moment(filters.startDate, 'DD/MM/YYYY').format('YYYY-MM-DD')) : null;
+    const endDate = filters.endDate ? moment(filters.endDate, 'DD/MM/YYYY').format('YYYY-MM-DD') : null;
 
     const subquery = this._inboxesRepository
       .createQueryBuilder('inbox')
@@ -217,8 +219,8 @@ export class InboxService {
   }
 
   findAvgResponseTime(filters: StatsFilterDto): Promise<string> {
-    const startDate = filters.startDate ? moment(filters.startDate).format('YYYY-MM-DD') : null;
-    const endDate = filters.endDate ? moment(filters.endDate).format('YYYY-MM-DD') : null;
+    const startDate = filters.startDate ? moment(filters.startDate, 'DD/MM/YYYY').format('YYYY-MM-DD') : null;
+    const endDate = filters.endDate ? moment(filters.endDate, 'DD/MM/YYYY').format('YYYY-MM-DD') : null;
 
     const query = this._inboxesRepository.createQueryBuilder('inbox')
       .select('ROUND(avg(inbox.response_time), 0) as averageResponse');
@@ -233,8 +235,8 @@ export class InboxService {
   }
 
   async findRatioResponseOk(filters: StatsFilterDto, confidence = 0.6): Promise<string> {
-    const startDate = filters.startDate ? moment(filters.startDate).format('YYYY-MM-DD') : null;
-    const endDate = filters.endDate ? moment(filters.endDate).format('YYYY-MM-DD') : null;
+    const startDate = filters.startDate ? moment(filters.startDate, 'DD/MM/YYYY').format('YYYY-MM-DD') : null;
+    const endDate = filters.endDate ? moment(filters.endDate, 'DD/MM/YYYY').format('YYYY-MM-DD') : null;
 
     const query = this._inboxesRepository.createQueryBuilder('inbox')
       .select(`100 * (SELECT COUNT(inbox.id) from inbox WHERE inbox.confidence >= ${confidence.toString(10)})/COUNT(inbox.id) as ratioResponseOk`);
