@@ -38,6 +38,9 @@ export class ChatbotConfig {
   @Column({ nullable: false, default: false })
   need_training: boolean;
 
+  @Column({ nullable: false, default: false })
+  is_blocked: boolean;
+
   @Column({ nullable: true, type: 'timestamp' })
   last_training_at: Date;
 
@@ -52,4 +55,7 @@ export class ChatbotConfig {
 
   @Column({ default: false })
   storage: boolean;
+
+  @Column({ nullable: true, length: 255 })
+  api_key: string;
 }
