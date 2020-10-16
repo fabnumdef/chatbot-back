@@ -33,7 +33,7 @@ export class RasaService {
 
   @Cron(CronExpression.EVERY_10_SECONDS)
   async updateRasa() {
-    if(await this.isRasaTraining() || !(await this.needRasaTraining())) {
+    if(!(await this.canTrainRasa()) || !(await this.needRasaTraining())) {
       return;
     }
     console.log(`${new Date().toLocaleString()} - Updating Rasa`);
@@ -43,8 +43,8 @@ export class RasaService {
     console.log(`${new Date().toLocaleString()} - Finish updating Rasa`);
   }
 
-  async isRasaTraining(): Promise<boolean> {
-    return (await this._configService.getChatbotConfig()).training_rasa;
+  async canTrainRasa(): Promise<boolean> {
+    return !(await this._configService.getChatbotConfig()).training_rasa && !(await this._configService.getChatbotConfig()).is_blocked;
   }
 
   async needRasaTraining(): Promise<boolean> {

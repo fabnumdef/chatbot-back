@@ -16,7 +16,7 @@ export class RasaController {
   @Post('train')
   @ApiOperation({ summary: 'Convert DB to Rasa files & train chatbot' })
   async trainRasa(): Promise<void> {
-    if(await this._rasaService.isRasaTraining()) {
+    if(!(await this._rasaService.canTrainRasa())) {
       throw new HttpException(`Le chatbot est déjà entrain d'être mis à jour. Merci de patienter quelques minutes.`, HttpStatus.NOT_ACCEPTABLE);
     }
 

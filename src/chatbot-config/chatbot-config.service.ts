@@ -8,6 +8,9 @@ import * as path from "path";
 import * as fs from "fs";
 import * as mkdirp from "mkdirp";
 import { Cron, CronExpression } from "@nestjs/schedule";
+import { plainToClass } from "class-transformer";
+import snakecaseKeys = require("snakecase-keys");
+const crypto = require('crypto');
 
 @Injectable()
 export class ChatbotConfigService {
@@ -86,4 +89,12 @@ export class ChatbotConfigService {
     }
   }
 
+  async validateApiKey(apiKey: string): Promise<boolean> {
+    return (await this.getChatbotConfig()).api_key === apiKey;
+  }
+
+  updateApiKey(): Promise<UpdateResult> {
+    const newApiKey = crypto.randomBytes(12).toString('hex');
+    return this.update(plainToClass(ChatbotConfig, snakecaseKeys({api_key: newApiKey})));
+  }
 }

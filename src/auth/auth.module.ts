@@ -7,6 +7,8 @@ import { JwtModule } from "@nestjs/jwt";
 import { JwtStrategy } from "./jwt.strategy";
 import { ConfigModule } from "@nestjs/config";
 import { SharedModule } from "../shared/shared.module";
+import { ApiKeyStrategy } from "./api-key.strategy";
+import { ChatbotConfigModule } from "../chatbot-config/chatbot-config.module";
 
 @Module({
   imports: [
@@ -17,9 +19,10 @@ import { SharedModule } from "../shared/shared.module";
       signOptions: { expiresIn: '1d' },
     }),
     UserModule,
-    SharedModule
+    SharedModule,
+    ChatbotConfigModule
   ],
-  providers: [AuthService, JwtStrategy],
+  providers: [AuthService, JwtStrategy, ApiKeyStrategy],
   controllers: [AuthController],
   exports: [JwtModule]
 })

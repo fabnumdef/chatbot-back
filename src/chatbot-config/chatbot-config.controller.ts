@@ -1,7 +1,7 @@
 import {
   Body,
   Controller,
-  Get,
+  Get, HttpException, HttpStatus,
   Post,
   Put,
   UploadedFiles,
@@ -22,11 +22,10 @@ import { ConfigUpdateDto } from "@core/dto/config-update.dto";
 import { RolesGuard } from "@core/guards/roles.guard";
 import { Roles } from "@core/decorators/roles.decorator";
 import { UserRole } from "@core/enums/user-role.enum";
+import { ApiKeyGuard } from "@core/guards/api-key.guard";
 
 @ApiTags('config')
 @Controller('config')
-@ApiBearerAuth()
-@UseGuards(JwtGuard)
 export class ChatbotConfigController {
 
   constructor(private readonly _configService: ChatbotConfigService,
@@ -36,6 +35,8 @@ export class ChatbotConfigController {
 
   @Get('')
   @ApiOperation({summary: 'Return the chatbot chatbot-config'})
+  @ApiBearerAuth()
+  @UseGuards(JwtGuard)
   async getChabotConfig(): Promise<ConfigDto> {
     const config: ChatbotConfig = await this._configService.getChatbotConfig();
     return config ? plainToClass(ConfigDto, camelcaseKeys(config, {deep: true})) : null;
@@ -60,6 +61,7 @@ export class ChatbotConfigController {
     type: ConfigUpdateDto,
   })
   @ApiOperation({summary: 'Set the chatbot config'})
+  @ApiBearerAuth()
   @UseGuards(JwtGuard, RolesGuard)
   @Roles(UserRole.admin)
   async setChatbotConfig(@UploadedFiles() files,
@@ -87,6 +89,7 @@ export class ChatbotConfigController {
   )
   @ApiConsumes('multipart/form-data')
   @ApiOperation({summary: 'Update the chatbot config'})
+  @ApiBearerAuth()
   @UseGuards(JwtGuard, RolesGuard)
   @Roles(UserRole.admin)
   async updateChatbotConfig(@UploadedFiles() files,
@@ -108,6 +111,36 @@ export class ChatbotConfigController {
     if (icon || botConfig.name) {
       await this._configService.updateFrontManifest();
     }
+    return plainToClass(ConfigDto, camelcaseKeys(configEntity, {deep: true}));
+  }
+
+  @Post('api-key')
+  @ApiOperation({summary: 'Update the api-key'})
+  @ApiBearerAuth()
+  @UseGuards(JwtGuard)
+  async updateApiKey(): Promise<ConfigDto> {
+    const config = await this._configService.updateApiKey();
+    return plainToClass(ConfigDto, camelcaseKeys(config, {deep: true}));
+  }
+
+  @Get('training')
+  @ApiOperation({summary: 'Return if the chatbot is training or not'})
+  @ApiBearerAuth()
+  @UseGuards(ApiKeyGuard)
+  async isChatbotTraining(): Promise<boolean> {
+    const config: ChatbotConfig = await this._configService.getChatbotConfig();
+    return config.training_rasa;
+  }
+
+  @Put('block')
+  @ApiOperation({summary: 'Block the chatbot for training rasa'})
+  @ApiBearerAuth()
+  @UseGuards(ApiKeyGuard)
+  async updateBlockChatbot(@Body() isBlocked: {isBlocked: boolean}): Promise<ConfigDto> {
+    if(await this.isChatbotTraining()) {
+      throw new HttpException(`Le chatbot est entrain d'être mis à jour. Merci de patienter quelques minutes.`, HttpStatus.NOT_ACCEPTABLE);
+    }
+    const configEntity = await this._configService.update(plainToClass(ChatbotConfig, snakecaseKeys(isBlocked)));
     return plainToClass(ConfigDto, camelcaseKeys(configEntity, {deep: true}));
   }
 }

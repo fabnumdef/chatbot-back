@@ -15,7 +15,7 @@ export class AuthService {
 
   constructor(private readonly _userService: UserService,
               private readonly _jwtService: JwtService,
-              private _mailService: MailService) {
+              private readonly _mailService: MailService) {
   }
 
   async login(user: LoginUserDto): Promise<AuthResponseDto> {

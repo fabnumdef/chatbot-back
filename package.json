@@ -48,6 +48,7 @@
     "nestjs-typeorm-paginate": "^2.0.3",
     "nodemailer": "^6.4.10",
     "passport": "^0.4.1",
+    "passport-headerapikey": "^1.2.2",
     "passport-jwt": "^4.0.0",
     "passport-local": "^1.0.0",
     "pg": "^7.18.2",
