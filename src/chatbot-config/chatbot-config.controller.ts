@@ -125,7 +125,6 @@ export class ChatbotConfigController {
 
   @Get('training')
   @ApiOperation({summary: 'Return if the chatbot is training or not'})
-  @ApiBearerAuth()
   @UseGuards(ApiKeyGuard)
   async isChatbotTraining(): Promise<boolean> {
     const config: ChatbotConfig = await this._configService.getChatbotConfig();
@@ -134,7 +133,6 @@ export class ChatbotConfigController {
 
   @Put('block')
   @ApiOperation({summary: 'Block the chatbot for training rasa'})
-  @ApiBearerAuth()
   @UseGuards(ApiKeyGuard)
   async updateBlockChatbot(@Body() isBlocked: {isBlocked: boolean}): Promise<ConfigDto> {
     if(await this.isChatbotTraining()) {

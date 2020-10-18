@@ -7,6 +7,7 @@ import { ChatbotConfigService } from "../chatbot-config/chatbot-config.service";
 export class ApiKeyStrategy extends PassportStrategy(HeaderAPIKeyStrategy, 'api-key') {
   constructor(private readonly _configService: ChatbotConfigService) {
     super({header: 'x-api-key', prefix: ''}, true, async (apikey, done, req) => {
+      console.log('API KEY', apikey);
       const checkKey = await _configService.validateApiKey(apikey);
       if (!checkKey) {
         return done(false);
