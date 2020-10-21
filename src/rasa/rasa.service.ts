@@ -15,6 +15,7 @@ import * as mkdirp from "mkdirp";
 import { Cron, CronExpression } from "@nestjs/schedule";
 import { FileService } from "../file/file.service";
 import { RasaStoryModel } from "@core/models/rasa-story.model";
+import { RasaRuleModel } from "@core/models/rasa-rule.model";
 
 const fs = require('fs');
 const yaml = require('js-yaml');
@@ -93,7 +94,8 @@ export class RasaService {
   private _intentsToRasa(intents: Intent[]) {
     const domain = new RasaDomainModel();
     const nlu = domain.nlu;
-    const stories = domain.stories;
+    // const stories = domain.stories;
+    const rules = domain.rules;
 
     domain.intents = intents.map(i => i.id);
     intents.forEach(intent => {
@@ -112,8 +114,16 @@ export class RasaService {
       const responses = this._generateDomainUtter(intent);
 
       // Fill STORIES
-      stories.push(new RasaStoryModel(intent.id));
-      const steps = stories[stories.length - 1].steps;
+      // stories.push(new RasaStoryModel(intent.id));
+      // const steps = stories[stories.length - 1].steps;
+      // steps.push({intent: intent.id});
+      // Object.keys(responses).forEach(utter => {
+      //   steps.push({action: utter});
+      // });
+
+      // Fill RULES
+      rules.push(new RasaRuleModel(intent.id));
+      const steps = rules[rules.length - 1].steps;
       steps.push({intent: intent.id});
       Object.keys(responses).forEach(utter => {
         steps.push({action: utter});
@@ -122,6 +132,10 @@ export class RasaService {
     });
 
     fs.writeFileSync(`${this._chatbotTemplateDir}/domain.yml`, yaml.safeDump(domain), 'utf8');
+
+    // TODO DELETE WHEN RASA 2.0
+    // fs.writeFileSync(`${this._chatbotTemplateDir}/data/nlu.yml`, yaml.safeDump({version: "2.0", nlu: nlu}), 'utf8');
+    // fs.writeFileSync(`${this._chatbotTemplateDir}/data/stories.yml`, yaml.safeDump({version: "2.0", stories: stories}), 'utf8');
   }
 
   /**

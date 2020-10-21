@@ -21,7 +21,9 @@
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "typeorm": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js --config src/ormconfig.ts",
     "typeorm:migrate": "npm run typeorm migration:generate -- -n",
-    "typeorm:run": "npm run typeorm migration:run"
+    "typeorm:run": "npm run typeorm migration:run",
+    "artillery": "artillery run test/artillery/load-test.yaml --output test/artillery/report.json",
+    "artillery:report": "artillery report test/artillery/report.json -o test/artillery/report.html"
   },
   "dependencies": {
     "@nestjs-modules/mailer": "^1.5.1",

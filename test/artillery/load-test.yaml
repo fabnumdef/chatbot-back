@@ -3,7 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 config:
-  target: "https://dev.chatbot.fabnum.fr"
+  target: "http://178.33.230.78"
   socketio:
     path: "/socket-chatbot"
     transports: ["websocket"]
