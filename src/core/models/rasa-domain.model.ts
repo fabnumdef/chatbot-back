@@ -13,7 +13,7 @@ export class RasaDomainModel {
   stories: RasaStoryModel[];
 
   constructor() {
-    this.version = '2.0';
+    this.version = "2.0";
     this.intents = [];
     this.responses = {};
     this.nlu = [];
