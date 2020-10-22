@@ -62,7 +62,7 @@ export class RasaService {
     await this._intentService.updateManyByCondition({status: In([IntentStatus.to_deploy, IntentStatus.active_modified])}, {status: IntentStatus.in_training});
     try {
       console.log(`${new Date().toLocaleString()} - TRAINING RASA`);
-      await execShellCommand(`rasa train --num-threads 8 --data domain.yml`, this._chatbotTemplateDir).then(res => {
+      await execShellCommand(`rasa train --data domain.yml --num-threads 8`, this._chatbotTemplateDir).then(res => {
         console.log(res);
       });
       console.log(`${new Date().toLocaleString()} - KILLING SCREEN`);
