@@ -33,7 +33,7 @@ export class RasaService {
 
   @Cron(CronExpression.EVERY_10_SECONDS)
   async updateRasa() {
-    if(!(await this.canTrainRasa()) || !(await this.needRasaTraining())) {
+    if (!(await this.canTrainRasa()) || !(await this.needRasaTraining())) {
       return;
     }
     console.log(`${new Date().toLocaleString()} - Updating Rasa`);
@@ -75,7 +75,7 @@ export class RasaService {
       await this._intentService.updateManyByCondition({status: IntentStatus.in_training}, {status: IntentStatus.active});
       await this._intentService.updateManyByCondition({status: IntentStatus.to_archive}, {status: IntentStatus.archived});
       await this._configService.update(<ChatbotConfig>{last_training_at: new Date()});
-    } catch(e) {
+    } catch (e) {
       console.error('RASA TRAIN', e);
     }
     await this._configService.update(<ChatbotConfig>{training_rasa: false});
@@ -125,7 +125,10 @@ export class RasaService {
 
     // TODO DELETE WHEN RASA 2.0
     fs.writeFileSync(`${this._chatbotTemplateDir}/data/nlu.yml`, yaml.safeDump({version: "2.0", nlu: nlu}), 'utf8');
-    fs.writeFileSync(`${this._chatbotTemplateDir}/data/stories.yml`, yaml.safeDump({version: "2.0", stories: stories}), 'utf8');
+    fs.writeFileSync(`${this._chatbotTemplateDir}/data/stories.yml`, yaml.safeDump({
+      version: "2.0",
+      stories: stories
+    }), 'utf8');
   }
 
   /**
@@ -140,10 +143,13 @@ export class RasaService {
           responses[`utter_${intent.id}_${index}`] = [{text: response.response}];
           break;
         case ResponseType.image:
-          responses[`utter_${intent.id}_${index - 1}`][0].image = response.response;
+          responses[`utter_${intent.id}_${index - 1}`] ? responses[`utter_${intent.id}_${index - 1}`][0].image = response.response : null;
           break;
         case ResponseType.button:
         case ResponseType.quick_reply:
+          if (!responses[`utter_${intent.id}_${index - 1}`]) {
+            break;
+          }
           const buttons: string[] = response.response.split(';');
           responses[`utter_${intent.id}_${index - 1}`][0].buttons = [];
           let utter_buttons = responses[`utter_${intent.id}_${index - 1}`][0].buttons;
@@ -165,7 +171,7 @@ export class RasaService {
       await execShellCommand("rm `ls -t | awk 'NR>5'`", path.resolve(this._chatbotTemplateDir, 'models')).then(res => {
         console.log(res);
       });
-    } catch(e) {
+    } catch (e) {
       console.error('DELETE OLD MODELS', e);
     }
   }

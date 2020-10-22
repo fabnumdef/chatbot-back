@@ -80,8 +80,6 @@ export class IntentService {
       .addOrderBy('intent.updated_at', 'DESC')
       .addOrderBy('intent.main_question', 'ASC');
 
-    console.log(query.getSql());
-
     if (!filters) {
       return query;
     }
