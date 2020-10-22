@@ -10,17 +10,17 @@ export class RasaDomainModel {
     session_expiration_time: number;
     carry_over_slots_to_new_session: boolean
   };
-  nlu: RasaNluModel[];
+  // nlu: RasaNluModel[];
   // stories: RasaStoryModel[];
-  rules: RasaRuleModel[];
+  // rules: RasaRuleModel[];
 
   constructor() {
     this.version = "2.0";
     this.intents = [];
     this.responses = {};
-    this.nlu = [];
+    // this.nlu = [];
     // this.stories = [];
-    this.rules = [];
+    // this.rules = [];
     this.session_config = {
       session_expiration_time: 60,
       carry_over_slots_to_new_session: true
