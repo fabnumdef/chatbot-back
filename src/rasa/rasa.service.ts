@@ -62,7 +62,7 @@ export class RasaService {
     await this._intentService.updateManyByCondition({status: In([IntentStatus.to_deploy, IntentStatus.active_modified])}, {status: IntentStatus.in_training});
     try {
       console.log(`${new Date().toLocaleString()} - TRAINING RASA`);
-      await execShellCommand(`rasa train --data domain.yml --num-threads 8`, this._chatbotTemplateDir).then(res => {
+      await execShellCommand(`rasa train --num-threads 8`, this._chatbotTemplateDir).then(res => {
         console.log(res);
       });
       console.log(`${new Date().toLocaleString()} - KILLING SCREEN`);
@@ -93,9 +93,9 @@ export class RasaService {
    */
   private _intentsToRasa(intents: Intent[]) {
     const domain = new RasaDomainModel();
-    const nlu = domain.nlu;
-    // const stories = domain.stories;
-    const rules = domain.rules;
+    const nlu: RasaNluModel[] = [];
+    // const stories: RasaStoryModel[] = [];
+    const rules: RasaRuleModel[] = [];
 
     domain.intents = intents.map(i => i.id);
     intents.forEach(intent => {
@@ -128,13 +128,19 @@ export class RasaService {
       Object.keys(responses).forEach(utter => {
         steps.push({action: utter});
       });
+
       domain.responses = Object.assign(responses, domain.responses);
     });
 
-    fs.writeFileSync(`${this._chatbotTemplateDir}/domain.yml`, yaml.safeDump(domain), 'utf8');
+    // Add fallback rule
+    rules.push(new RasaRuleModel('nlu_fallback'));
+    const steps = rules[rules.length - 1].steps;
+    steps.push({intent: 'nlu_fallback'});
+    steps.push({action: 'utter_phrase_hors_sujet_0'});
 
-    // TODO DELETE WHEN RASA 2.0
-    // fs.writeFileSync(`${this._chatbotTemplateDir}/data/nlu.yml`, yaml.safeDump({version: "2.0", nlu: nlu}), 'utf8');
+    fs.writeFileSync(`${this._chatbotTemplateDir}/domain.yml`, yaml.safeDump(domain), 'utf8');
+    fs.writeFileSync(`${this._chatbotTemplateDir}/data/nlu.yml`, yaml.safeDump({version: "2.0", nlu: nlu}), 'utf8');
+    fs.writeFileSync(`${this._chatbotTemplateDir}/data/rules.yml`, yaml.safeDump({version: "2.0", rules: rules}), 'utf8');
     // fs.writeFileSync(`${this._chatbotTemplateDir}/data/stories.yml`, yaml.safeDump({version: "2.0", stories: stories}), 'utf8');
   }
 
