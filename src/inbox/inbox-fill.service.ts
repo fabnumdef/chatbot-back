@@ -84,8 +84,13 @@ export class InboxFillService {
           break;
         case 'user':
           inbox.question = data.text;
-          inbox.confidence = data.parse_data?.intent?.confidence ? data.parse_data?.intent?.confidence : 0;
-          inbox.intent_ranking = data.parse_data?.intent_ranking?.slice(0, 5);
+          inbox.intent_ranking = data.parse_data?.intent_ranking?.filter(i => i.name !== 'nlu_fallback').slice(0, 5);
+          inbox.confidence = data.parse_data?.intent?.confidence ?
+            data.parse_data?.intent?.name !== 'nlu_fallback' ?
+              data.parse_data?.intent?.confidence : inbox.intent_ranking[0] ?
+              inbox.intent_ranking[0]?.confidence
+              : 0
+            : 0;
           inbox.status = (inbox.confidence >= 0.6) ? (inbox.confidence >= 0.95) ? InboxStatus.confirmed : InboxStatus.to_verify : InboxStatus.pending
           inbox.intent = new Intent(data.parse_data?.intent?.name);
           getMessageTimestamp = data.timestamp;
