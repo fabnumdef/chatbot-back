@@ -197,8 +197,8 @@ export class IntentService {
   }
 
   findNbIntentByTime(filters: StatsFilterDto): Promise<Array<string>> {
-    const startDate = filters.startDate ? (moment(filters.startDate).format('YYYY-MM-DD')) : (moment().subtract(1, 'month').format('YYYY-MM-DD'));
-    const endDate = filters.endDate ? moment(filters.endDate).format('YYYY-MM-DD') : moment().format('YYYY-MM-DD');
+    const startDate = filters.startDate ? (moment(filters.startDate, 'DD/MM/YYYY').format('YYYY-MM-DD')) : (moment().subtract(1, 'month').format('YYYY-MM-DD'));
+    const endDate = filters.endDate ? moment(filters.endDate, 'DD/MM/YYYY').format('YYYY-MM-DD') : moment().format('YYYY-MM-DD');
     const query = this._intentsRepository.createQueryBuilder('intent')
       .select("DATE(intent.created_at) AS date")
       .addSelect("COUNT(*) AS count")
@@ -210,8 +210,8 @@ export class IntentService {
   }
 
   findNeverUsedIntent(filters: StatsFilterDto): Promise<Array<string>> {
-    const startDate = filters.startDate ? (moment(filters.startDate).format('YYYY-MM-DD')) : null;
-    const endDate = filters.endDate ? moment(filters.endDate).format('YYYY-MM-DD') : null;
+    const startDate = filters.startDate ? (moment(filters.startDate, 'DD/MM/YYYY').format('YYYY-MM-DD')) : null;
+    const endDate = filters.endDate ? moment(filters.endDate, 'DD/MM/YYYY').format('YYYY-MM-DD') : null;
 
 
     const query = this._intentsRepository

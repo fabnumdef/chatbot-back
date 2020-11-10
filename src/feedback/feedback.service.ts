@@ -60,8 +60,8 @@ export class FeedbackService {
   }
 
   findNbFeedbackByTime(filters: StatsFilterDto): Promise<Array<string>> {
-    const startDate = filters.startDate ? (moment(filters.startDate).format('YYYY-MM-DD')) : (moment().subtract(1, 'month').format('YYYY-MM-DD'));
-    const endDate = filters.endDate ? moment(filters.endDate).format('YYYY-MM-DD') : moment().format('YYYY-MM-DD');
+    const startDate = filters.startDate ? (moment(filters.startDate, 'DD/MM/YYYY').format('YYYY-MM-DD')) : (moment().subtract(1, 'month').format('YYYY-MM-DD'));
+    const endDate = filters.endDate ? moment(filters.endDate, 'DD/MM/YYYY').format('YYYY-MM-DD') : moment().format('YYYY-MM-DD');
     const query = this._feedbacksRepository.createQueryBuilder('feedback')
       .select("DATE(feedback.created_at) AS date")
       .addSelect("COUNT(*) AS count")
