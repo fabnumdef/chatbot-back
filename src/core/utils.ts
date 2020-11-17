@@ -1,4 +1,5 @@
 import { ExecOptions } from "child_process";
+import { parse } from "dotenv";
 
 /**
  * Executes a shell command and return it as a Promise.
@@ -22,4 +23,16 @@ export function execShellCommand(cmd, curDir?: string) {
       resolve(stdout? stdout : stderr);
     });
   });
+}
+
+export function jsonToDotenv(json: any): string {
+  let dotenv = '';
+  for (const property in json) {
+    dotenv += `${property}=${json[property]}\n`;
+  }
+  return dotenv;
+}
+
+export function dotenvToJson(dotenv: string): any {
+  return parse(dotenv);
 }

@@ -27,6 +27,7 @@ import * as path from "path";
 import { MailerModule } from "@nestjs-modules/mailer";
 import { HandlebarsAdapter } from "@nestjs-modules/mailer/dist/adapters/handlebars.adapter";
 import { FeedbackModule } from './feedback/feedback.module';
+import { UpdateModule } from './update/update.module';
 
 @Module({
   imports: [
@@ -71,7 +72,8 @@ import { FeedbackModule } from './feedback/feedback.module';
     TerminusModule,
     PublicModule,
     SharedModule,
-    FeedbackModule
+    FeedbackModule,
+    UpdateModule
   ],
   controllers: [RefDataController, HealthController, PublicController],
   providers: [

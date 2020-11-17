@@ -12,6 +12,9 @@ export class ChatbotConfig {
   name: string;
 
   @Column({ nullable: true, length: 50 })
+  domain_name: string;
+
+  @Column({ nullable: true, length: 50 })
   function: string;
 
   @Column({ nullable: false, length: 50 })
