@@ -34,6 +34,11 @@ export class UpdateService {
     await ansiblePlaybook.command(`generate-chatbot.yml -e '${JSON.stringify(extraVars)}'`).then(async (result) => {
       console.log(`${new Date().toLocaleString()} - CHATBOT UPDATED`);
       console.log(result);
+      if(updateChatbot.updateBack) {
+        await ansiblePlaybook.command(`reload-back.yml -e '${JSON.stringify(extraVars)}'`).then((result) => {
+          console.log(result);
+        })
+      }
     }).catch(() => {
       console.error(`${new Date().toLocaleString()} - ERROR UPDATING CHATBOT`);
     });
@@ -50,11 +55,6 @@ export class UpdateService {
     await ansiblePlaybook.command(`update-chatbot-repo.yml -e '${JSON.stringify(extraVars)}'`).then(async (result) => {
       console.log(`${new Date().toLocaleString()} - UPDATING CHATBOTS REPOSITORIES`);
       console.log(result);
-      if(updateChatbot.updateBack) {
-        await ansiblePlaybook.command(`reload-back.yml -e '${JSON.stringify(extraVars)}'`).then((result) => {
-          console.log(result);
-        })
-      }
     }).catch(error => {
       console.error(`${new Date().toLocaleString()} - ERRROR UPDATING CHATBOTS REPOSITORIES`);
     });
