@@ -8,6 +8,7 @@ import * as fs from "fs";
 export class UpdateService {
 
   private _appDir = '/var/www/chatbot-back';
+  private _gitDir = '/var/www/git/chatbot-back';
 
   constructor(private _configService: ChatbotConfigService) {
   }
@@ -27,7 +28,7 @@ export class UpdateService {
       fs.writeFileSync(`/etc/nginx_conf.cfg`, files.nginx_site[0], 'utf8');
     }
 
-    const playbookOptions = new Options(`${this._appDir}/ansible`);
+    const playbookOptions = new Options(`${this._gitDir}/ansible`);
     const ansiblePlaybook = new AnsiblePlaybook(playbookOptions);
     const extraVars = {...updateChatbot, ...{botDomain: chatbotConfig.domain_name}};
     await ansiblePlaybook.command(`generate-chatbot.yml -e '${JSON.stringify(extraVars)}'`).then(async (result) => {
@@ -39,16 +40,21 @@ export class UpdateService {
   }
 
   private async _updateChatbotRepos(updateChatbot: UpdateChatbotDto) {
-    const playbookOptions = new Options(`${this._appDir}/ansible`);
+    const playbookOptions = new Options(`${this._gitDir}/ansible`);
     const ansiblePlaybook = new AnsiblePlaybook(playbookOptions);
     const extraVars = {
       frontBranch: updateChatbot.frontBranch,
       backBranch: updateChatbot.backBranch,
       botBranch: updateChatbot.botBranch
     };
-    await ansiblePlaybook.command(`update-chatbot-repo.yml -e '${JSON.stringify(extraVars)}'`).then((result) => {
+    await ansiblePlaybook.command(`update-chatbot-repo.yml -e '${JSON.stringify(extraVars)}'`).then(async (result) => {
       console.log(`${new Date().toLocaleString()} - UPDATING CHATBOTS REPOSITORIES`);
       console.log(result);
+      if(updateChatbot.updateBack) {
+        await ansiblePlaybook.command(`reload-back.yml -e '${JSON.stringify(extraVars)}'`).then((result) => {
+          console.log(result);
+        })
+      }
     }).catch(error => {
       console.error(`${new Date().toLocaleString()} - ERRROR UPDATING CHATBOTS REPOSITORIES`);
     });
