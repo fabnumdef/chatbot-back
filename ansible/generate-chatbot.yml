@@ -1,7 +1,7 @@
 ---
 - name: Init chatbot server
 
-  hosts: all
+  hosts: localhost
 
 #  remote_user: chatbot_user
 
@@ -20,6 +20,12 @@
 #    - ansible_ssh_private_key_file: "/root/.ssh/id_rsa"
 
   tasks:
+    - name: Update and upgrade apt packages
+#      become: true
+      apt:
+        upgrade: 'yes'
+        update_cache: 'yes'
+
     - name: Set right rights on www directory
 #      become: true
       file:
@@ -145,20 +151,21 @@
         chdir: '{{ appsDir }}/{{ backDir }}'
       when: updateBack
 
-    - name: NODE | Stop APP
-      shell: pm2 stop ChatbotBack
-      args:
-        chdir: '{{ appsDir }}/{{ backDir }}'
-      ignore_errors: yes
-#      become: yes
-      when: updateBack
+#    - name: NODE | Stop APP
+#      shell: pm2 stop ChatbotBack
+#      args:
+#        chdir: '{{ appsDir }}/{{ backDir }}'
+#      ignore_errors: yes
+##      become: yes
+#      when: updateBack
 
     - name: NODE | Start APP
-      shell: pm2 start main.js --name ChatbotBack
+      shell: pm2 start main.js --name ChatbotBack --watch
       args:
         chdir: '{{ appsDir }}/{{ backDir }}/dist'
 #      become: yes
       when: updateBack
+      ignore_errors: true
 
     - name: Update PM2 script at startup
 #      become: yes
