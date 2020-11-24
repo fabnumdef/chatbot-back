@@ -93,12 +93,12 @@ export class RasaService {
    * @private
    */
   private _intentsToRasa(intents: Intent[]) {
-    const domain = new RasaDomainModel();
+    const domain: RasaDomainModel = yaml.safeLoad(fs.readFileSync(`${this._chatbotTemplateDir}/domain.yml`, 'utf8'));
     const nlu: RasaNluModel[] = [];
     // const stories: RasaStoryModel[] = [];
     const rules: RasaRuleModel[] = [];
 
-    domain.intents = intents.map(i => i.id);
+    domain.intents = {...intents.map(i => i.id), ...domain.intents};
     intents.forEach(intent => {
       // Fill NLU
       nlu.push(new RasaNluModel(intent.id));
@@ -134,10 +134,10 @@ export class RasaService {
     });
 
     // Add fallback rule
-    rules.push(new RasaRuleModel('nlu_fallback'));
-    const steps = rules[rules.length - 1].steps;
-    steps.push({intent: 'nlu_fallback'});
-    steps.push({action: 'utter_phrase_hors_sujet_0'});
+    // rules.push(new RasaRuleModel('nlu_fallback'));
+    // const steps = rules[rules.length - 1].steps;
+    // steps.push({intent: 'nlu_fallback'});
+    // steps.push({action: 'utter_phrase_hors_sujet_0'});
 
     fs.writeFileSync(`${this._chatbotTemplateDir}/domain.yml`, yaml.safeDump(domain), 'utf8');
     fs.writeFileSync(`${this._chatbotTemplateDir}/data/nlu.yml`, yaml.safeDump({version: "2.0", nlu: nlu}), 'utf8');
