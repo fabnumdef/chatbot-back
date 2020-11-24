@@ -97,9 +97,8 @@
       pip:
         executable: pip3
         name:
-          - rasa==2.0.1
+          - rasa>=2.1.0,<3.0
           - psycopg2-binary
-          - rasa[spacy]
       when: updateRasa
 
     - name: Copy chatbot-template
