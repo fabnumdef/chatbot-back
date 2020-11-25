@@ -1,4 +1,5 @@
 import { IsBoolean, IsNotEmpty, IsOptional, IsString } from "class-validator";
+import { ApiProperty } from "@nestjs/swagger";
 
 export class UpdateChatbotDto {
   @IsBoolean()
@@ -24,4 +25,16 @@ export class UpdateChatbotDto {
   @IsString()
   @IsOptional()
   botBranch: string = 'master';
+
+  @IsOptional()
+  @ApiProperty({type: 'string', format: 'binary'})
+  nginx_conf: any;
+
+  @IsOptional()
+  @ApiProperty({type: 'string', format: 'binary'})
+  nginx_site: any;
+
+  @IsOptional()
+  @ApiProperty({type: 'string', format: 'binary'})
+  env: any;
 }
