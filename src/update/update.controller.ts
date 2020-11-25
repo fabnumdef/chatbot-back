@@ -1,5 +1,5 @@
 import { Body, Controller, Post, UploadedFiles, UseGuards, UseInterceptors } from '@nestjs/common';
-import { ApiBody, ApiOperation, ApiTags } from "@nestjs/swagger";
+import { ApiBody, ApiConsumes, ApiOperation, ApiTags } from "@nestjs/swagger";
 import { ApiKeyGuard } from "@core/guards/api-key.guard";
 import { UpdateChatbotDto } from "@core/dto/update-chatbot.dto";
 import { UpdateService } from "./update.service";
@@ -30,6 +30,7 @@ export class UpdateController {
     description: 'Update the chatbot code',
     type: UpdateChatbotDto,
   })
+  @ApiConsumes('multipart/form-data')
   @ApiOperation({summary: 'Update the chatbot code'})
   async updateBot(@UploadedFiles() files,
                   @Body() updateChatbot: UpdateChatbotDto) {
