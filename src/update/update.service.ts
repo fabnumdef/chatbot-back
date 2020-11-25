@@ -30,9 +30,9 @@ export class UpdateService {
 
     const playbookOptions = new Options(`${this._gitDir}/ansible`);
     const ansiblePlaybook = new AnsiblePlaybook(playbookOptions);
-    const extraVars = {...updateChatbot, ...{botDomain: chatbotConfig.domain_name}};
+    const extraVars = {...updateChatbot, ...{botDomain: chatbotConfig.domain_name, DB_PASSWORD: process.env.DATABASE_PASSWORD}};
+    console.log(`${new Date().toLocaleString()} - UPDATING CHATBOT`);
     await ansiblePlaybook.command(`generate-chatbot.yml -e '${JSON.stringify(extraVars)}'`).then(async (result) => {
-      console.log(`${new Date().toLocaleString()} - CHATBOT UPDATED`);
       console.log(result);
       if(updateChatbot.updateBack) {
         await ansiblePlaybook.command(`reload-back.yml -e '${JSON.stringify(extraVars)}'`).then((result) => {
@@ -52,8 +52,8 @@ export class UpdateService {
       backBranch: updateChatbot.backBranch,
       botBranch: updateChatbot.botBranch
     };
+    console.log(`${new Date().toLocaleString()} - UPDATING CHATBOTS REPOSITORIES`);
     await ansiblePlaybook.command(`update-chatbot-repo.yml -e '${JSON.stringify(extraVars)}'`).then(async (result) => {
-      console.log(`${new Date().toLocaleString()} - UPDATING CHATBOTS REPOSITORIES`);
       console.log(result);
     }).catch(error => {
       console.error(`${new Date().toLocaleString()} - ERRROR UPDATING CHATBOTS REPOSITORIES`);
