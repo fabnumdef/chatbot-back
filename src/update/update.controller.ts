@@ -26,14 +26,20 @@ export class UpdateController {
       }
     })
   )
+  @ApiConsumes('multipart/form-data')
   @ApiBody({
     description: 'Update the chatbot code',
     type: UpdateChatbotDto,
   })
-  @ApiConsumes('multipart/form-data')
   @ApiOperation({summary: 'Update the chatbot code'})
   async updateBot(@UploadedFiles() files,
                   @Body() updateChatbot: UpdateChatbotDto) {
+    // @ts-ignore
+    updateChatbot.updateFront = (updateChatbot.updateFront == 'true');
+    // @ts-ignore
+    updateChatbot.updateBack = (updateChatbot.updateBack == 'true');
+    // @ts-ignore
+    updateChatbot.updateRasa = (updateChatbot.updateRasa == 'true');
     this._updateService.update(updateChatbot, files);
   }
 

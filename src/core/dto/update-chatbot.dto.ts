@@ -2,15 +2,15 @@ import { IsBoolean, IsNotEmpty, IsOptional, IsString } from "class-validator";
 import { ApiProperty } from "@nestjs/swagger";
 
 export class UpdateChatbotDto {
-  @IsBoolean()
+  @IsString()
   @IsNotEmpty()
   updateFront: boolean;
 
-  @IsBoolean()
+  @IsString()
   @IsNotEmpty()
   updateBack: boolean;
 
-  @IsBoolean()
+  @IsString()
   @IsNotEmpty()
   updateRasa: boolean;
 
