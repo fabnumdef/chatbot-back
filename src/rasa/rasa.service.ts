@@ -14,8 +14,8 @@ import { IntentStatus } from "@core/enums/intent-status.enum";
 import * as mkdirp from "mkdirp";
 import { Cron, CronExpression } from "@nestjs/schedule";
 import { FileService } from "../file/file.service";
-import { RasaStoryModel } from "@core/models/rasa-story.model";
 import { RasaRuleModel } from "@core/models/rasa-rule.model";
+import { AppConstants } from "@core/constant";
 
 const fs = require('fs');
 const yaml = require('js-yaml');
@@ -53,7 +53,8 @@ export class RasaService {
   }
 
   async generateFiles() {
-    const intents: Intent[] = await this._intentService.findFullIntents(false);
+    let intents: Intent[] = await this._intentService.findFullIntents(false);
+    intents = intents.filter(i => !AppConstants.General.excluded_Ids.includes(i.id));
     this._intentsToRasa(intents);
   }
 
@@ -93,12 +94,12 @@ export class RasaService {
    * @private
    */
   private _intentsToRasa(intents: Intent[]) {
-    const domain: RasaDomainModel = yaml.safeLoad(fs.readFileSync(`${this._chatbotTemplateDir}/domain.yml`, 'utf8'));
+    const domain: RasaDomainModel = yaml.safeLoad(fs.readFileSync(`${this._chatbotTemplateDir}/domain.template.yml`, 'utf8'));
     const nlu: RasaNluModel[] = [];
     // const stories: RasaStoryModel[] = [];
     const rules: RasaRuleModel[] = [];
 
-    domain.intents = {...intents.map(i => i.id), ...domain.intents};
+    domain.intents = [...intents.map(i => i.id), ...domain.intents];
     intents.forEach(intent => {
       // Fill NLU
       nlu.push(new RasaNluModel(intent.id));
