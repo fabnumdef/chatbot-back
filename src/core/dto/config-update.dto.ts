@@ -54,4 +54,8 @@ export class ConfigUpdateDto {
   @IsString()
   @IsOptional()
   storage: string;
+
+  @IsString()
+  @IsOptional()
+  domainName: string;
 }
