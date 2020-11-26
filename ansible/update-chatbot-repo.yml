@@ -23,6 +23,7 @@
         dest: '{{ gitDir }}/{{ backDir }}'
         force: yes
         version: '{{ backBranch }}'
+      when: updateBack
 
     - name: Git chatbot-front
 #      become: yes
@@ -32,6 +33,7 @@
         force: yes
         version: '{{ frontBranch }}'
       register: pullFront
+      when: updateFront
 
     - name: Git chatbot-template
 #      become: yes
@@ -40,6 +42,7 @@
         dest: '{{ gitDir }}/{{ botDir }}'
         force: yes
         version: '{{ botBranch }}'
+      when: updateRasa
 
     - name: npm install chatbot-front
 #      become: yes

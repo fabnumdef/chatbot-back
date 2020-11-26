@@ -47,13 +47,8 @@ export class UpdateService {
   private async _updateChatbotRepos(updateChatbot: UpdateChatbotDto) {
     const playbookOptions = new Options(`${this._gitDir}/ansible`);
     const ansiblePlaybook = new AnsiblePlaybook(playbookOptions);
-    const extraVars = {
-      frontBranch: updateChatbot.frontBranch,
-      backBranch: updateChatbot.backBranch,
-      botBranch: updateChatbot.botBranch
-    };
     console.log(`${new Date().toLocaleString()} - UPDATING CHATBOTS REPOSITORIES`);
-    await ansiblePlaybook.command(`update-chatbot-repo.yml -e '${JSON.stringify(extraVars)}'`).then(async (result) => {
+    await ansiblePlaybook.command(`update-chatbot-repo.yml -e '${JSON.stringify(updateChatbot)}'`).then(async (result) => {
       console.log(result);
     }).catch(error => {
       console.error(`${new Date().toLocaleString()} - ERRROR UPDATING CHATBOTS REPOSITORIES`);
