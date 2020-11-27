@@ -61,4 +61,7 @@ export class ChatbotConfig {
 
   @Column({ nullable: true, length: 255 })
   api_key: string;
+
+  @Column({ default: false })
+  maintenance_mode: boolean;
 }

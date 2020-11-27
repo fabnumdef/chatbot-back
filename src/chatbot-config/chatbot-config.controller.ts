@@ -142,4 +142,12 @@ export class ChatbotConfigController {
     const configEntity = await this._configService.update(plainToClass(ChatbotConfig, snakecaseKeys(isBlocked)));
     return plainToClass(ConfigDto, camelcaseKeys(configEntity, {deep: true}));
   }
+
+  @Put('maintenance')
+  @ApiOperation({summary: 'Set the bot in maintenance mode'})
+  @UseGuards(ApiKeyGuard)
+  async updateMaintenanceMode(@Body() maintenanceMode: {maintenanceMode: boolean}): Promise<ConfigDto> {
+    const configEntity = await this._configService.update(plainToClass(ChatbotConfig, snakecaseKeys(maintenanceMode)));
+    return plainToClass(ConfigDto, camelcaseKeys(configEntity, {deep: true}));
+  }
 }

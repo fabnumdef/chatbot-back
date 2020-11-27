@@ -1,4 +1,4 @@
-import { IsHexColor, IsNotEmpty, IsOptional, IsString, MaxLength } from "class-validator";
+import { IsBoolean, IsHexColor, IsNotEmpty, IsOptional, IsString, MaxLength } from "class-validator";
 import { ApiProperty } from "@nestjs/swagger";
 import { FileUploadDto } from "@core/dto/file-upload.dto";
 
@@ -48,4 +48,8 @@ export class PublicConfigDto {
   @IsNotEmpty()
   @MaxLength(500)
   help: string;
+
+  @IsBoolean()
+  @IsNotEmpty()
+  maintenanceMode: boolean;
 }

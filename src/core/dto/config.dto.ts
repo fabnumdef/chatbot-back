@@ -68,4 +68,8 @@ export class ConfigDto {
   @IsBoolean()
   @IsOptional()
   storage: boolean;
+
+  @IsBoolean()
+  @IsNotEmpty()
+  maintenanceMode: boolean;
 }
