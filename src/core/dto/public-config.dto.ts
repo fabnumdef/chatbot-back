@@ -52,4 +52,20 @@ export class PublicConfigDto {
   @IsBoolean()
   @IsNotEmpty()
   maintenanceMode: boolean;
+
+  @IsBoolean()
+  @IsNotEmpty()
+  showIntentSearch: boolean;
+
+  @IsBoolean()
+  @IsNotEmpty()
+  dismissQuickReplies: boolean;
+
+  @IsBoolean()
+  @IsNotEmpty()
+  showFeedback: boolean;
+
+  @IsBoolean()
+  @IsNotEmpty()
+  blockTypeText: boolean;
 }

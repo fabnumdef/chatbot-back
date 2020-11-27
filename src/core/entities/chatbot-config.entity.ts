@@ -64,4 +64,16 @@ export class ChatbotConfig {
 
   @Column({ default: false })
   maintenance_mode: boolean;
+
+  @Column({ default: true })
+  show_intent_search: boolean;
+
+  @Column({ default: false })
+  dismiss_quick_replies: boolean;
+
+  @Column({ default: true })
+  show_feedback: boolean;
+
+  @Column({ default: false })
+  block_type_text: boolean;
 }

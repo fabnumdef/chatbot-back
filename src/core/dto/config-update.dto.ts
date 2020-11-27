@@ -58,4 +58,20 @@ export class ConfigUpdateDto {
   @IsString()
   @IsOptional()
   domainName: string;
+
+  @IsString()
+  @IsOptional()
+  showIntentSearch: boolean;
+
+  @IsString()
+  @IsOptional()
+  dismissQuickReplies: boolean;
+
+  @IsString()
+  @IsOptional()
+  showFeedback: boolean;
+
+  @IsString()
+  @IsOptional()
+  blockTypeText: boolean;
 }

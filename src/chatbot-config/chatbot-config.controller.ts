@@ -108,6 +108,22 @@ export class ChatbotConfigController {
       const embeddedIconName = await this._mediaService.storeFile(embeddedIcon);
       botConfig = {...chatbotConfig, ...{embeddedIcon: embeddedIconName}};
     }
+    if(chatbotConfig.showIntentSearch) {
+      // @ts-ignore
+      chatbotConfig.showIntentSearch = (chatbotConfig.showIntentSearch == 'true');
+    }
+    if(chatbotConfig.dismissQuickReplies) {
+      // @ts-ignore
+      chatbotConfig.dismissQuickReplies = (chatbotConfig.dismissQuickReplies == 'true');
+    }
+    if(chatbotConfig.showFeedback) {
+      // @ts-ignore
+      chatbotConfig.showFeedback = (chatbotConfig.showFeedback == 'true');
+    }
+    if(chatbotConfig.blockTypeText) {
+      // @ts-ignore
+      chatbotConfig.blockTypeText = (chatbotConfig.blockTypeText == 'true');
+    }
     const configEntity = await this._configService.update(plainToClass(ChatbotConfig, snakecaseKeys(botConfig)));
     if (icon || botConfig.name) {
       await this._configService.updateFrontManifest();
