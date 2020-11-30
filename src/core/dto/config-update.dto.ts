@@ -74,4 +74,8 @@ export class ConfigUpdateDto {
   @IsString()
   @IsOptional()
   blockTypeText: boolean;
+
+  @IsString()
+  @IsOptional()
+  showRebootBtn: boolean;
 }

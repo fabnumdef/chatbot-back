@@ -76,4 +76,7 @@ export class ChatbotConfig {
 
   @Column({ default: false })
   block_type_text: boolean;
+
+  @Column({ default: false })
+  show_reboot_btn: boolean;
 }

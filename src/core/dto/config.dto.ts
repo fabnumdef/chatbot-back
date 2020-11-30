@@ -88,4 +88,8 @@ export class ConfigDto {
   @IsBoolean()
   @IsNotEmpty()
   blockTypeText: boolean;
+
+  @IsBoolean()
+  @IsNotEmpty()
+  showRebootBtn: boolean;
 }

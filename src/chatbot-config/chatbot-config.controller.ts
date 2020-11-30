@@ -124,6 +124,10 @@ export class ChatbotConfigController {
       // @ts-ignore
       chatbotConfig.blockTypeText = (chatbotConfig.blockTypeText == 'true');
     }
+    if(chatbotConfig.showRebootBtn) {
+      // @ts-ignore
+      chatbotConfig.showRebootBtn = (chatbotConfig.showRebootBtn == 'true');
+    }
     const configEntity = await this._configService.update(plainToClass(ChatbotConfig, snakecaseKeys(botConfig)));
     if (icon || botConfig.name) {
       await this._configService.updateFrontManifest();

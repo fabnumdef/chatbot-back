@@ -68,4 +68,8 @@ export class PublicConfigDto {
   @IsBoolean()
   @IsNotEmpty()
   blockTypeText: boolean;
+
+  @IsBoolean()
+  @IsNotEmpty()
+  showRebootBtn: boolean;
 }

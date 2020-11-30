@@ -27,7 +27,7 @@ export class PublicController {
     const config: ChatbotConfig = await this._configService.getChatbotConfig(
       {select: ['name', 'icon', 'function', 'primary_color', 'secondary_color', 'problematic', 'audience',
           'embedded_icon', 'description', 'help', 'maintenance_mode', 'show_intent_search', 'dismiss_quick_replies',
-          'show_feedback', 'block_type_text']}
+          'show_feedback', 'block_type_text', 'show_reboot_btn']}
       );
     return config ? plainToClass(PublicConfigDto, camelcaseKeys(config, {deep: true})) : null;
   }
