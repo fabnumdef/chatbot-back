@@ -1,4 +1,16 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpException,
+  HttpStatus,
+  Param,
+  Post,
+  Put,
+  Query,
+  UseGuards
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from "@nestjs/swagger";
 import { JwtGuard } from "@core/guards/jwt.guard";
 import { IntentService } from "./intent.service";
@@ -34,6 +46,12 @@ export class IntentController {
     return plainToClass(IntentDto, camelcaseKeys(intent, {deep: true}));
   }
 
+  @Get('check/:intentId')
+  @ApiOperation({summary: 'Check if id exists'})
+  async checkIntentId(@Param('intentId') intentId: string): Promise<boolean> {
+    return this._intentService.intentExists(intentId);
+  }
+
   @Post('search')
   @ApiOperation({summary: 'Return intents paginated'})
   async getIntentsPagination(@Query() options: PaginationQueryDto,
@@ -45,7 +63,7 @@ export class IntentController {
   }
 
   @Post('')
-  @ApiOperation({summary: 'Create or edit an intent'})
+  @ApiOperation({summary: 'Create an intent'})
   async createEditIntent(@Body() intentDto: IntentDto): Promise<IntentDto> {
     let intent = this._formatIntent(intentDto);
     intent = await this._intentService.createEdit(intent);
@@ -56,6 +74,9 @@ export class IntentController {
   @ApiOperation({summary: 'Edit an intent'})
   async editIntent(@Param('id') intentId: string, @Body() intentDto: IntentDto): Promise<IntentDto> {
     let intent = this._formatIntent(intentDto);
+    if(await this._intentService.intentExists(intent.id)) {
+      throw new HttpException(`Impossible de créer cette connaissance, l'identifiant existe déjà.`, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
     intent = await this._intentService.createEdit(intent, intentId);
     return plainToClass(IntentDto, camelcaseKeys(intent, {deep: true}));
   }
@@ -68,7 +89,7 @@ export class IntentController {
 
   private _formatIntent(intentDto: IntentDto): Intent {
     let intent: Intent = plainToClass(Intent, snakecaseKeys(intentDto));
-    if(intent.responses.findIndex(r => !r.id) >= 0) {
+    if (intent.responses.findIndex(r => !r.id) >= 0) {
       intent.responses.map(r => {
         delete r.id;
       });
