@@ -101,6 +101,9 @@ export class InboxService {
     if (filters.assignedTo) {
       query.andWhere(`inbox.user.email = '${filters.assignedTo}'`);
     }
+    if (filters.assignedToAll) {
+      query.andWhere(`inbox.user.email is not null`);
+    }
 
     return query;
   }

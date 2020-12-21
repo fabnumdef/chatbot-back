@@ -15,4 +15,7 @@ export class InboxFilterDto {
 
   @IsOptional()
   assignedTo: string;
+
+  @IsOptional()
+  assignedToAll: string;
 }
