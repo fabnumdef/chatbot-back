@@ -1,0 +1,29 @@
+---
+
+# Prerequisites: SSH access for user with password
+
+- hosts: localhost
+
+- name: install metricbeat
+  import_playbook: metricbeat.yml
+  vars:
+    ELASTIC_HOST: "{{ elastic_host }}"
+    ELASTIC_USERNAME: "{{ elastic_username }}"
+    ELASTIC_PASSWORD: "{{ elastic_password }}"
+    ELASTIC_METRICBEAT_INDEX: "{{ elastic_metricbeat_index }}"
+
+- name: install packetbeat
+  import_playbook: packetbeat.yml
+  vars:
+    ELASTIC_HOST: "{{ elastic_host }}"
+    ELASTIC_USERNAME: "{{ elastic_username }}"
+    ELASTIC_PASSWORD: "{{ elastic_password }}"
+    ELASTIC_PACKETBEAT_INDEX: "{{ elastic_packetbeat_index }}"
+
+- name: install filebeat
+  import_playbook: filebeat.yml
+  vars:
+    ELASTIC_HOST: "{{ elastic_host }}"
+    ELASTIC_USERNAME: "{{ elastic_username }}"
+    ELASTIC_PASSWORD: "{{ elastic_password }}"
+    ELASTIC_FILEBEAT_INDEX: "{{ elastic_filebeat_index }}"

@@ -19,6 +19,9 @@
         upgrade: 'yes'
         update_cache: 'yes'
 
+    - name: Ansible galaxy install elastic.beats role
+      shell: 'ansible-galaxy install elastic.beats,v7.10.1'
+
     - name: Set right rights on www directory
       file:
         path: '{{appsDir}}'
