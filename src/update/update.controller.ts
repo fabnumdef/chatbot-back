@@ -40,6 +40,8 @@ export class UpdateController {
     updateChatbot.updateBack = (updateChatbot.updateBack == 'true');
     // @ts-ignore
     updateChatbot.updateRasa = (updateChatbot.updateRasa == 'true');
+    // @ts-ignore
+    updateChatbot.updateLogs = (updateChatbot.updateLogs == 'true');
     this._updateService.update(updateChatbot, files);
   }
 

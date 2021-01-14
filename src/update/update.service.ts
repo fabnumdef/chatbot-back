@@ -39,7 +39,7 @@ export class UpdateService {
     console.log(`${new Date().toLocaleString()} - UPDATING CHATBOT`);
     await ansiblePlaybook.command(`generate-chatbot.yml -e '${JSON.stringify(extraVars)}'`).then(async (result) => {
       console.log(result);
-      if (updateChatbot.elastic_host && updateChatbot.elastic_username && updateChatbot.elastic_password) {
+      if (updateChatbot.updateLogs && updateChatbot.elastic_host && updateChatbot.elastic_username && updateChatbot.elastic_password) {
         await ansiblePlaybook.command(`elastic/elastic.yml -e '${JSON.stringify(extraVars)}'`).then((result) => {
           console.log(result);
         })

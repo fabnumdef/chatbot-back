@@ -15,6 +15,10 @@ export class UpdateChatbotDto {
   updateRasa: boolean;
 
   @IsString()
+  @IsNotEmpty()
+  updateLogs: boolean;
+
+  @IsString()
   @IsOptional()
   frontBranch: string = 'master';
 
