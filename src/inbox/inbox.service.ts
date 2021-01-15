@@ -315,7 +315,7 @@ export class InboxService {
   private async _generateWorksheet(options: PaginationQueryDto, filters: InboxFilterDto) {
     const inboxes = await this.getInboxQueryBuilder(PaginationUtils.setQuery(options, Inbox.getAttributesToSearch()), filters).getMany();
     let idx = 1;
-    const rows = [['Question', 'Statut', 'Date de la question']];
+    const rows = [['Question', 'Catégorie', 'Statut', '% de pertinence', 'Date de la question']];
     inboxes.forEach((inbox: Inbox) => {
       idx += 1;
       rows.push(this._generateRow(inbox, idx));
@@ -324,16 +324,17 @@ export class InboxService {
   }
   /**
    * Generate row for a worksheet
-   * @param intent
+   * @param inbox
    * @param idx
-   * @param idxResponse
    * @private
    */
   private _generateRow(inbox: Inbox, idx: number) {
     return [
       inbox.question,
+      inbox.intent?.category,
       InboxStatus_Fr[inbox.status],
-      inbox.created_at.toString(10)
+      inbox.confidence ? Math.round(inbox.confidence * 100).toString(10) : '0',
+      moment(inbox.created_at).format('DD/MM/YYYY hh:mm:ss')
     ]
   }
 
