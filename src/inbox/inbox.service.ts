@@ -182,7 +182,10 @@ export class InboxService {
       .select('int.main_question AS question')
       .addSelect("COUNT(inbox.intent) AS count")
       .innerJoin("intent", "int", 'int.id = inbox.intent')
+      // Remove phrase_presentation & co
       .where('int.id NOT IN (:...excludedIds)', {excludedIds: AppConstants.General.excluded_Ids})
+      // Remove small talks
+      .andWhere(`int.id NOT LIKE 'st_%'`)
     if (startDate) {
       query.andWhere(`DATE(to_timestamp(inbox.timestamp)) >= '${startDate}'`)
     }
@@ -191,7 +194,7 @@ export class InboxService {
     }
     query.groupBy('int.main_question')
       .orderBy('count', 'DESC', 'NULLS LAST')
-      .limit(7);
+      .limit(15);
     return query.getRawMany();
   }
 
@@ -241,8 +244,11 @@ export class InboxService {
     const startDate = filters.startDate ? moment(filters.startDate, 'DD/MM/YYYY').format('YYYY-MM-DD') : null;
     const endDate = filters.endDate ? moment(filters.endDate, 'DD/MM/YYYY').format('YYYY-MM-DD') : null;
 
+    let additionnalWhereClause = startDate ? `AND DATE(to_timestamp(inbox.timestamp)) >= '${startDate}'` : '';
+    additionnalWhereClause += endDate ? ` AND DATE(to_timestamp(inbox.timestamp)) <= '${endDate}'` : additionnalWhereClause;
+
     const query = this._inboxesRepository.createQueryBuilder('inbox')
-      .select(`100 * (SELECT COUNT(inbox.id) from inbox WHERE inbox.confidence >= ${confidence.toString(10)})/COUNT(inbox.id) as ratioResponseOk`);
+      .select(`100 * (SELECT COUNT(inbox.id) from inbox WHERE inbox.confidence >= ${confidence.toString(10)} ${additionnalWhereClause})/COUNT(inbox.id) as ratioResponseOk`);
     if (startDate) {
       query.where(`DATE(to_timestamp(inbox.timestamp)) >= '${startDate}'`)
     }
