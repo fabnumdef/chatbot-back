@@ -56,6 +56,9 @@ export class ChatbotConfig {
   @Column({ nullable: true, length: 500 })
   help: string;
 
+  @Column({ nullable: true, length: 20, default: 'Aide' })
+  help_btn: string;
+
   @Column({ default: false })
   storage: boolean;
 

@@ -65,6 +65,11 @@ export class ConfigDto {
   @MaxLength(500)
   help: string;
 
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(20)
+  help_btn: string;
+
   @IsBoolean()
   @IsOptional()
   storage: boolean;

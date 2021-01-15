@@ -53,6 +53,11 @@ export class ConfigUpdateDto {
 
   @IsString()
   @IsOptional()
+  @MaxLength(20)
+  helpBtn: string;
+
+  @IsString()
+  @IsOptional()
   storage: string;
 
   @IsString()
