@@ -5,6 +5,7 @@ import { ApiBearerAuth, ApiOperation, ApiTags } from "@nestjs/swagger";
 import { JwtGuard } from "@core/guards/jwt.guard";
 import { plainToClass } from "class-transformer";
 import { StatsMostAskedQuestionsDto } from "@core/dto/stats-most-asked-questions.dto";
+import { StatsMostAskedCategoriesDto } from "@core/dto/stats-most-asked-categories.dto";
 
 @ApiTags('stats')
 @Controller('stats')
@@ -29,6 +30,14 @@ export class StatsController {
   async sendBestData(@Body() filters: StatsFilterDto) {
     const result = {};
     result['mostAskedQuestions'] = plainToClass(StatsMostAskedQuestionsDto, await this._statsService.getMostAskedQuestions(filters));
+    return result;
+  }
+
+  @Post('best_categories')
+  @ApiOperation({ summary: 'Return the most relevant categories' })
+  async sendBestCategories(@Body() filters: StatsFilterDto) {
+    const result = {};
+    result['mostAskedCategories'] = plainToClass(StatsMostAskedCategoriesDto, await this._statsService.getMostAskedCategories(filters));
     return result;
   }
 

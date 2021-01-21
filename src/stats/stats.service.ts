@@ -5,6 +5,7 @@ import { KnowledgeService } from "../knowledge/knowledge.service";
 import { InboxService } from "../inbox/inbox.service";
 import { StatsMostAskedQuestionsDto } from "@core/dto/stats-most-asked-questions.dto";
 import { FeedbackService } from "../feedback/feedback.service";
+import { StatsMostAskedCategoriesDto } from "@core/dto/stats-most-asked-categories.dto";
 
 
 
@@ -40,6 +41,10 @@ export class StatsService {
 
   getMostAskedQuestions(filters: StatsFilterDto): Promise<StatsMostAskedQuestionsDto[]> {
     return this._inboxService.findMostAskedQuestions(filters);
+  }
+
+  getMostAskedCategories(filters: StatsFilterDto): Promise<StatsMostAskedCategoriesDto[]> {
+    return this._inboxService.findMostAskedCategories(filters);
   }
 
   getNeverAskedQuestions(filters: StatsFilterDto): Promise<Array<string>> {

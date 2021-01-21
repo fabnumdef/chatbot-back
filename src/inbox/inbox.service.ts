@@ -24,6 +24,7 @@ import { Cron, CronExpression } from "@nestjs/schedule";
 import { Events } from "@core/entities/events.entity";
 import * as fs from "fs";
 import { WorkBook } from "xlsx";
+import { StatsMostAskedCategoriesDto } from "@core/dto/stats-most-asked-categories.dto";
 
 const XLSX = require('xlsx');
 const uuid = require('uuid');
@@ -193,6 +194,30 @@ export class InboxService {
       query.andWhere(`DATE(to_timestamp(inbox.timestamp)) <= '${endDate}'`)
     }
     query.groupBy('int.main_question')
+      .orderBy('count', 'DESC', 'NULLS LAST')
+      .limit(15);
+    return query.getRawMany();
+  }
+
+  findMostAskedCategories(filters: StatsFilterDto): Promise<StatsMostAskedCategoriesDto[]> {
+    const startDate = filters.startDate ? (moment(filters.startDate, 'DD/MM/YYYY').format('YYYY-MM-DD')) : null;
+    const endDate = filters.endDate ? moment(filters.endDate, 'DD/MM/YYYY').format('YYYY-MM-DD') : null;
+
+    const query = this._inboxesRepository.createQueryBuilder('inbox')
+      .select('int.category AS category')
+      .addSelect("COUNT(inbox.intent) AS count")
+      .innerJoin("intent", "int", 'int.id = inbox.intent')
+      // Remove phrase_presentation & co
+      .where('int.id NOT IN (:...excludedIds)', {excludedIds: AppConstants.General.excluded_Ids})
+      // Remove small talks
+      .andWhere(`int.id NOT LIKE 'st_%'`)
+    if (startDate) {
+      query.andWhere(`DATE(to_timestamp(inbox.timestamp)) >= '${startDate}'`)
+    }
+    if (endDate) {
+      query.andWhere(`DATE(to_timestamp(inbox.timestamp)) <= '${endDate}'`)
+    }
+    query.groupBy('int.category')
       .orderBy('count', 'DESC', 'NULLS LAST')
       .limit(15);
     return query.getRawMany();
