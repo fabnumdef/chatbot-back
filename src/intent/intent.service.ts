@@ -32,8 +32,8 @@ export class IntentService {
     return this._intentsRepository.find(params);
   }
 
-  findFullIntents(): Promise<Intent[]> {
-    return this.getFullIntentQueryBuilder().getMany();
+  findFullIntents(getHidden = true): Promise<Intent[]> {
+    return this.getFullIntentQueryBuilder(null, getHidden).getMany();
   }
 
   async paginate(options: PaginationQueryDto, filters: IntentFilterDto): Promise<Pagination<Intent>> {
@@ -86,6 +86,9 @@ export class IntentService {
     if (filters.categories && filters.categories.length > 0) {
       query.andWhere('intent.category IN (:...categories)', {categories: filters.categories});
     }
+    if(filters.hidden) {
+      query.andWhere('intent.hidden = true');
+    }
     if (filters.expiresAt) {
       query.andWhere(`intent.expires_at::date >= date '${filters.expiresAt}'`);
     } else if (filters.expires) {
@@ -98,7 +101,7 @@ export class IntentService {
     return query;
   }
 
-  getFullIntentQueryBuilder(id?: string) {
+  getFullIntentQueryBuilder(id?: string, getHidden?: boolean) {
     return this._intentsRepository.createQueryBuilder('intent')
       .leftJoinAndSelect('intent.responses', 'responses')
       .leftJoinAndSelect('intent.knowledges', 'knowledges')
@@ -111,6 +114,7 @@ export class IntentService {
         ]
       })
       .andWhere(id ? `intent.id = '${id}'` : `'1'`)
+      .andWhere(getHidden ? `'1'` : `hidden = false`)
       .orderBy({
         'intent.id': 'ASC',
         'knowledges.id': 'ASC',
@@ -140,7 +144,7 @@ export class IntentService {
   }
 
   findOne(id: string): Promise<Intent> {
-    return this.getFullIntentQueryBuilder(id).getOne();
+    return this.getFullIntentQueryBuilder(id, true).getOne();
   }
 
   findIntentsMatching(query: string, intentsNumber = 10): Promise<Intent[]> {

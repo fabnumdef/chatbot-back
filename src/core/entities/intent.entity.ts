@@ -18,6 +18,9 @@ export class Intent {
   @Column({default: IntentStatus.to_deploy})
   status: IntentStatus;
 
+  @Column({ nullable: false, default: false })
+  hidden: boolean;
+
   @OneToMany(type => Knowledge, knowledge => knowledge.intent, {cascade: true})
   knowledges: Knowledge[];
 

@@ -1,4 +1,13 @@
-import { IsArray, IsDateString, IsNotEmpty, IsNumber, IsOptional, IsString, ValidateIf } from "class-validator";
+import {
+  IsArray,
+  IsBoolean,
+  IsDateString,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+  ValidateIf
+} from "class-validator";
 import { IntentStatus } from "@core/enums/intent-status.enum";
 import { ResponseDto } from "@core/dto/response.dto";
 import { KnowledgeDto } from "@core/dto/knowledge.dto";
@@ -20,6 +29,10 @@ export class IntentDto {
   @IsString()
   @IsOptional()
   status?: IntentStatus;
+
+  @IsBoolean()
+  @IsOptional()
+  hidden?: boolean;
 
   @IsNumber()
   @IsOptional()

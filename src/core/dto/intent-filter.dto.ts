@@ -8,6 +8,9 @@ export class IntentFilterDto {
   intentInError: boolean;
 
   @IsOptional()
+  hidden: boolean;
+
+  @IsOptional()
   expiresAt: string;
 
   @IsOptional()

@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsNumber, IsObject, IsOptional, IsString } from "class-validator";
+import { IsBoolean, IsNotEmpty, IsNumber, IsObject, IsOptional, IsString } from "class-validator";
 import { IntentStatus } from "@core/enums/intent-status.enum";
 import { ResponseModel } from "@core/models/response.model";
 import { KnowledgeModel } from "@core/models/knowledge.model";
@@ -19,6 +19,10 @@ export class IntentModel {
   @IsString()
   @IsNotEmpty()
   status: IntentStatus;
+
+  @IsBoolean()
+  @IsOptional()
+  hidden: boolean;
 
   @IsNumber()
   @IsOptional()
