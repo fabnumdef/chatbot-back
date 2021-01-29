@@ -125,7 +125,7 @@ export class FileService {
       'Type de réponse': 'response_type',
       'Réponse(s)': 'response',
       'Questions synonymes (à séparer par un point-virgule ;)': 'questions',
-      'Contenu variable (DD/MM/YYYY)': 'expires_at'
+      'Expire le (DD/MM/YYYY)': 'expires_at'
     };
     const options: Sheet2JSONOpts = {};
     const excelJson = this._xlsx.utils.sheet_to_json(worksheet, options);
@@ -233,7 +233,8 @@ export class FileService {
           category: t.category,
           main_question: t.main_question,
           status: IntentStatus.to_deploy,
-          expires_at: t.expires_at ? t.expires_at.toDate() : null
+          expires_at: t.expires_at ? t.expires_at.toDate() : null,
+          hidden: false
         });
       }
     });
@@ -302,7 +303,7 @@ export class FileService {
       })
       .getMany();
     let idx = 1;
-    const rows = [['ID', 'Catégorie', 'Question', 'Type de réponse', 'Réponse(s)', '', 'Questions synonymes (à séparer par un point-virgule ;)', 'Contenu variable (DD/MM/YYYY)',  'Date de dernière mise à jour']];
+    const rows = [['ID', 'Catégorie', 'Question', 'Type de réponse', 'Réponse(s)', '', 'Questions synonymes (à séparer par un point-virgule ;)', 'Expire le (DD/MM/YYYY)',  'Date de dernière mise à jour']];
     intents.forEach((intent: Intent) => {
       intent.responses.forEach((r, idxResponse) => {
         idx += 1;
