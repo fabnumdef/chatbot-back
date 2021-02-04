@@ -1,6 +1,5 @@
-import { IsBoolean, IsHexColor, IsNotEmpty, IsOptional, IsString, MaxLength } from "class-validator";
+import { IsHexColor, IsOptional, IsString, MaxLength } from "class-validator";
 import { ApiProperty } from "@nestjs/swagger";
-import { FileUploadDto } from "@core/dto/file-upload.dto";
 
 export class ConfigUpdateDto {
   @IsString()
@@ -83,4 +82,8 @@ export class ConfigUpdateDto {
   @IsString()
   @IsOptional()
   showRebootBtn: boolean;
+
+  @IsString()
+  @IsOptional()
+  delayBetweenMessages: number;
 }

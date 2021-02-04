@@ -97,4 +97,8 @@ export class ConfigDto {
   @IsBoolean()
   @IsNotEmpty()
   showRebootBtn: boolean;
+
+  @IsNumber()
+  @IsNotEmpty()
+  delayBetweenMessages: number;
 }
