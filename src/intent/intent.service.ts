@@ -15,8 +15,11 @@ import { ChatbotConfigService } from "../chatbot-config/chatbot-config.service";
 import { ChatbotConfig } from "@core/entities/chatbot-config.entity";
 import { StatsFilterDto } from '@core/dto/stats-filter.dto';
 import * as moment from 'moment';
-import { StatsMostAskedQuestionsDto } from "@core/dto/stats-most-asked-questions.dto";
 import { AppConstants } from "@core/constant";
+import { Response } from "@core/entities/response.entity";
+import { ResponseType } from "@core/enums/response-type.enum";
+import { ResponseModel } from "@core/models/response.model";
+import { KnowledgeModel } from "@core/models/knowledge.model";
 
 @Injectable()
 export class IntentService {
@@ -36,7 +39,7 @@ export class IntentService {
     return this.getFullIntentQueryBuilder(null, getHidden).getMany();
   }
 
-  async paginate(options: PaginationQueryDto, filters: IntentFilterDto): Promise<Pagination<Intent>> {
+  async paginate(options: PaginationQueryDto, filters: IntentFilterDto): Promise<Pagination<IntentModel>> {
     const results = await paginate(
       this.getIntentQueryBuilder(PaginationUtils.setQuery(options, Intent.getAttributesToSearch()), filters),
       options
@@ -44,11 +47,22 @@ export class IntentService {
 
     // Obligé de faire ça pour la pagination quand il y a des left join
     return new Pagination(
-      await Promise.all(results.items.map(async (item: Intent) => {
-        const knowledges = await this._knowledgeService.findByIntent(item);
-        const responses = await this._responseService.findByIntent(item);
+      // @ts-ignore
+      await Promise.all(results.items.map(async (item: IntentModel) => {
+        const [knowledges, responses, previousIntents, nextIntents] = await Promise.all([
+          this._knowledgeService.findByIntent(item),
+          this._responseService.findByIntent(item),
+          this._findPreviousIntents(item),
+          this._findNextIntents(item)
+        ])
+        // @ts-ignore
         item.knowledges = knowledges;
+        // @ts-ignore
         item.responses = responses;
+        // @ts-ignore
+        item.previousIntents = previousIntents;
+        // @ts-ignore
+        item.nextIntents = nextIntents;
 
         return item;
       })),
@@ -86,7 +100,7 @@ export class IntentService {
     if (filters.categories && filters.categories.length > 0) {
       query.andWhere('intent.category IN (:...categories)', {categories: filters.categories});
     }
-    if(filters.hidden) {
+    if (filters.hidden) {
       query.andWhere('intent.hidden = true');
     }
     if (filters.expiresAt) {
@@ -94,7 +108,7 @@ export class IntentService {
     } else if (filters.expires) {
       query.andWhere('intent.expires_at is not null');
     }
-    if(filters.intentInError) {
+    if (filters.intentInError) {
       query.andWhere('(SELECT count(*) FROM "knowledge" WHERE "knowledge"."intentId" = "intent"."id") < 2');
     }
 
@@ -240,6 +254,35 @@ export class IntentService {
       .orderBy("intent.main_question", 'ASC');
 
     return query.getRawMany();
+  }
+
+  private _findPreviousIntents(intent: IntentModel): Promise<Intent[]> {
+    return this._intentsRepository.find({
+      select: ['id', 'main_question', 'category'],
+      join: {alias: 'intents', innerJoin: {responses: 'intents.responses'}},
+      where: qb => {
+        qb.where(`responses.response like '%<${intent.id}>%'`)
+      },
+    });
+  }
+
+  private async _findNextIntents(intent: IntentModel): Promise<Intent[]> {
+    const intentsId = (await this._responseService.findByIntent(intent)).map((r: Response) => {
+      if (![ResponseType.quick_reply, ResponseType.button].includes(r.response_type) || !r.response) {
+        return null;
+      }
+      return r.response.substring(r.response.indexOf('<') + 1, r.response.indexOf('>')).trim();
+    }).filter(r => !!r);
+    if (intentsId.length < 1) {
+      return;
+    }
+    const sql = this._intentsRepository.createQueryBuilder('intent')
+      .select(['id', 'main_question', 'category'])
+      .where("intent.id IN (:...ids)", {
+        ids: intentsId
+      })
+
+    return sql.getRawMany();
   }
 
   private async _updateNeedTraining() {

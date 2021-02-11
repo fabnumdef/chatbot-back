@@ -35,4 +35,12 @@ export class IntentModel {
   @IsObject()
   @IsNotEmpty()
   knowledges?: KnowledgeModel[];
+
+  @IsObject()
+  @IsNotEmpty()
+  previousIntents?: IntentModel[];
+
+  @IsObject()
+  @IsNotEmpty()
+  nextIntents?: IntentModel[];
 }

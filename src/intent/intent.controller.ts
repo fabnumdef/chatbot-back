@@ -23,6 +23,7 @@ import { UpdateResult } from "typeorm/query-builder/result/UpdateResult";
 import { PaginationQueryDto } from "@core/dto/pagination-query.dto";
 import { Pagination } from "nestjs-typeorm-paginate/index";
 import { IntentFilterDto } from "@core/dto/intent-filter.dto";
+import { IntentModel } from "@core/models/intent.model";
 
 @ApiTags('intent')
 @Controller('intent')
@@ -56,7 +57,7 @@ export class IntentController {
   @ApiOperation({summary: 'Return intents paginated'})
   async getIntentsPagination(@Query() options: PaginationQueryDto,
                              @Body() filters: IntentFilterDto): Promise<IntentDto[]> {
-    const intents: Pagination<Intent> = await this._intentService.paginate(options, filters);
+    const intents: Pagination<IntentModel> = await this._intentService.paginate(options, filters);
     intents.items.filter(i => !!i).map(i => plainToClass(IntentDto, camelcaseKeys(i, {deep: true})));
     // @ts-ignore
     return camelcaseKeys(intents, {deep: true});

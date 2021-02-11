@@ -4,6 +4,7 @@ import { Repository } from "typeorm";
 import { Knowledge } from "@core/entities/knowledge.entity";
 import { KnowledgeModel } from "@core/models/knowledge.model";
 import { Intent } from "@core/entities/intent.entity";
+import { IntentModel } from "@core/models/intent.model";
 
 @Injectable()
 export class KnowledgeService {
@@ -12,7 +13,7 @@ export class KnowledgeService {
               private readonly _knowledgesRepository: Repository<Knowledge>) {
   }
 
-  findByIntent(intent: Intent): Promise<Knowledge[]> {
+  findByIntent(intent: IntentModel): Promise<Knowledge[]> {
     return this._knowledgesRepository.find({where: {'intent': intent}, order: {'id': 'ASC'}});
   }
 

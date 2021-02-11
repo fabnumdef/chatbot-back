@@ -4,6 +4,7 @@ import { Repository } from "typeorm";
 import { Response } from "@core/entities/response.entity";
 import { ResponseModel } from "@core/models/response.model";
 import { Intent } from "@core/entities/intent.entity";
+import { IntentModel } from "@core/models/intent.model";
 
 @Injectable()
 export class ResponseService {
@@ -12,7 +13,7 @@ export class ResponseService {
               private readonly _responsesRepository: Repository<Response>) {
   }
 
-  findByIntent(intent: Intent): Promise<Response[]> {
+  findByIntent(intent: IntentModel): Promise<Response[]> {
     return this._responsesRepository.find({where: {'intent': intent}, order: {'id': 'ASC'}});
   }
 
