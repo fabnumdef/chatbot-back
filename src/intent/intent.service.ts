@@ -257,13 +257,13 @@ export class IntentService {
   }
 
   private _findPreviousIntents(intent: IntentModel): Promise<Intent[]> {
-    return this._intentsRepository.find({
-      select: ['id', 'main_question', 'category'],
-      join: {alias: 'intents', innerJoin: {responses: 'intents.responses'}},
-      where: qb => {
-        qb.where(`responses.response like '%<${intent.id}>%'`)
-      },
-    });
+    const sql = this._intentsRepository.createQueryBuilder('intent')
+      .select(['intent.id', 'main_question', 'category',
+        '(select count(*) from response where intent.id = response."intentId" and type = \'quick_reply\') as linked_responses'])
+      .leftJoin('intent.responses', 'responses')
+      .where(`responses.response like '%<${intent.id}>%'`);
+
+    return sql.getRawMany();
   }
 
   private async _findNextIntents(intent: IntentModel): Promise<Intent[]> {
@@ -277,10 +277,11 @@ export class IntentService {
       return;
     }
     const sql = this._intentsRepository.createQueryBuilder('intent')
-      .select(['id', 'main_question', 'category'])
+      .select(['intent.id', 'main_question', 'category',
+        '(select count(*) from response where intent.id = response."intentId" and type = \'quick_reply\') as linked_responses'])
       .where("intent.id IN (:...ids)", {
         ids: intentsId
-      })
+      });
 
     return sql.getRawMany();
   }

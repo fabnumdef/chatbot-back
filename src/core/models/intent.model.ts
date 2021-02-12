@@ -43,4 +43,8 @@ export class IntentModel {
   @IsObject()
   @IsNotEmpty()
   nextIntents?: IntentModel[];
+
+  @IsNumber()
+  @IsOptional()
+  linkedResponses?: number;
 }
