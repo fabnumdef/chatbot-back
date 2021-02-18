@@ -157,8 +157,23 @@ export class IntentService {
     return intents.filter(i => !!i.category).map(i => i.category);
   }
 
-  findOne(id: string): Promise<Intent> {
-    return this.getFullIntentQueryBuilder(id, true).getOne();
+  async findOne(id: string): Promise<Intent> {
+    const intent = await this.getFullIntentQueryBuilder(id, true).getOne();
+    if(!intent) {
+      return;
+    }
+    const [previousIntents, nextIntents] = await Promise.all([
+      // @ts-ignore
+      this._findPreviousIntents(intent),
+      // @ts-ignore
+      this._findNextIntents(intent)
+    ])
+    // @ts-ignore
+    intent.previousIntents = previousIntents;
+    // @ts-ignore
+    intent.nextIntents = nextIntents;
+
+    return intent;
   }
 
   findIntentsMatching(query: string, intentsNumber = 10): Promise<Intent[]> {
@@ -258,7 +273,7 @@ export class IntentService {
 
   private _findPreviousIntents(intent: IntentModel): Promise<Intent[]> {
     const sql = this._intentsRepository.createQueryBuilder('intent')
-      .select(['intent.id', 'main_question', 'category',
+      .select(['intent.id as id', 'main_question', 'category',
         '(select count(*) from response where intent.id = response."intentId" and type = \'quick_reply\') as linked_responses'])
       .leftJoin('intent.responses', 'responses')
       .where(`responses.response like '%<${intent.id}>%'`);
@@ -267,17 +282,20 @@ export class IntentService {
   }
 
   private async _findNextIntents(intent: IntentModel): Promise<Intent[]> {
-    const intentsId = (await this._responseService.findByIntent(intent)).map((r: Response) => {
+    let intentsId = (await this._responseService.findByIntent(intent)).map((r: Response) => {
       if (![ResponseType.quick_reply, ResponseType.button].includes(r.response_type) || !r.response) {
         return null;
       }
-      return r.response.substring(r.response.indexOf('<') + 1, r.response.indexOf('>')).trim();
+      return r.response.split(';').map(text => {
+        return text.substring(text.indexOf('<') + 1, text.indexOf('>')).trim();
+      })
     }).filter(r => !!r);
+    intentsId = [].concat(...intentsId);
     if (intentsId.length < 1) {
       return;
     }
     const sql = this._intentsRepository.createQueryBuilder('intent')
-      .select(['intent.id', 'main_question', 'category',
+      .select(['intent.id as id', 'main_question', 'category',
         '(select count(*) from response where intent.id = response."intentId" and type = \'quick_reply\') as linked_responses'])
       .where("intent.id IN (:...ids)", {
         ids: intentsId
