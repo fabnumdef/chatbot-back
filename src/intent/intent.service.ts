@@ -6,7 +6,7 @@ import { IntentModel } from "@core/models/intent.model";
 import { UpdateResult } from "typeorm/query-builder/result/UpdateResult";
 import { IntentStatus } from "@core/enums/intent-status.enum";
 import { PaginationQueryDto } from "@core/dto/pagination-query.dto";
-import { paginate, Pagination } from "nestjs-typeorm-paginate/index";
+import { paginate, Pagination } from "nestjs-typeorm-paginate";
 import { KnowledgeService } from "../knowledge/knowledge.service";
 import { ResponseService } from "../response/response.service";
 import { PaginationUtils } from "@core/pagination-utils";
@@ -18,8 +18,6 @@ import * as moment from 'moment';
 import { AppConstants } from "@core/constant";
 import { Response } from "@core/entities/response.entity";
 import { ResponseType } from "@core/enums/response-type.enum";
-import { ResponseModel } from "@core/models/response.model";
-import { KnowledgeModel } from "@core/models/knowledge.model";
 
 @Injectable()
 export class IntentService {
@@ -37,6 +35,12 @@ export class IntentService {
 
   findFullIntents(getHidden = true): Promise<Intent[]> {
     return this.getFullIntentQueryBuilder(null, getHidden).getMany();
+  }
+
+  findByCategory(category: string): Promise<Intent[]> {
+    return this.getIntentAndResponseQueryBuilder()
+      .andWhere(`category = '${category}'`)
+      .getMany();
   }
 
   async paginate(options: PaginationQueryDto, filters: IntentFilterDto): Promise<Pagination<IntentModel>> {
@@ -71,7 +75,7 @@ export class IntentService {
     );
   }
 
-  getIntentQueryBuilder(findManyOptions: FindManyOptions, filters?: IntentFilterDto) {
+  getIntentQueryBuilder(findManyOptions: FindManyOptions, filters?: IntentFilterDto, getResponses?: boolean) {
     const query = this._intentsRepository.createQueryBuilder('intent')
       .where('intent.status IN (:...status)', {
         status: [
@@ -93,6 +97,11 @@ export class IntentService {
       .addOrderBy(`case when intent.expires_at::date >= now() - interval '1 month' then intent.expires_at end`)
       .addOrderBy('intent.updated_at', 'DESC')
       .addOrderBy('intent.main_question', 'ASC');
+
+    if (getResponses) {
+      query.leftJoinAndSelect('intent.responses', 'responses');
+      query.addOrderBy('responses.id', 'ASC');
+    }
 
     if (!filters) {
       return query;
@@ -136,6 +145,26 @@ export class IntentService {
       })
   }
 
+  getIntentAndResponseQueryBuilder() {
+    return this._intentsRepository.createQueryBuilder('intent')
+      .select('intent.main_question')
+      .addSelect('intent.category')
+      .leftJoinAndSelect('intent.responses', 'responses')
+      .where('intent.status IN (:...status)', {
+        status: [
+          IntentStatus.to_deploy,
+          IntentStatus.active,
+          IntentStatus.active_modified,
+          IntentStatus.in_training
+        ]
+      })
+      .andWhere(`hidden = false`)
+      .orderBy({
+        'intent.main_question': 'ASC',
+        'responses.id': 'ASC'
+      })
+  }
+
   async findAllCategories(active = false): Promise<string[]> {
     const query = this._intentsRepository.createQueryBuilder('intent')
       .select('DISTINCT category', 'category')
@@ -159,7 +188,7 @@ export class IntentService {
 
   async findOne(id: string): Promise<Intent> {
     const intent = await this.getFullIntentQueryBuilder(id, true).getOne();
-    if(!intent) {
+    if (!intent) {
       return;
     }
     const [previousIntents, nextIntents] = await Promise.all([
@@ -176,12 +205,20 @@ export class IntentService {
     return intent;
   }
 
-  findIntentsMatching(query: string, intentsNumber = 10): Promise<Intent[]> {
-    return this.getIntentQueryBuilder(PaginationUtils.setQuery(<PaginationQueryDto>{query: query}, Intent.getAttributesToSearch()), null)
+  findIntentsMatching(query: string, intentsNumber = 1000, getResponses = false): Promise<Intent[]> {
+    const queryBuilder = this.getIntentQueryBuilder(PaginationUtils.setQuery(<PaginationQueryDto>{query: query}, Intent.getAttributesToSearch(), 'intent'), null, getResponses)
       .andWhere('hidden = False')
-      .select(['id', 'main_question', 'category'])
-      .orderBy('main_question', 'ASC', 'NULLS LAST')
-      .take(intentsNumber)
+      .select('intent.id')
+      .addSelect('intent.main_question')
+      .addSelect('intent.category')
+      .addOrderBy('intent.main_question', 'ASC', 'NULLS LAST')
+
+    console.log(queryBuilder.getSql());
+    if(getResponses) {
+      return queryBuilder.take(intentsNumber)
+        .getMany();
+    }
+    return queryBuilder.take(intentsNumber)
       .getRawMany();
   }
 

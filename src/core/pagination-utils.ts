@@ -4,7 +4,8 @@ import * as escape from "pg-escape";
 
 export class PaginationUtils {
   static setQuery(pagination: PaginationQueryDto,
-                  attributes: string[]): any {
+                  attributes: string[],
+                  entity?: string): any {
     const options: FindManyOptions = {};
 
     let queries = pagination.query ? pagination.query.trim().split(' ') : null;
@@ -17,7 +18,7 @@ export class PaginationUtils {
         options.where += idx > 0 ? ') or (' : '';
         queries.forEach((q, idxQuery) => {
           options.where += idxQuery > 0 ? ' and ' : '';
-          options.where += escape(`unaccent(upper(%I)) like unaccent(%L)`, a, q.toUpperCase());
+          options.where += escape(`unaccent(upper(${entity ? entity + '.' : ''}%I)) like unaccent(%L)`, a, q.toUpperCase());
         });
       });
       options.where += '))';

@@ -33,9 +33,24 @@ export class PublicController {
   }
 
   @Get('/intents')
-  @ApiOperation({summary: 'Return the 10 firsts matching intents'})
-  async getIntents(@Query('query') query: string): Promise<IntentDto[]> {
-    const intents: Intent[] = await this._intentService.findIntentsMatching(decodeURIComponent(query), 10);
+  @ApiOperation({summary: 'Return the firsts matching intents'})
+  async getIntents(@Query('query') query: string,
+                   @Query('intentsNumber') intentsNumber: number,
+                   @Query('getResponses') getResponses: boolean): Promise<IntentDto[]> {
+    const intents: Intent[] = await this._intentService.findIntentsMatching(decodeURIComponent(query), intentsNumber, getResponses);
+    return plainToClass(IntentDto, camelcaseKeys(intents, {deep: true}));
+  }
+
+  @Get('/categories')
+  @ApiOperation({summary: 'Return all actives categories'})
+  async getCategories(): Promise<string[]> {
+    return await this._intentService.findAllCategories(true);
+  }
+
+  @Get('/category/:category')
+  @ApiOperation({summary: 'Return intents of the category'})
+  async getCategory(@Param('category') category: string): Promise<IntentDto[]> {
+    const intents: Intent[] = await this._intentService.findByCategory(decodeURIComponent(category));
     return plainToClass(IntentDto, camelcaseKeys(intents, {deep: true}));
   }
 
