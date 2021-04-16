@@ -86,7 +86,7 @@ export class IntentService {
         ]
       })
       .andWhere(!!findManyOptions.where ? findManyOptions.where.toString() : `'1'`)
-      .addOrderBy(`case 
+      .orderBy(`case 
           when intent.status = 'to_deploy' then 1
           when intent.status = 'in_training' then 2
           when intent.status = 'active_modified' then 3
