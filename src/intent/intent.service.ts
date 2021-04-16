@@ -86,13 +86,11 @@ export class IntentService {
         ]
       })
       .andWhere(!!findManyOptions.where ? findManyOptions.where.toString() : `'1'`)
-      .addOrderBy(`case when intent.expires_at::date >= now() - interval '1 month' then intent.expires_at end`)
-      .addOrderBy('intent.updated_at', 'DESC')
-      .addOrderBy('intent.main_question', 'ASC');
 
     if (getResponses) {
-      query.leftJoinAndSelect('intent.responses', 'responses');
-      query.addOrderBy('responses.id', 'ASC');
+      query.leftJoinAndSelect('intent.responses', 'responses')
+        .addOrderBy('intent.main_question', 'ASC')
+        .addOrderBy('responses.id', 'ASC');
     } else {
       query.addOrderBy(`case intent.status 
           when 'to_deploy' then 1
@@ -102,6 +100,9 @@ export class IntentService {
           when 'to_archive' then 5
           when 'archived' then 6
           end`)
+        .addOrderBy(`case when intent.expires_at::date >= now() - interval '1 month' then intent.expires_at end`)
+        .addOrderBy('intent.updated_at', 'DESC')
+        .addOrderBy('intent.main_question', 'ASC');
     }
 
     if (!filters) {
@@ -215,7 +216,7 @@ export class IntentService {
       .addOrderBy('intent.main_question', 'ASC', 'NULLS LAST')
 
     console.log(queryBuilder.getSql());
-    if(getResponses) {
+    if (getResponses) {
       return queryBuilder.take(intentsNumber)
         .getMany();
     }
