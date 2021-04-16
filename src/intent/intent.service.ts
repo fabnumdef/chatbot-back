@@ -86,11 +86,13 @@ export class IntentService {
         ]
       })
       .andWhere(!!findManyOptions.where ? findManyOptions.where.toString() : `'1'`)
-      .addOrderBy(`case intent.status when 'to_deploy' then 1 when 'in_training' then 2
-          when 'active_modified' then 3
-          when 'active' then 4
-          when 'to_archive' then 5
-          when 'archived' then 6
+      .addOrderBy(`case intent.status 
+          when intent.status = 'to_deploy' then 1
+          when intent.status = 'in_training' then 2
+          when intent.status = 'active_modified' then 3
+          when intent.status = 'active' then 4
+          when intent.status = 'to_archive' then 5
+          when intent.status = 'archived' then 6
           end`)
       .addOrderBy(`case when intent.expires_at::date >= now() - interval '1 month' then intent.expires_at end`)
       .addOrderBy('intent.updated_at', 'DESC')
