@@ -87,13 +87,7 @@ export class IntentService {
       })
       .andWhere(!!findManyOptions.where ? findManyOptions.where.toString() : `'1'`)
 
-    if (getResponses) {
-      query.leftJoinAndSelect('intent.responses', 'responses')
-        .orderBy({
-          'intent.main_question': 'ASC',
-          'responses.id': 'ASC'
-        })
-    } else {
+    if (!getResponses) {
       query.addOrderBy(`case intent.status 
           when 'to_deploy' then 1
           when 'in_training' then 2
@@ -216,9 +210,12 @@ export class IntentService {
       .addSelect('intent.main_question')
       .addSelect('intent.category')
 
-    console.log(queryBuilder.getSql());
     if (getResponses) {
-      return queryBuilder
+      return queryBuilder.leftJoinAndSelect('intent.responses', 'responses')
+        .orderBy({
+          'intent.main_question': 'ASC',
+          'responses.id': 'ASC'
+        })
         .getMany();
     }
     return queryBuilder.take(intentsNumber)
