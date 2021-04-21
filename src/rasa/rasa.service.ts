@@ -53,7 +53,7 @@ export class RasaService {
   }
 
   async generateFiles() {
-    const intents: Intent[] = await this._intentService.findFullIntents(false);
+    const intents: Intent[] = await this._intentService.findFullIntents(null, null, false);
     this._intentsToRasa(intents);
   }
 

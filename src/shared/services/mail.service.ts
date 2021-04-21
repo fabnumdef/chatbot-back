@@ -1,8 +1,11 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { MailerService } from "@nestjs-modules/mailer";
+import * as path from "path";
 
 @Injectable()
 export class MailService {
+  private _appDir = '/var/www/chatbot-back';
+
   constructor(private readonly _mailerService: MailerService) {
   }
 
@@ -19,7 +22,7 @@ export class MailService {
         to: email,
         from: `${process.env.MAIL_USER}`,
         subject: subject,
-        template: template,
+        template: path.resolve(this._appDir, 'templates', template),
         context: context,
       }).then((info) => {
         console.log(`${new Date().toLocaleString()} - MAIL SEND TO: ${email} WITH SUBJECT: ${subject} WITH TEMPLATE: ${template} AND CONTEXT: ${JSON.stringify(context)}`);

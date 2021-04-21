@@ -1,6 +1,6 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from "@nestjs/typeorm";
-import { FindManyOptions, In, Repository } from "typeorm";
+import { FindManyOptions, In, QueryBuilder, Repository } from "typeorm";
 import { Intent } from "@core/entities/intent.entity";
 import { IntentModel } from "@core/models/intent.model";
 import { UpdateResult } from "typeorm/query-builder/result/UpdateResult";
@@ -18,6 +18,7 @@ import * as moment from 'moment';
 import { AppConstants } from "@core/constant";
 import { Response } from "@core/entities/response.entity";
 import { ResponseType } from "@core/enums/response-type.enum";
+import { SelectQueryBuilder } from "typeorm/query-builder/SelectQueryBuilder";
 
 @Injectable()
 export class IntentService {
@@ -33,8 +34,17 @@ export class IntentService {
     return this._intentsRepository.find(params);
   }
 
-  findFullIntents(getHidden = true): Promise<Intent[]> {
-    return this.getFullIntentQueryBuilder(null, getHidden).getMany();
+  findFullIntents(options: PaginationQueryDto = null,
+                  filters: IntentFilterDto = null,
+                  getHidden = true,
+                  getResponses = true,
+                  getKnowledges = true): Promise<Intent[]> {
+    return this.getFullIntentQueryBuilder(PaginationUtils.setQuery(options, Intent.getAttributesToSearch(), 'intent'),
+      filters,
+      null,
+      getHidden,
+      getResponses,
+      getKnowledges).getMany();
   }
 
   findByCategory(category: string): Promise<Intent[]> {
@@ -45,7 +55,7 @@ export class IntentService {
 
   async paginate(options: PaginationQueryDto, filters: IntentFilterDto): Promise<Pagination<IntentModel>> {
     const results = await paginate(
-      this.getIntentQueryBuilder(PaginationUtils.setQuery(options, Intent.getAttributesToSearch()), filters),
+      this.getIntentQueryBuilder(PaginationUtils.setQuery(options, Intent.getAttributesToSearch(), 'intent'), filters),
       options
     );
 
@@ -75,8 +85,8 @@ export class IntentService {
     );
   }
 
-  getIntentQueryBuilder(findManyOptions: FindManyOptions, filters?: IntentFilterDto, getResponses?: boolean) {
-    const query = this._intentsRepository.createQueryBuilder('intent')
+  getIntentQueryBuilder(findManyOptions: FindManyOptions, filters?: IntentFilterDto, getResponses?: boolean): SelectQueryBuilder<any> {
+    let query = this._intentsRepository.createQueryBuilder('intent')
       .where('intent.status IN (:...status)', {
         status: [
           IntentStatus.to_deploy,
@@ -101,31 +111,17 @@ export class IntentService {
         .addOrderBy('intent.main_question', 'ASC', 'NULLS LAST');
     }
 
-    if (!filters) {
-      return query;
-    }
-    if (filters.categories && filters.categories.length > 0) {
-      query.andWhere('intent.category IN (:...categories)', {categories: filters.categories});
-    }
-    if (filters.hidden) {
-      query.andWhere('intent.hidden = true');
-    }
-    if (filters.expiresAt) {
-      query.andWhere(`intent.expires_at::date >= date '${filters.expiresAt}'`);
-    } else if (filters.expires) {
-      query.andWhere('intent.expires_at is not null');
-    }
-    if (filters.intentInError) {
-      query.andWhere('(SELECT count(*) FROM "knowledge" WHERE "knowledge"."intentId" = "intent"."id") < 2');
-    }
-
+    query = this._addFilters(query, filters);
     return query;
   }
 
-  getFullIntentQueryBuilder(id?: string, getHidden?: boolean) {
-    return this._intentsRepository.createQueryBuilder('intent')
-      .leftJoinAndSelect('intent.responses', 'responses')
-      .leftJoinAndSelect('intent.knowledges', 'knowledges')
+  getFullIntentQueryBuilder(findManyOptions: FindManyOptions,
+                            filters: IntentFilterDto,
+                            id?: string,
+                            getHidden?: boolean,
+                            getResponses = true,
+                            getKnowledges = true): SelectQueryBuilder<any> {
+    let query = this._intentsRepository.createQueryBuilder('intent')
       .where("intent.status IN (:...status)", {
         status: [
           IntentStatus.to_deploy,
@@ -134,13 +130,25 @@ export class IntentService {
           IntentStatus.in_training
         ]
       })
+      .andWhere(findManyOptions && !!findManyOptions.where ? findManyOptions.where.toString() : `'1'`)
       .andWhere(id ? `intent.id = '${id}'` : `'1'`)
       .andWhere(getHidden ? `'1'` : `hidden = false`)
       .orderBy({
         'intent.id': 'ASC',
-        'knowledges.id': 'ASC',
-        'responses.id': 'ASC'
       })
+
+    query = this._addFilters(query, filters);
+
+    if (getKnowledges) {
+      query.leftJoinAndSelect('intent.knowledges', 'knowledges')
+      query.addOrderBy('knowledges.id', 'ASC')
+    }
+    if (getResponses) {
+      query.leftJoinAndSelect('intent.responses', 'responses')
+      query.addOrderBy('responses.id', 'ASC')
+    }
+
+    return query;
   }
 
   getIntentAndResponseQueryBuilder() {
@@ -185,7 +193,7 @@ export class IntentService {
   }
 
   async findOne(id: string): Promise<Intent> {
-    const intent = await this.getFullIntentQueryBuilder(id, true).getOne();
+    const intent = await this.getFullIntentQueryBuilder(null, null, id, true).getOne();
     if (!intent) {
       return;
     }
@@ -219,7 +227,7 @@ export class IntentService {
         .getMany();
     }
     return queryBuilder.take(intentsNumber)
-      .getRawMany();
+      .getMany();
   }
 
   async intentExists(id: string): Promise<boolean> {
@@ -308,6 +316,12 @@ export class IntentService {
     return query.getRawMany();
   }
 
+  public async getFullTree(options: PaginationQueryDto, filters: IntentFilterDto): Promise<Intent[]> {
+    const intents: Intent[] = await this.findFullIntents(options, filters, true, true, false);
+    const allIntents: Intent[] = await this.findFullIntents(null, null, true, true, false);
+    return this._buildIntentsTree(intents, allIntents);
+  }
+
   private _findPreviousIntents(intent: IntentModel): Promise<Intent[]> {
     const sql = this._intentsRepository.createQueryBuilder('intent')
       .select(['intent.id as id', 'main_question', 'category',
@@ -344,5 +358,85 @@ export class IntentService {
   private async _updateNeedTraining() {
     const needTraining = await this._intentsRepository.count({status: In([IntentStatus.to_deploy, IntentStatus.active_modified, IntentStatus.to_archive])});
     await this._configService.update(<ChatbotConfig>{need_training: (needTraining > 0)});
+  }
+
+  private _buildIntentsTree(intents: Intent[], allIntents: Intent[]): Intent[] {
+    const rootIntents: Intent[] = [];
+    intents.forEach(intent => {
+      if (!allIntents.find(i => i.responses.find(r => r.response.includes(intent.id)))) {
+        // @ts-ignore
+        intent.previousIntents = null;
+        rootIntents.push(intent);
+      }
+    });
+    this._buildIntentBranch(rootIntents, allIntents);
+    return rootIntents;
+  }
+
+  private _buildIntentBranch(rootIntents: Intent[], fullIntents: Intent[]) {
+    rootIntents.forEach(rootIntent => {
+      let intentsId = rootIntent.responses.map((r: Response) => {
+        if (![ResponseType.quick_reply, ResponseType.button].includes(r.response_type) || !r.response) {
+          return null;
+        }
+        return r.response.split(';').map(text => {
+          return text.substring(text.indexOf('<') + 1, text.indexOf('>')).trim();
+        })
+      }).filter(id => {
+        // @ts-ignore
+        return !!id && (!rootIntent.parents || !rootIntent.parents.includes(id));
+      });
+      intentsId = [].concat(...intentsId);
+      if (intentsId.length < 1) {
+        // @ts-ignore
+        rootIntent.nextIntents = [];
+        return;
+      }
+      // @ts-ignore
+      rootIntent.nextIntents = fullIntents.filter(intent => intentsId.includes(intent.id));
+      return;
+    });
+
+    // @ts-ignore
+    let nextRootIntents = rootIntents.map(r => {
+      // @ts-ignore
+      r.nextIntents.map(n => {
+        // @ts-ignore
+        n.parents = r.parents ? r.parents : [];
+        n.parents.push(r.id);
+      })
+      // @ts-ignore
+      return r.nextIntents;
+      // @ts-ignore
+    });
+    nextRootIntents = [].concat(...nextRootIntents);
+    if (!nextRootIntents || nextRootIntents.length < 1) {
+      return;
+    }
+    setTimeout(() => {
+      this._buildIntentBranch(nextRootIntents, fullIntents);
+    }, 0);
+  }
+
+  private _addFilters(query: SelectQueryBuilder<any>, filters: IntentFilterDto): SelectQueryBuilder<any> {
+    if (!filters) {
+      return query;
+    }
+    if (filters.categories && filters.categories.length > 0) {
+      query.andWhere('intent.category IN (:...categories)', {categories: filters.categories});
+    }
+    if (filters.hidden) {
+      query.andWhere('intent.hidden = true');
+    }
+    if (filters.expiresAt) {
+      query.andWhere(`intent.expires_at::date >= date '${filters.expiresAt}'`);
+    } else if (filters.expires) {
+      query.andWhere('intent.expires_at is not null');
+    }
+    if (filters.intentInError) {
+      query.andWhere('(SELECT count(*) FROM "knowledge" WHERE "knowledge"."intentId" = "intent"."id") < 2');
+    }
+
+    return query;
   }
 }

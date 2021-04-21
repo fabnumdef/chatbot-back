@@ -8,7 +8,7 @@ export class PaginationUtils {
                   entity?: string): any {
     const options: FindManyOptions = {};
 
-    let queries = pagination.query ? pagination.query.trim().split(' ') : null;
+    let queries = pagination && pagination.query ? pagination.query.trim().split(' ') : null;
     if (!!queries && queries.length > 0) {
       queries = queries.map(q => {
         return `%${q}%`;

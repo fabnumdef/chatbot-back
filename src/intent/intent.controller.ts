@@ -88,6 +88,14 @@ export class IntentController {
     return this._intentService.delete(intentId);
   }
 
+  @Post('tree')
+  @ApiOperation({summary: 'Return full intent tree'})
+  async getIntentsTree(@Query() options: PaginationQueryDto,
+                       @Body() filters: IntentFilterDto): Promise<IntentDto[]> {
+    const intents: Intent[] = await this._intentService.getFullTree(options, filters);
+    return plainToClass(IntentDto, camelcaseKeys(intents, {deep: true}));
+  }
+
   private _formatIntent(intentDto: IntentDto): Intent {
     let intent: Intent = plainToClass(Intent, snakecaseKeys(intentDto));
     if (intent.responses.findIndex(r => !r.id) >= 0) {

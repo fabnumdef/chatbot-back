@@ -57,10 +57,6 @@ export class ChatbotConfigController {
     })
   )
   @ApiConsumes('multipart/form-data')
-  @ApiBody({
-    description: 'Set the chatbot config',
-    type: ConfigUpdateDto,
-  })
   @ApiOperation({summary: 'Set the chatbot config'})
   @ApiBearerAuth()
   @UseGuards(JwtGuard, RolesGuard)

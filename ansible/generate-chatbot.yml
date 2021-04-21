@@ -100,7 +100,7 @@
       pip:
         executable: pip3
         name:
-          - rasa>=2.1.0,<3.0
+          - rasa==2.5.0
           - psycopg2-binary
       when: updateRasa
 
@@ -114,7 +114,7 @@
 
     - name: npm install chatbot-back
       command:
-        cmd: sudo npm install --build-from-source
+        cmd: npm install
         chdir: '{{ appsDir }}/{{ backDir }}'
       when: updateBack
 

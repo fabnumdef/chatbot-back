@@ -1,6 +1,6 @@
 {
   "name": "chatbot-back",
-  "version": "1.1.0",
+  "version": "1.3.0",
   "description": "",
   "author": "",
   "license": "MIT",
@@ -26,7 +26,7 @@
     "artillery:report": "artillery report test/artillery/report.json -o test/artillery/report.html"
   },
   "dependencies": {
-    "@nestjs-modules/mailer": "^1.5.1",
+    "@nestjs-modules/mailer": "^1.6.0",
     "@nestjs/common": "^7.6.5",
     "@nestjs/config": "^0.5.0",
     "@nestjs/core": "^7.4.2",
@@ -39,7 +39,7 @@
     "@nestjs/typeorm": "^7.1.1",
     "ansible-playbook-cli-js": "^2.0.5",
     "archiver": "^4.0.1",
-    "bcrypt": "^5.0.0",
+    "bcrypt": "^5.0.1",
     "camelcase-keys": "^6.2.1",
     "class-transformer": "^0.3.1",
     "class-validator": "^0.11.0",

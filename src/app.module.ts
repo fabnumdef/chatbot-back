@@ -25,9 +25,9 @@ import { PublicModule } from './public/public.module';
 import { SharedModule } from './shared/shared.module';
 import * as path from "path";
 import { MailerModule } from "@nestjs-modules/mailer";
-import { HandlebarsAdapter } from "@nestjs-modules/mailer/dist/adapters/handlebars.adapter";
 import { FeedbackModule } from './feedback/feedback.module';
 import { UpdateModule } from './update/update.module';
+import { HandlebarsAdapter } from "@nestjs-modules/mailer/dist/adapters/handlebars.adapter";
 
 @Module({
   imports: [

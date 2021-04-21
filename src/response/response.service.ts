@@ -5,6 +5,7 @@ import { Response } from "@core/entities/response.entity";
 import { ResponseModel } from "@core/models/response.model";
 import { Intent } from "@core/entities/intent.entity";
 import { IntentModel } from "@core/models/intent.model";
+import { UpdateResult } from "typeorm/query-builder/result/UpdateResult";
 
 @Injectable()
 export class ResponseService {
@@ -23,6 +24,10 @@ export class ResponseService {
 
   create(response: ResponseModel): Promise<Response> {
     return this._responsesRepository.save(response);
+  }
+
+  update(response: ResponseModel): Promise<UpdateResult> {
+    return this._responsesRepository.update({id: response.id}, response);
   }
 
   saveMany(responses: Response[]): Promise<Response[]> {
