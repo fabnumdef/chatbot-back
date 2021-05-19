@@ -70,7 +70,7 @@ export class RasaService {
         console.log(res);
       });
       console.log(`${new Date().toLocaleString()} - LAUNCHING SCREEN`);
-      await execShellCommand(`screen -S rasa -dmS rasa run -m models --enable-api --log-file out.log --cors "*" --debug`, this._chatbotTemplateDir).then(res => {
+      await execShellCommand(`screen -S rasa -dmS rasa run -m models --log-file out.log --cors "*" --debug`, this._chatbotTemplateDir).then(res => {
         console.log(res);
       });
       await this._intentService.updateManyByCondition({status: IntentStatus.in_training}, {status: IntentStatus.active});

@@ -174,10 +174,11 @@ export class IntentService {
   async findAllCategories(active = false): Promise<string[]> {
     const query = this._intentsRepository.createQueryBuilder('intent')
       .select('DISTINCT category', 'category')
+      .where("intent.id NOT LIKE 'st_%'")
       .orderBy('category', 'ASC');
 
     if (active) {
-      query.where("intent.status IN (:...status)", {
+      query.andWhere("intent.status IN (:...status)", {
         status: [
           IntentStatus.to_deploy,
           IntentStatus.active,
@@ -413,9 +414,7 @@ export class IntentService {
     if (!nextRootIntents || nextRootIntents.length < 1) {
       return;
     }
-    setTimeout(() => {
-      this._buildIntentBranch(nextRootIntents, fullIntents);
-    }, 0);
+    this._buildIntentBranch(nextRootIntents, fullIntents);
   }
 
   private _addFilters(query: SelectQueryBuilder<any>, filters: IntentFilterDto): SelectQueryBuilder<any> {

@@ -98,6 +98,14 @@ export class ConfigDto {
   @IsNotEmpty()
   showRebootBtn: boolean;
 
+  @IsBoolean()
+  @IsNotEmpty()
+  isTree: boolean;
+
+  @IsBoolean()
+  @IsNotEmpty()
+  showFaq: boolean;
+
   @IsNumber()
   @IsNotEmpty()
   delayBetweenMessages: number;

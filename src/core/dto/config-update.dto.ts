@@ -86,4 +86,12 @@ export class ConfigUpdateDto {
   @IsString()
   @IsOptional()
   delayBetweenMessages: number;
+
+  @IsString()
+  @IsOptional()
+  isTree: boolean;
+
+  @IsString()
+  @IsOptional()
+  showFaq: boolean;
 }

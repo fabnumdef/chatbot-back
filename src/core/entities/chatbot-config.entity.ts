@@ -83,6 +83,12 @@ export class ChatbotConfig {
   @Column({default: false})
   show_reboot_btn: boolean;
 
+  @Column({default: false})
+  is_tree: boolean;
+
+  @Column({default: true})
+  show_faq: boolean;
+
   @Column({default: 2000})
   delay_between_messages: number;
 }

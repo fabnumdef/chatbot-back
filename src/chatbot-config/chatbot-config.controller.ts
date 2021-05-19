@@ -116,13 +116,21 @@ export class ChatbotConfigController {
       // @ts-ignore
       chatbotConfig.showFeedback = (chatbotConfig.showFeedback == 'true');
     }
-    if(chatbotConfig.blockTypeText) {
+    if (chatbotConfig.blockTypeText) {
       // @ts-ignore
       chatbotConfig.blockTypeText = (chatbotConfig.blockTypeText == 'true');
     }
-    if(chatbotConfig.showRebootBtn) {
+    if (chatbotConfig.showRebootBtn) {
       // @ts-ignore
       chatbotConfig.showRebootBtn = (chatbotConfig.showRebootBtn == 'true');
+    }
+    if (chatbotConfig.isTree) {
+      // @ts-ignore
+      chatbotConfig.isTree = (chatbotConfig.isTree == 'true');
+    }
+    if (chatbotConfig.showFaq) {
+      // @ts-ignore
+      chatbotConfig.showFaq = (chatbotConfig.showFaq == 'true');
     }
     const configEntity = await this._configService.update(plainToClass(ChatbotConfig, snakecaseKeys(botConfig)));
     if (icon || botConfig.name) {
