@@ -55,7 +55,7 @@ export class UpdateService {
   }
 
   private async _updateChatbotRepos(updateChatbot: UpdateChatbotDto) {
-    const playbookOptions = new Options(`${this._gitDir}/ansible`);
+    const playbookOptions = new Options(`${this._appDir}/ansible`);
     const ansiblePlaybook = new AnsiblePlaybook(playbookOptions);
     console.log(`${new Date().toLocaleString()} - UPDATING CHATBOTS REPOSITORIES`);
     await ansiblePlaybook.command(`update-chatbot-repo.yml -e '${JSON.stringify(updateChatbot)}'`).then(async (result) => {

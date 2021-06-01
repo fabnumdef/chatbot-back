@@ -10,6 +10,7 @@ import * as mkdirp from "mkdirp";
 import { Cron, CronExpression } from "@nestjs/schedule";
 import { plainToClass } from "class-transformer";
 import snakecaseKeys = require("snakecase-keys");
+
 const crypto = require('crypto');
 
 @Injectable()
@@ -17,7 +18,7 @@ export class ChatbotConfigService {
 
   constructor(@InjectRepository(ChatbotConfig)
               private readonly _configRepository: Repository<ChatbotConfig>,
-              private readonly  _mediaService: MediaService) {
+              private readonly _mediaService: MediaService) {
   }
 
   getChatbotConfig(options?: FindOneOptions): Promise<ChatbotConfig> {
@@ -66,6 +67,9 @@ export class ChatbotConfigService {
     mkdirp(`${webchatDir}/assets/icons`);
 
     const botConfig = await this.getChatbotConfig();
+    if (!botConfig) {
+      return;
+    }
     // @ts-ignore
     const manifest = JSON.parse(fs.readFileSync(path.resolve(frontDir, 'manifest.webmanifest')));
     // @ts-ignore
