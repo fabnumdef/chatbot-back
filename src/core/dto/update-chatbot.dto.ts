@@ -32,6 +32,10 @@ export class UpdateChatbotDto {
 
   @IsString()
   @IsOptional()
+  domainName: string;
+
+  @IsString()
+  @IsOptional()
   elastic_host: string;
 
   @IsString()

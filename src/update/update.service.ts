@@ -16,6 +16,10 @@ export class UpdateService {
   async update(updateChatbot: UpdateChatbotDto, files) {
     console.log('Updating Chatbot...', updateChatbot);
     await this._updateChatbotRepos(updateChatbot);
+    if (updateChatbot.domainName) {
+      // @ts-ignore
+      await this._configService.update({domain_name: updateChatbot.domainName});
+    }
     const chatbotConfig = await this._configService.getChatbotConfig();
 
     if (files && files.env && files.env[0]) {
