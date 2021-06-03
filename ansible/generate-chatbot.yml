@@ -102,6 +102,7 @@
         name:
           - rasa==2.6.3
           - psycopg2-binary
+          - python-socketio==5.3.0
       when: updateRasa
 
     - name: Copy chatbot-template
