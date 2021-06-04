@@ -26,10 +26,10 @@ export class UpdateService {
       fs.writeFileSync(`${this._appDir}/../git/.env`, files.env[0], 'utf8');
     }
     if (files && files.nginx_conf && files.nginx_conf[0]) {
-      fs.writeFileSync(`/etc/nginx.conf`, files.nginx_conf[0], 'utf8');
+      fs.writeFileSync(`${this._appDir}/../git/nginx.conf`, files.nginx_conf[0], 'utf8');
     }
     if (files && files.nginx_site && files.nginx_site[0]) {
-      fs.writeFileSync(`/etc/nginx_conf.cfg`, files.nginx_site[0], 'utf8');
+      fs.writeFileSync(`${this._appDir}/../git/nginx_conf.cfg`, files.nginx_site[0], 'utf8');
     }
 
     const playbookOptions = new Options(`${this._gitDir}/ansible`);
