@@ -6,6 +6,7 @@ import { JwtGuard } from "@core/guards/jwt.guard";
 import { plainToClass } from "class-transformer";
 import { StatsMostAskedQuestionsDto } from "@core/dto/stats-most-asked-questions.dto";
 import { StatsMostAskedCategoriesDto } from "@core/dto/stats-most-asked-categories.dto";
+import { forkJoin } from "rxjs";
 
 @ApiTags('stats')
 @Controller('stats')
@@ -17,12 +18,12 @@ export class StatsController {
   @Post('linedata')
   @ApiOperation({ summary: 'Return data for line chart' })
   async sendLineData(@Body() filters: StatsFilterDto) {
-    const result = {};
-    result['askedQuestionsNumber'] = await this._statsService.getNbAskedQuestions(filters);
-    result['visitorNumber'] = await this._statsService.getNbVisitors(filters);
-    result['dbQuestionSize'] = await this._statsService.getNbIntent(filters);
-    result['feedbacksNumber'] = await this._statsService.getNbFeedbacks(filters);
-    return result;
+    return forkJoin({
+      askedQuestionsNumber: this._statsService.getNbAskedQuestions(filters),
+      visitorNumber: this._statsService.getNbVisitors(filters),
+      dbQuestionSize: this._statsService.getNbIntent(filters),
+      feedbacksNumber: this._statsService.getNbFeedbacks(filters)
+    });
   }
 
   @Post('bestdata')
@@ -52,12 +53,12 @@ export class StatsController {
   @Post('kpidata')
   @ApiOperation({ summary: 'Return kpi indicators' })
   async sendKPIData(@Body() filters: StatsFilterDto) {
-    const result = {};
-    result['uniqueVisitorsNumber'] = await this._statsService.getNbUniqueVisitors(filters);
-    result['avgQuestionPerVisitor'] = await this._statsService.getAvgQuestPerVisitors(filters);
-    result['avgChatbotResponseTime'] = await this._statsService.getAvgResponseTime(filters);
-    result['ratioChatbotResponseOk'] = await this._statsService.getRatioResponseOk(filters);
-    result['ratioChatbotResponseSure'] = await this._statsService.getRatioResponseSure(filters);
-    return result;
+    return forkJoin({
+      uniqueVisitorsNumber: this._statsService.getNbUniqueVisitors(filters),
+      avgQuestionPerVisitor: this._statsService.getAvgQuestPerVisitors(filters),
+      avgChatbotResponseTime: this._statsService.getAvgResponseTime(filters),
+      ratioChatbotResponseOk: this._statsService.getRatioResponseOk(filters),
+      ratioChatbotResponseSure: this._statsService.getRatioResponseSure(filters)
+    });
   }
 }

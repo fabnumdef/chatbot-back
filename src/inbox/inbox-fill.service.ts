@@ -8,6 +8,7 @@ import { EventActionTypeEnum } from "@core/enums/event-action-type.enum";
 import { Intent } from "@core/entities/intent.entity";
 import { InboxStatus } from "@core/enums/inbox-status.enum";
 import { IntentService } from "../intent/intent.service";
+import { truncateString } from "@core/utils";
 
 @Injectable()
 export class InboxFillService {
@@ -83,13 +84,14 @@ export class InboxFillService {
           sendMessageTimestamp = data.timestamp;
           break;
         case 'user':
-          if(data.parse_data?.intent?.name === 'nlu_fallback') {
+          if (data.parse_data?.intent?.name === 'nlu_fallback') {
             // @ts-ignore
             data.parse_data?.intent_ranking = data.parse_data?.intent_ranking?.filter(i => i.name !== 'nlu_fallback');
             // @ts-ignore
             data.parse_data?.intent = data.parse_data?.intent_ranking[0];
           }
-          inbox.question = data.text;
+          // Question is limited at 2000 char
+          inbox.question = truncateString(data.text, 1900);
           inbox.confidence = data.parse_data?.intent?.confidence ? data.parse_data?.intent?.confidence : 0;
           inbox.intent_ranking = data.parse_data?.intent_ranking?.slice(0, 5);
           inbox.status = (inbox.confidence >= 0.6) ? (inbox.confidence >= 0.95) ? InboxStatus.confirmed : InboxStatus.to_verify : InboxStatus.pending

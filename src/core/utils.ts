@@ -36,3 +36,10 @@ export function jsonToDotenv(json: any): string {
 export function dotenvToJson(dotenv: string): any {
   return parse(dotenv);
 }
+
+export function truncateString(str, num) {
+  if (str.length <= num) {
+    return str;
+  }
+  return str.slice(0, num) + '...';
+}
