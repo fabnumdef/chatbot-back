@@ -75,7 +75,7 @@ export class IntentController {
   @ApiOperation({summary: 'Edit an intent'})
   async editIntent(@Param('id') intentId: string, @Body() intentDto: IntentDto): Promise<IntentDto> {
     let intent = this._formatIntent(intentDto);
-    if(await this._intentService.intentExists(intent.id)) {
+    if (await this._intentService.intentExists(intent.id)) {
       throw new HttpException(`Impossible de créer cette connaissance, l'identifiant existe déjà.`, HttpStatus.INTERNAL_SERVER_ERROR);
     }
     intent = await this._intentService.createEdit(intent, intentId);
@@ -106,17 +106,19 @@ export class IntentController {
     intent.responses.map(r => {
       r.intent = <Intent>{id: intent.id};
     });
-    intent.knowledges = intent.knowledges.filter(k => !!k.question.trim());
-    intent.knowledges.map(k => {
-      k.intent = <Intent>{id: intent.id};
-      if (!k.id) {
-        delete k.id;
-      }
-    });
-    // Filter several knowledges with same questions
-    intent.knowledges = intent.knowledges.reverse().filter((value, index, self) => {
-      return self.findIndex(k => k.question === value.question) === index;
-    });
+    if (intent.knowledges) {
+      intent.knowledges = intent.knowledges.filter(k => !!k.question.trim());
+      intent.knowledges.map(k => {
+        k.intent = <Intent>{id: intent.id};
+        if (!k.id) {
+          delete k.id;
+        }
+      });
+      // Filter several knowledges with same questions
+      intent.knowledges = intent.knowledges.reverse().filter((value, index, self) => {
+        return self.findIndex(k => k.question === value.question) === index;
+      });
+    }
     return intent;
   }
 }

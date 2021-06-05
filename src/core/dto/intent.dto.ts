@@ -47,6 +47,6 @@ export class IntentDto {
   responses?: ResponseDto[];
 
   @IsArray()
-  @IsNotEmpty()
+  @IsOptional()
   knowledges?: KnowledgeDto[];
 }

@@ -3,9 +3,11 @@ import { UpdateChatbotDto } from "@core/dto/update-chatbot.dto";
 import { AnsiblePlaybook, Options } from "ansible-playbook-cli-js";
 import { ChatbotConfigService } from "../chatbot-config/chatbot-config.service";
 import * as fs from "fs";
+import { BotLogger } from "../logger/bot.logger";
 
 @Injectable()
 export class UpdateService {
+  private readonly _logger = new BotLogger('UpdateService');
 
   private _appDir = '/var/www/chatbot-back';
   private _gitDir = '/var/www/git/chatbot-back';
@@ -14,7 +16,7 @@ export class UpdateService {
   }
 
   async update(updateChatbot: UpdateChatbotDto, files) {
-    console.log('Updating Chatbot...', updateChatbot);
+    this._logger.log('Updating Chatbot...', JSON.stringify(updateChatbot));
     await this._updateChatbotRepos(updateChatbot);
     if (updateChatbot.domainName) {
       // @ts-ignore
@@ -41,32 +43,32 @@ export class UpdateService {
         DB_PASSWORD: process.env.DATABASE_PASSWORD
       }
     };
-    console.log(`${new Date().toLocaleString()} - UPDATING CHATBOT`);
+    this._logger.log('UPDATING CHATBOT');
     await ansiblePlaybook.command(`generate-chatbot.yml -e '${JSON.stringify(extraVars)}'`).then(async (result) => {
-      console.log(result);
+      this._logger.log(JSON.stringify(result));
       if (updateChatbot.updateLogs && updateChatbot.elastic_host && updateChatbot.elastic_username && updateChatbot.elastic_password) {
         await ansiblePlaybook.command(`elastic/elastic.yml -e '${JSON.stringify(extraVars)}'`).then((result) => {
-          console.log(result);
+          this._logger.log(JSON.stringify(result));
         })
       }
       if (updateChatbot.updateBack) {
         await ansiblePlaybook.command(`reload-back.yml -e '${JSON.stringify(extraVars)}'`).then((result) => {
-          console.log(result);
+          this._logger.log(JSON.stringify(result));
         })
       }
-    }).catch(() => {
-      console.error(`${new Date().toLocaleString()} - ERROR UPDATING CHATBOT`);
+    }).catch((e) => {
+      this._logger.error('ERROR UPDATING CHATBOT', e);
     });
   }
 
   private async _updateChatbotRepos(updateChatbot: UpdateChatbotDto) {
     const playbookOptions = new Options(`${this._appDir}/ansible`);
     const ansiblePlaybook = new AnsiblePlaybook(playbookOptions);
-    console.log(`${new Date().toLocaleString()} - UPDATING CHATBOTS REPOSITORIES`);
+    this._logger.log('UPDATING CHATBOTS REPOSITORIES');
     await ansiblePlaybook.command(`update-chatbot-repo.yml -e '${JSON.stringify(updateChatbot)}'`).then(async (result) => {
-      console.log(result);
+      this._logger.log(JSON.stringify(result));
     }).catch(error => {
-      console.error(`${new Date().toLocaleString()} - ERRROR UPDATING CHATBOTS REPOSITORIES`);
+      this._logger.log('ERRROR UPDATING CHATBOTS REPOSITORIES', error);
     });
   }
 }

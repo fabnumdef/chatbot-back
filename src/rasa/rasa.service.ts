@@ -14,14 +14,15 @@ import { IntentStatus } from "@core/enums/intent-status.enum";
 import * as mkdirp from "mkdirp";
 import { Cron, CronExpression } from "@nestjs/schedule";
 import { FileService } from "../file/file.service";
-import { RasaStoryModel } from "@core/models/rasa-story.model";
 import { RasaRuleModel } from "@core/models/rasa-rule.model";
+import { BotLogger } from "../logger/bot.logger";
 
 const fs = require('fs');
 const yaml = require('js-yaml');
 
 @Injectable()
 export class RasaService {
+  private readonly _logger = new BotLogger('RasaService');
 
   private _chatbotTemplateDir = path.resolve(__dirname, '../../../chatbot-template');
 
@@ -37,11 +38,11 @@ export class RasaService {
     if (!(await this.canTrainRasa()) || !(await this.needRasaTraining())) {
       return;
     }
-    console.log(`${new Date().toLocaleString()} - Updating Rasa`);
+    this._logger.log('Updating Rasa');
     await this.generateFiles();
     await this.trainRasa();
     await this._deleteOldModels();
-    console.log(`${new Date().toLocaleString()} - Finish updating Rasa`);
+    this._logger.log('Finish updating Rasa');
   }
 
   async canTrainRasa(): Promise<boolean> {
@@ -61,23 +62,23 @@ export class RasaService {
     await this._configService.update(<ChatbotConfig>{training_rasa: true});
     await this._intentService.updateManyByCondition({status: In([IntentStatus.to_deploy, IntentStatus.active_modified])}, {status: IntentStatus.in_training});
     try {
-      console.log(`${new Date().toLocaleString()} - TRAINING RASA`);
+      this._logger.log('TRAINING RASA');
       await execShellCommand(`rasa train --num-threads 8`, this._chatbotTemplateDir).then(res => {
-        console.log(res);
+        this._logger.log(res);
       });
-      console.log(`${new Date().toLocaleString()} - KILLING SCREEN`);
+      this._logger.log('KILLING SCREEN');
       await execShellCommand(`pkill screen`, this._chatbotTemplateDir).then(res => {
-        console.log(res);
+        this._logger.log(res);
       });
-      console.log(`${new Date().toLocaleString()} - LAUNCHING SCREEN`);
+      this._logger.log('LAUNCHING SCREEN');
       await execShellCommand(`screen -S rasa -dmS rasa run -m models --log-file out.log --cors "*" --debug`, this._chatbotTemplateDir).then(res => {
-        console.log(res);
+        this._logger.log(res);
       });
       await this._intentService.updateManyByCondition({status: IntentStatus.in_training}, {status: IntentStatus.active});
       await this._intentService.updateManyByCondition({status: IntentStatus.to_archive}, {status: IntentStatus.archived});
       await this._configService.update(<ChatbotConfig>{last_training_at: new Date()});
     } catch (e) {
-      console.error('RASA TRAIN', e);
+      this._logger.error('RASA TRAIN', e);
     }
     await this._configService.update(<ChatbotConfig>{training_rasa: false});
   }
@@ -180,12 +181,12 @@ export class RasaService {
    */
   private async _deleteOldModels() {
     try {
-      console.log(`${new Date().toLocaleString()} - DELETING OLD MODELS, KEEP 5 FOR SECURITY`);
+      this._logger.log('DELETING OLD MODELS, KEEP 5 FOR SECURITY');
       await execShellCommand("rm `ls -t | awk 'NR>5'`", path.resolve(this._chatbotTemplateDir, 'models')).then(res => {
-        console.log(res);
+        this._logger.log(res);
       });
     } catch (e) {
-      console.error('DELETE OLD MODELS', e);
+      this._logger.error('DELETE OLD MODELS', e);
     }
   }
 }

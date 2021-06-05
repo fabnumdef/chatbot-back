@@ -9,9 +9,12 @@ import { Intent } from "@core/entities/intent.entity";
 import { InboxStatus } from "@core/enums/inbox-status.enum";
 import { IntentService } from "../intent/intent.service";
 import { truncateString } from "@core/utils";
+import { BotLogger } from "../logger/bot.logger";
 
 @Injectable()
 export class InboxFillService {
+  private readonly _logger = new BotLogger('InboxFillService');
+
   constructor(@InjectRepository(Events)
               private readonly _eventsRepository: Repository<Events>,
               @InjectRepository(Inbox)
@@ -57,7 +60,7 @@ export class InboxFillService {
     }
     if (inboxes.length > 0) {
       await this._inboxesRepository.save(inboxes);
-      console.log(`${new Date().toLocaleString()} - Finishing updating ${inboxes.length} inbox`);
+      this._logger.log('Finishing updating ${inboxes.length} inbox');
     }
   }
 

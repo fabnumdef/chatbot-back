@@ -10,11 +10,13 @@ import * as mkdirp from "mkdirp";
 import { Cron, CronExpression } from "@nestjs/schedule";
 import { plainToClass } from "class-transformer";
 import snakecaseKeys = require("snakecase-keys");
+import { BotLogger } from "../logger/bot.logger";
 
 const crypto = require('crypto');
 
 @Injectable()
 export class ChatbotConfigService {
+  private readonly _logger = new BotLogger('ChatbotConfigService');
 
   constructor(@InjectRepository(ChatbotConfig)
               private readonly _configRepository: Repository<ChatbotConfig>,
@@ -58,7 +60,7 @@ export class ChatbotConfigService {
   };
 
   async updateFrontManifest() {
-    console.log('UPDATING MANIFESTS');
+    this._logger.log('UPDATING MANIFESTS');
     const frontDir = path.resolve(__dirname, '../../../chatbot-front');
     const webchatDir = path.resolve(__dirname, '../../../webchat');
 
@@ -70,18 +72,22 @@ export class ChatbotConfigService {
     if (!botConfig) {
       return;
     }
-    // @ts-ignore
-    const manifest = JSON.parse(fs.readFileSync(path.resolve(frontDir, 'manifest.webmanifest')));
-    // @ts-ignore
-    const manifestWebchat = JSON.parse(fs.readFileSync(path.resolve(webchatDir, 'manifest.webmanifest')));
-    manifest.name = `BACKOFFICE - ${botConfig.name}`;
-    manifest.short_name = `BACKOFFICE - ${botConfig.name}`;
-    manifestWebchat.name = botConfig.name;
-    manifestWebchat.short_name = botConfig.name;
-    fs.writeFileSync(path.resolve(frontDir, 'manifest.webmanifest'), JSON.stringify(manifest));
-    fs.writeFileSync(path.resolve(webchatDir, 'manifest.webmanifest'), JSON.stringify(manifestWebchat));
-    fs.copyFileSync(path.resolve(__dirname, '../../mediatheque', botConfig.icon), path.resolve(frontDir, 'assets/icons/icon.png'));
-    fs.copyFileSync(path.resolve(__dirname, '../../mediatheque', botConfig.icon), path.resolve(webchatDir, 'assets/icons/icon.png'));
+    try {
+      // @ts-ignore
+      const manifest = JSON.parse(fs.readFileSync(path.resolve(frontDir, 'manifest.webmanifest')));
+      // @ts-ignore
+      const manifestWebchat = JSON.parse(fs.readFileSync(path.resolve(webchatDir, 'manifest.webmanifest')));
+      manifest.name = `BACKOFFICE - ${botConfig.name}`;
+      manifest.short_name = `BACKOFFICE - ${botConfig.name}`;
+      manifestWebchat.name = botConfig.name;
+      manifestWebchat.short_name = botConfig.name;
+      fs.writeFileSync(path.resolve(frontDir, 'manifest.webmanifest'), JSON.stringify(manifest));
+      fs.writeFileSync(path.resolve(webchatDir, 'manifest.webmanifest'), JSON.stringify(manifestWebchat));
+      fs.copyFileSync(path.resolve(__dirname, '../../mediatheque', botConfig.icon), path.resolve(frontDir, 'assets/icons/icon.png'));
+      fs.copyFileSync(path.resolve(__dirname, '../../mediatheque', botConfig.icon), path.resolve(webchatDir, 'assets/icons/icon.png'));
+    } catch (e) {
+      this._logger.error('ERROR UPDATING MANIFESTS', e);
+    }
   }
 
   // Check icons to update manifests

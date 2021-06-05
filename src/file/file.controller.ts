@@ -23,6 +23,7 @@ import camelcaseKeys = require("camelcase-keys");
 import { RolesGuard } from "@core/guards/roles.guard";
 import { UserRole } from "@core/enums/user-role.enum";
 import { Roles } from "@core/decorators/roles.decorator";
+import { BotLogger } from "../logger/bot.logger";
 
 @ApiTags('file')
 @Controller('file')
@@ -30,6 +31,7 @@ import { Roles } from "@core/decorators/roles.decorator";
 @UseGuards(JwtGuard, RolesGuard)
 @Roles(UserRole.admin)
 export class FileController {
+  private readonly _logger = new BotLogger('FileController');
 
   constructor(private readonly _fileService: FileService) {
   }
@@ -94,7 +96,7 @@ export class FileController {
       streamFile.pipe(res);
     }
     catch (err) {
-      console.error(`${new Date().toLocaleString()} - ${JSON.stringify(err)}`);
+      this._logger.error('', err);
       throw new HttpException(`Une erreur est survenue durant l'export de la base de connaissance`, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }

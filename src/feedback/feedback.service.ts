@@ -7,9 +7,11 @@ import { InboxService } from "../inbox/inbox.service";
 import { In } from "typeorm/index";
 import * as moment from 'moment';
 import { StatsFilterDto } from "@core/dto/stats-filter.dto";
+import { BotLogger } from "../logger/bot.logger";
 
 @Injectable()
 export class FeedbackService {
+  private readonly _logger = new BotLogger('FeedbackService');
 
   constructor(@InjectRepository(Feedback)
               private readonly _feedbacksRepository: Repository<Feedback>,
@@ -55,7 +57,7 @@ export class FeedbackService {
       await this._feedbacksRepository.delete({
         id: In(toDelete)
       });
-      console.log(`${new Date().toLocaleString()} - Finishing updating ${toDelete.length} feedbacks`);
+      this._logger.log('Finishing updating ${toDelete.length} feedbacks');
     }
   }
 

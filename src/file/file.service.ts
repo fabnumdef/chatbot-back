@@ -25,6 +25,7 @@ import { Cron, CronExpression } from "@nestjs/schedule";
 import * as moment from 'moment';
 import { ChatbotConfigService } from "../chatbot-config/chatbot-config.service";
 import { AppConstants } from "@core/constant";
+import { BotLogger } from "../logger/bot.logger";
 
 const XLSX = require('xlsx');
 const uuid = require('uuid');
@@ -32,7 +33,8 @@ const uuid = require('uuid');
 @Injectable()
 export class FileService {
   private _xlsx = XLSX;
-  private _historicDir = path.resolve(__dirname, '../../historic')
+  private _historicDir = path.resolve(__dirname, '../../historic');
+  private readonly _logger = new BotLogger('FileService');
 
   constructor(private readonly _intentService: IntentService,
               private readonly _knowledgeService: KnowledgeService,
@@ -95,7 +97,7 @@ export class FileService {
     if (botConfig.last_training_at && moment().diff(moment(botConfig.last_training_at), 'hours') > 24) {
       return;
     }
-    console.log(`${new Date().toLocaleString()} - Storing historic file`);
+    this._logger.log('Storing historic file');
     const workbook = await this._generateWorkbook();
 
     const timestamp = Date.now();
@@ -103,7 +105,7 @@ export class FileService {
     XLSX.writeFile(workbook, path.resolve(this._historicDir, pathNameWithGuid));
 
     await this._fileHistoricRepository.save({name: pathNameWithGuid});
-    console.log(`${new Date().toLocaleString()} - Finish storing historic file`);
+    this._logger.log('Finish storing historic file');
   }
 
   async findAll() {

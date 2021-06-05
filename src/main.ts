@@ -5,9 +5,11 @@ import { ValidationPipe } from "@nestjs/common";
 import * as compression from 'compression';
 import * as rateLimit from 'express-rate-limit';
 import { urlencoded, json } from 'express';
+import { BotLogger } from "./logger/bot.logger";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  app.useLogger(app.get(BotLogger));
   app.use(compression());
   app.use(
     rateLimit({

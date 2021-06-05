@@ -23,12 +23,14 @@ import { Pagination } from "nestjs-typeorm-paginate";
 import { InboxFilterDto } from "@core/dto/inbox-filter.dto";
 import { UpdateResult } from "typeorm/query-builder/result/UpdateResult";
 import { InboxUpdateDto } from "@core/dto/inbox-update.dto";
+import { BotLogger } from "../logger/bot.logger";
 
 @ApiTags('inbox')
 @Controller('inbox')
 @ApiBearerAuth()
 @UseGuards(JwtGuard)
 export class InboxController {
+  private readonly _logger = new BotLogger('InboxController');
   constructor(private readonly _inboxService: InboxService) {}
 
   @Get('')
@@ -49,7 +51,7 @@ export class InboxController {
       streamFile.pipe(res);
     }
     catch (err) {
-      console.error(`${new Date().toLocaleString()} - ${JSON.stringify(err)}`);
+      this._logger.error('', err);
       throw new HttpException(`Une erreur est survenue durant l'export des requêtes.`, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
