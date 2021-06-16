@@ -8,7 +8,7 @@ import {
   UseGuards,
   UseInterceptors
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiBody, ApiConsumes, ApiOperation, ApiTags } from "@nestjs/swagger";
+import { ApiBearerAuth, ApiConsumes, ApiOperation, ApiTags } from "@nestjs/swagger";
 import { JwtGuard } from "@core/guards/jwt.guard";
 import { ChatbotConfigService } from "./chatbot-config.service";
 import { plainToClass } from "class-transformer";
@@ -23,15 +23,18 @@ import { RolesGuard } from "@core/guards/roles.guard";
 import { Roles } from "@core/decorators/roles.decorator";
 import { UserRole } from "@core/enums/user-role.enum";
 import { ApiKeyGuard } from "@core/guards/api-key.guard";
+import { UpdateDomainNameDto } from "@core/dto/update-chatbot.dto";
+import { UpdateService } from "../update/update.service";
 
 @ApiTags('config')
 @Controller('config')
 export class ChatbotConfigController {
 
   constructor(private readonly _configService: ChatbotConfigService,
+              private readonly _updateService: UpdateService,
               private readonly _mediaService: MediaService) {
     this._configService.updateFrontManifest();
-    this._configService.update(<ChatbotConfig> {is_blocked: false});
+    this._configService.update(<ChatbotConfig>{is_blocked: false});
   }
 
   @Get('')
@@ -170,8 +173,17 @@ export class ChatbotConfigController {
   @Put('maintenance')
   @ApiOperation({summary: 'Set the bot in maintenance mode'})
   @UseGuards(ApiKeyGuard)
-  async updateMaintenanceMode(@Body() maintenanceMode: {maintenanceMode: boolean}): Promise<ConfigDto> {
+  async updateMaintenanceMode(@Body() maintenanceMode: { maintenanceMode: boolean }): Promise<ConfigDto> {
     const configEntity = await this._configService.update(plainToClass(ChatbotConfig, snakecaseKeys(maintenanceMode)));
+    return plainToClass(ConfigDto, camelcaseKeys(configEntity, {deep: true}));
+  }
+
+  @Post('domain-name')
+  @ApiOperation({summary: 'Update domain name'})
+  @UseGuards(ApiKeyGuard)
+  async updateDomainName(@Body() updateDomainName: UpdateDomainNameDto) {
+    await this._updateService.updateDomainName(updateDomainName.domainName);
+    const configEntity = await this._configService.update(plainToClass(ChatbotConfig, snakecaseKeys(updateDomainName)));
     return plainToClass(ConfigDto, camelcaseKeys(configEntity, {deep: true}));
   }
 }

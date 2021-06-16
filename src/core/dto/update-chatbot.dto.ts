@@ -70,3 +70,9 @@ export class UpdateChatbotDto {
   @ApiProperty({type: 'string', format: 'binary'})
   env: any;
 }
+
+export class UpdateDomainNameDto {
+  @IsString()
+  @IsNotEmpty()
+  domainName: string;
+}

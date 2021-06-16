@@ -61,6 +61,22 @@ export class UpdateService {
     });
   }
 
+  async updateDomainName(domainName) {
+    const playbookOptions = new Options(`${this._gitDir}/ansible`);
+    const ansiblePlaybook = new AnsiblePlaybook(playbookOptions);
+    const extraVars = {
+      ...{
+        botDomain: domainName
+      }
+    };
+    this._logger.log('UPDATING DOMAIN NAME');
+    await ansiblePlaybook.command(`nginx-conf.yml -e '${JSON.stringify(extraVars)}'`).then(async (result) => {
+      this._logger.log(JSON.stringify(result));
+    }).catch((e) => {
+      this._logger.error('ERROR UPDATING DOMAIN NAME', e);
+    });
+  }
+
   private async _updateChatbotRepos(updateChatbot: UpdateChatbotDto) {
     const playbookOptions = new Options(`${this._appDir}/ansible`);
     const ansiblePlaybook = new AnsiblePlaybook(playbookOptions);
