@@ -8,67 +8,53 @@ config:
     path: "/socket-chatbot"
     transports: ["websocket"]
   phases:
-    - duration: 60
+    - duration: 120
       arrivalRate: 1
     - duration: 120
       arrivalRate: 5
-    - duration: 60
+    - duration: 120
       arrivalRate: 10
+    - duration: 120
+      arrivalRate: 30
   processor: "./functions.js"
+  engines:
+    socketio-v3: { }
 
 scenarios:
   - name: "A user that just lurks"
-    weight: 50
-    engine: "socketio"
+    weight: 100
+    engine: socketio-v3
     flow:
       - emit:
           channel: "session_request"
-          data: {session_id: null}
-          response:
-            channel: "session_confirm"
-      - think: 60
+          data: { session_id: null }
+      - think: 120
 
-  - name: "A mostly quiet user"
-    weight: 25
-    engine: "socketio"
-    flow:
-      - emit:
-          channel: "session_request"
-          data: {session_id: null}
-          response:
-            channel: "session_confirm"
-            capture:
-              regexp: '[\s\S]+'
-              transform: "this.sessionId.replace(/\"/g, '')"
-              as: "sessionId"
-      - think: 5
-      - function: "setMessage"
-      - emit:
-          channel: "user_uttered"
-          data: {"message": "{{ message }}", "session_id": "{{ sessionId }}"}
-          response:
-            channel: "bot_uttered"
-      - think: 60
-
-  - name: "A chatty user"
-    weight: 25
-    engine: "socketio"
-    flow:
-      - emit:
-          channel: "session_request"
-          data: {session_id: null}
-          response:
-            channel: "session_confirm"
-            capture:
-              regexp: '[\s\S]+'
-              transform: "this.sessionId.replace(/\"/g, '')"
-              as: "sessionId"
-      - loop:
-          - function: "setMessage"
-          - emit:
-              channel: "user_uttered"
-              data: {"message": "{{ message }}", "session_id": "{{ sessionId }}"}
-              response:
-                channel: "bot_uttered"
-          - think: 10
-        count: 10
+#  - name: "A mostly quiet user"
+#    weight: 0
+#    engine: "socketio"
+#    flow:
+#      - emit:
+#          channel: "session_request"
+#          data: {session_id: null}
+#      - think: 5
+#      - function: "setMessage"
+#      - emit:
+#          channel: "user_uttered"
+#          data: {"message": "Bonjour", "session_id": "{{ sessionId }}"}
+#      - think: 60
+#
+#  - name: "A chatty user"
+#    weight: 0
+#    engine: "socketio"
+#    flow:
+#      - emit:
+#          channel: "session_request"
+#          data: {session_id: null}
+#      - loop:
+#          - function: "setMessage"
+#          - emit:
+#              channel: "user_uttered"
+#              data: {"message": "Bonjour", "session_id": "{{ sessionId }}"}
+#          - think: 10
+#        count: 10
