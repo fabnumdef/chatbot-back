@@ -2,17 +2,17 @@ import { IsOptional } from "class-validator";
 
 export class IntentFilterDto {
   @IsOptional()
-  categories: string[];
+  categories?: string[];
 
   @IsOptional()
-  intentInError: boolean;
+  intentInError?: boolean;
 
   @IsOptional()
-  hidden: boolean;
+  hidden?: boolean;
 
   @IsOptional()
-  expiresAt: string;
+  expiresAt?: string;
 
   @IsOptional()
-  expires: boolean;
+  expires?: boolean;
 }

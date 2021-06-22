@@ -62,9 +62,14 @@ export class RasaService {
     await this._configService.update(<ChatbotConfig>{training_rasa: true});
     await this._intentService.updateManyByCondition({status: In([IntentStatus.to_deploy, IntentStatus.active_modified])}, {status: IntentStatus.in_training});
     try {
-      this._logger.log('TRAINING RASA');
-      await execShellCommand(`rasa train --num-threads 8`, this._chatbotTemplateDir).then(res => {
+      this._logger.log(`TRAINING RASA`);
+      await execShellCommand(`rasa train --finetune --epoch-fraction 0.2 --num-threads 8`, this._chatbotTemplateDir).then(async (res: string) => {
         this._logger.log(res);
+        if (res.includes('can not be finetuned')) {
+          await execShellCommand(`rasa train --num-threads 8`, this._chatbotTemplateDir).then(res => {
+            this._logger.log(res);
+          });
+        }
       });
       this._logger.log('KILLING SCREEN');
       await execShellCommand(`pkill screen`, this._chatbotTemplateDir).then(res => {
@@ -141,7 +146,10 @@ export class RasaService {
 
     fs.writeFileSync(`${this._chatbotTemplateDir}/domain.yml`, yaml.safeDump(domain), 'utf8');
     fs.writeFileSync(`${this._chatbotTemplateDir}/data/nlu.yml`, yaml.safeDump({version: "2.0", nlu: nlu}), 'utf8');
-    fs.writeFileSync(`${this._chatbotTemplateDir}/data/rules.yml`, yaml.safeDump({version: "2.0", rules: rules}), 'utf8');
+    fs.writeFileSync(`${this._chatbotTemplateDir}/data/rules.yml`, yaml.safeDump({
+      version: "2.0",
+      rules: rules
+    }), 'utf8');
     // fs.writeFileSync(`${this._chatbotTemplateDir}/data/stories.yml`, yaml.safeDump({version: "2.0", stories: stories}), 'utf8');
   }
 
