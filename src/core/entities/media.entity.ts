@@ -16,7 +16,7 @@ export class Media {
   added_by: string;
 
   @CreateDateColumn({type: "timestamp"})
-  created_at: number;
+  created_at?: number;
 
   static getAttributesToSearch() {
     return ['file'];

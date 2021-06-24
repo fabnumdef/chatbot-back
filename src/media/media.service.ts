@@ -83,8 +83,7 @@ export class MediaService {
       file: fileName,
       // size in KB
       size: Math.round(stats['size'] / 1000),
-      added_by: `${user.first_name} ${user.last_name}`,
-      created_at: null
+      added_by: `${user.first_name} ${user.last_name}`
     }
     return this._mediasRepository.save(fileToSave);
   }

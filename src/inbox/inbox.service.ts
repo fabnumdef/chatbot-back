@@ -172,6 +172,7 @@ export class InboxService {
     if (endDate) {
       query.andWhere(`DATE(to_timestamp(inbox.timestamp)) <= '${endDate}'`)
     }
+
     return query.getRawOne();
   }
 
@@ -227,24 +228,15 @@ export class InboxService {
     const startDate = filters.startDate ? (moment(filters.startDate, 'DD/MM/YYYY').format('YYYY-MM-DD')) : null;
     const endDate = filters.endDate ? moment(filters.endDate, 'DD/MM/YYYY').format('YYYY-MM-DD') : null;
 
-    const subquery = this._inboxesRepository
+    const query = this._inboxesRepository
       .createQueryBuilder('inbox')
-      .select("inbox.sender_id")
-      .addSelect("DATE(to_timestamp(inbox.timestamp))")
-      .addSelect("count(*) as count")
+      .select("ROUND(count(*) * 1.0 / count(distinct inbox.sender_id), 2) as averageQuestions")
     if (startDate) {
-      subquery.where(`DATE(to_timestamp(inbox.timestamp)) >= '${startDate}'`)
+      query.where(`DATE(to_timestamp(inbox.timestamp)) >= '${startDate}'`)
     }
     if (endDate) {
-      subquery.andWhere(`DATE(to_timestamp(inbox.timestamp)) <= '${endDate}'`)
+      query.andWhere(`DATE(to_timestamp(inbox.timestamp)) <= '${endDate}'`)
     }
-    subquery.groupBy("(DATE(to_timestamp(inbox.timestamp))), inbox.sender_id");
-
-    const query = this._inboxesRepository
-      .createQueryBuilder()
-      .select("ROUND(AVG(count), 2) as averageQuestions")
-      .from("(" + subquery.getQuery() + ")", "t1")
-      .setParameters(subquery.getParameters());
 
     return query.getRawOne();
   }
@@ -280,8 +272,6 @@ export class InboxService {
     if (endDate) {
       query.andWhere(`DATE(to_timestamp(inbox.timestamp)) <= '${endDate}'`)
     }
-
-    console.log(query.getSql());
 
     return query.getRawOne();
   }

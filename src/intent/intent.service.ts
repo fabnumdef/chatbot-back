@@ -374,7 +374,7 @@ export class IntentService {
     return rootIntents;
   }
 
-  private _buildIntentBranch(rootIntents: Intent[], fullIntents: Intent[]): void {
+  private _buildIntentBranch(rootIntents: Intent[], fullIntents: Intent[]) {
     rootIntents.forEach(rootIntent => {
       let intentsId = rootIntent.responses.map((r: Response) => {
         if (![ResponseType.quick_reply, ResponseType.button].includes(r.response_type) || !r.response) {
@@ -383,11 +383,12 @@ export class IntentService {
         return r.response.split(';').map(text => {
           return text.substring(text.indexOf('<') + 1, text.indexOf('>')).trim();
         })
-      }).filter(id => {
+      });
+      intentsId = [].concat(...intentsId);
+      intentsId = intentsId.filter(id => {
         // @ts-ignore
         return !!id && (!rootIntent.parents || !rootIntent.parents.includes(id));
       });
-      intentsId = [].concat(...intentsId);
       if (intentsId.length < 1) {
         // @ts-ignore
         rootIntent.nextIntents = [];
@@ -401,10 +402,11 @@ export class IntentService {
     // @ts-ignore
     let nextRootIntents = rootIntents.map(r => {
       // @ts-ignore
-      r.nextIntents.map(n => {
+      r.nextIntents = r.nextIntents.map(n => {
         // @ts-ignore
         n.parents = r.parents ? r.parents : [];
         n.parents.push(r.id);
+        return n;
       })
       // @ts-ignore
       return r.nextIntents;
@@ -414,7 +416,7 @@ export class IntentService {
     if (!nextRootIntents || nextRootIntents.length < 1) {
       return;
     }
-    setImmediate(() => this._buildIntentBranch(nextRootIntents, fullIntents));
+    this._buildIntentBranch(nextRootIntents, fullIntents);
   }
 
   private _addFilters(query: SelectQueryBuilder<any>, filters: IntentFilterDto): SelectQueryBuilder<any> {
