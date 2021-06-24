@@ -281,6 +281,8 @@ export class InboxService {
       query.andWhere(`DATE(to_timestamp(inbox.timestamp)) <= '${endDate}'`)
     }
 
+    console.log(query.getSql());
+
     return query.getRawOne();
   }
 

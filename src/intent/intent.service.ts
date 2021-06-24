@@ -374,7 +374,7 @@ export class IntentService {
     return rootIntents;
   }
 
-  private _buildIntentBranch(rootIntents: Intent[], fullIntents: Intent[]) {
+  private _buildIntentBranch(rootIntents: Intent[], fullIntents: Intent[]): void {
     rootIntents.forEach(rootIntent => {
       let intentsId = rootIntent.responses.map((r: Response) => {
         if (![ResponseType.quick_reply, ResponseType.button].includes(r.response_type) || !r.response) {
@@ -414,7 +414,7 @@ export class IntentService {
     if (!nextRootIntents || nextRootIntents.length < 1) {
       return;
     }
-    this._buildIntentBranch(nextRootIntents, fullIntents);
+    setImmediate(() => this._buildIntentBranch(nextRootIntents, fullIntents));
   }
 
   private _addFilters(query: SelectQueryBuilder<any>, filters: IntentFilterDto): SelectQueryBuilder<any> {
