@@ -1,9 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { UpdateChatbotDto } from "@core/dto/update-chatbot.dto";
 import { AnsiblePlaybook, Options } from "ansible-playbook-cli-js";
 import { ChatbotConfigService } from "../chatbot-config/chatbot-config.service";
 import * as fs from "fs";
 import { BotLogger } from "../logger/bot.logger";
+import { ChatbotConfig } from "@core/entities/chatbot-config.entity";
 
 @Injectable()
 export class UpdateService {
@@ -15,6 +16,27 @@ export class UpdateService {
   constructor(private _configService: ChatbotConfigService) {
   }
 
+  async launchUpdate(updateChatbot: UpdateChatbotDto, files, retry = false) {
+    const config: ChatbotConfig = await this._configService.getChatbotConfig();
+    if (config.need_update && !retry) {
+      this._logger.error('UPDATE - update already planned', null);
+      throw new HttpException(`Une mise à jour est déjà prévue.`, HttpStatus.NOT_ACCEPTABLE);
+    }
+    await this._configService.update(<ChatbotConfig>{need_update: true});
+    if (config.training_rasa) {
+      this._logger.log('UPDATE - Waiting for RASA to train bot');
+      setTimeout(() => {
+        this.launchUpdate(updateChatbot, files, true)
+      }, 60 * 1000);
+    } else {
+      try {
+        await this.update(updateChatbot, files);
+      } catch (err) {
+      }
+      await this._configService.update(<ChatbotConfig>{need_update: false});
+    }
+  }
+
   async update(updateChatbot: UpdateChatbotDto, files) {
     this._logger.log('Updating Chatbot...', JSON.stringify(updateChatbot));
     await this._updateChatbotRepos(updateChatbot);
@@ -24,7 +46,6 @@ export class UpdateService {
     }
     const chatbotConfig = await this._configService.getChatbotConfig();
 
-    console.log(files);
     if (files && files.env && files.env[0]) {
       fs.writeFileSync(`${this._appDir}/../git/.env`, files.env[0], 'utf8');
     }

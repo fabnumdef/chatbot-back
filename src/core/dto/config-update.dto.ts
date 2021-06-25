@@ -57,6 +57,16 @@ export class ConfigUpdateDto {
 
   @IsString()
   @IsOptional()
+  @MaxLength(25)
+  chatBtn: string;
+
+  @IsString()
+  @IsOptional()
+  @MaxLength(25)
+  faqBtn: string;
+
+  @IsString()
+  @IsOptional()
   storage: string;
 
   @IsString()

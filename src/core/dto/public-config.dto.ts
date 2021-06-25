@@ -76,4 +76,19 @@ export class PublicConfigDto {
   @IsNumber()
   @IsNotEmpty()
   delayBetweenMessages: number;
+
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(20)
+  helpBtn: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(25)
+  chatBtn: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(25)
+  faqBtn: string;
 }

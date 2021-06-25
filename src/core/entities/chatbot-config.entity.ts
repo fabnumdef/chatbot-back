@@ -42,6 +42,9 @@ export class ChatbotConfig {
   need_training: boolean;
 
   @Column({nullable: false, default: false})
+  need_update: boolean;
+
+  @Column({nullable: false, default: false})
   is_blocked: boolean;
 
   @Column({nullable: true, type: 'timestamp'})
@@ -58,6 +61,12 @@ export class ChatbotConfig {
 
   @Column({nullable: true, length: 20, default: 'Aide'})
   help_btn: string;
+
+  @Column({nullable: false, length: 25, default: 'Chat'})
+  chat_btn: string;
+
+  @Column({nullable: false, length: 25, default: 'Faq'})
+  faq_btn: string;
 
   @Column({default: false})
   storage: boolean;

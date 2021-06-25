@@ -49,7 +49,7 @@ export class UpdateController {
     updateChatbot.updateRasa = (updateChatbot.updateRasa == 'true');
     // @ts-ignore
     updateChatbot.updateLogs = (updateChatbot.updateLogs == 'true');
-    this._updateService.update(updateChatbot, files);
+    return await this._updateService.launchUpdate(updateChatbot, files);
   }
 
 }

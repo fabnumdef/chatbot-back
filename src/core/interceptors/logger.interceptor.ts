@@ -11,7 +11,7 @@ export class LoggerInterceptor implements NestInterceptor {
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     const id = crypto.randomBytes(8).toString("hex");
     const req = context.getArgByIndex(0);
-    const body = req.body;
+    const body = {...req.body};
     if (body?.password) {
       body.password = 'PASSWORD';
     }

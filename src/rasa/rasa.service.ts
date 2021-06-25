@@ -46,7 +46,8 @@ export class RasaService {
   }
 
   async canTrainRasa(): Promise<boolean> {
-    return !(await this._configService.getChatbotConfig()).training_rasa && !(await this._configService.getChatbotConfig()).is_blocked;
+    const config: ChatbotConfig = await this._configService.getChatbotConfig();
+    return !config.training_rasa && !config.is_blocked && !config.need_update;
   }
 
   async needRasaTraining(): Promise<boolean> {

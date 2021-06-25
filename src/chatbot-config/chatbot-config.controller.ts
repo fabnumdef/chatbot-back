@@ -34,7 +34,11 @@ export class ChatbotConfigController {
               private readonly _updateService: UpdateService,
               private readonly _mediaService: MediaService) {
     this._configService.updateFrontManifest();
-    this._configService.update(<ChatbotConfig>{is_blocked: false});
+    this._configService.update(<ChatbotConfig>{
+      is_blocked: false,
+      training_rasa: false,
+      need_update: false
+    });
   }
 
   @Get('')
