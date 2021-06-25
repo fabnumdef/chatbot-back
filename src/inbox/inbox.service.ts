@@ -187,7 +187,7 @@ export class InboxService {
       // Remove phrase_presentation & co
       .where('int.id NOT IN (:...excludedIds)', {excludedIds: AppConstants.General.excluded_Ids})
       // Remove small talks
-      .andWhere(`int.id NOT LIKE 'st_%'`)
+      .andWhere(`int.id NOT LIKE 'st\\_%' ESCAPE '\\'`)
     if (startDate) {
       query.andWhere(`DATE(to_timestamp(inbox.timestamp)) >= '${startDate}'`)
     }
@@ -211,7 +211,7 @@ export class InboxService {
       // Remove phrase_presentation & co
       .where('int.id NOT IN (:...excludedIds)', {excludedIds: AppConstants.General.excluded_Ids})
       // Remove small talks
-      .andWhere(`int.id NOT LIKE 'st_%'`)
+      .andWhere(`int.id NOT LIKE 'st\\_%' ESCAPE '\\'`)
     if (startDate) {
       query.andWhere(`DATE(to_timestamp(inbox.timestamp)) >= '${startDate}'`)
     }

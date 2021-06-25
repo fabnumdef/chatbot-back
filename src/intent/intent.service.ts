@@ -174,7 +174,7 @@ export class IntentService {
   async findAllCategories(active = false): Promise<string[]> {
     const query = this._intentsRepository.createQueryBuilder('intent')
       .select('DISTINCT category', 'category')
-      .where("intent.id NOT LIKE 'st_%'")
+      .where("intent.id NOT LIKE 'st\\_%' ESCAPE '\\'")
       .orderBy('category', 'ASC');
 
     if (active) {
@@ -309,7 +309,7 @@ export class IntentService {
         }
         return subq
       }, 't1', 't1.intentid = intent.id')
-      .where("intent.id NOT LIKE 'st_%'")
+      .where("intent.id NOT LIKE 'st\\_%' ESCAPE '\\'")
       .groupBy("intent.main_question")
       .having("COUNT(t1.intentid) = 0")
       .orderBy("intent.main_question", 'ASC');

@@ -17,13 +17,14 @@ import { IntentService } from "./intent.service";
 import { IntentDto } from "@core/dto/intent.dto";
 import { plainToClass } from "class-transformer";
 import { Intent } from "@core/entities/intent.entity";
-import camelcaseKeys = require("camelcase-keys");
-import snakecaseKeys = require("snakecase-keys");
 import { UpdateResult } from "typeorm/query-builder/result/UpdateResult";
 import { PaginationQueryDto } from "@core/dto/pagination-query.dto";
 import { Pagination } from "nestjs-typeorm-paginate/index";
 import { IntentFilterDto } from "@core/dto/intent-filter.dto";
 import { IntentModel } from "@core/models/intent.model";
+import { IntentStatus } from "@core/enums/intent-status.enum";
+import camelcaseKeys = require("camelcase-keys");
+import snakecaseKeys = require("snakecase-keys");
 
 @ApiTags('intent')
 @Controller('intent')
@@ -67,6 +68,7 @@ export class IntentController {
   @ApiOperation({summary: 'Create an intent'})
   async createEditIntent(@Body() intentDto: IntentDto): Promise<IntentDto> {
     let intent = this._formatIntent(intentDto);
+    intent.status = IntentStatus.to_deploy;
     intent = await this._intentService.createEdit(intent);
     return plainToClass(IntentDto, camelcaseKeys(intent, {deep: true}));
   }
