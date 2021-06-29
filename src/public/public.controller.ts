@@ -12,12 +12,14 @@ import { FeedbackDto } from "@core/dto/feedback.dto";
 import { FeedbackService } from "../feedback/feedback.service";
 import snakecaseKeys = require("snakecase-keys/index");
 import { Feedback } from "@core/entities/feedback.entity";
+import { FaqService } from "../faq/faq.service";
 
 @ApiTags('public')
 @Controller('public')
 export class PublicController {
   constructor(private readonly _configService: ChatbotConfigService,
               private readonly _intentService: IntentService,
+              private readonly _faqService: FaqService,
               private readonly _feedbackService: FeedbackService) {
   }
 
@@ -43,6 +45,21 @@ export class PublicController {
     return plainToClass(IntentDto, camelcaseKeys(intents, {deep: true}));
   }
 
+  @Post('/faq')
+  @ApiOperation({summary: 'User connects to the FAQ'})
+  async connectToFaq(@Body() body: { senderId: string }): Promise<void> {
+    await this._faqService.connectToFaq(body.senderId);
+    return;
+  }
+
+  @Post('/faq/:intentId')
+  @ApiOperation({summary: 'User click an intent on the FAQ'})
+  async clickIntent(@Body() body: { senderId: string },
+                    @Param('intentId') intentId: string): Promise<void> {
+    await this._faqService.clickIntent(body.senderId, intentId);
+    return;
+  }
+
   @Get('/categories')
   @ApiOperation({summary: 'Return all actives categories'})
   async getCategories(): Promise<string[]> {
@@ -51,7 +68,9 @@ export class PublicController {
 
   @Get('/category/:category')
   @ApiOperation({summary: 'Return intents of the category'})
-  async getCategory(@Param('category') category: string): Promise<IntentDto[]> {
+  async getCategory(@Query() options: { senderId: string },
+                    @Param('category') category: string): Promise<IntentDto[]> {
+    await this._faqService.searchCategory(options.senderId, category);
     const intents: Intent[] = await this._intentService.findByCategory(decodeURIComponent(category));
     return plainToClass(IntentDto, camelcaseKeys(intents, {deep: true}));
   }

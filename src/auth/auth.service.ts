@@ -85,13 +85,13 @@ export class AuthService {
   private async _validateUser(user: LoginUserDto): Promise<any> {
     const userToReturn = await this._userService.findOne(user.email, true);
     if(!!userToReturn && userToReturn.lock_until && moment.duration(moment(userToReturn.lock_until).add(1, 'd').diff(moment())).asHours() < 0) {
-      await this._userService.findAndUpdate(userToReturn.email, {failed_login_attempts: 0, lock_until: undefined});
-      userToReturn.lock_until = undefined;
+      await this._userService.findAndUpdate(userToReturn.email, {failed_login_attempts: 0, lock_until: null});
+      userToReturn.lock_until = null;
       userToReturn.failed_login_attempts = 0;
     }
     if (!!userToReturn && bcrypt.compareSync(user.password, userToReturn.password) && userToReturn.failed_login_attempts < 3) {
       const {password, ...result} = userToReturn;
-      await this._userService.findAndUpdate(userToReturn.email, {failed_login_attempts: 0, lock_until: undefined})
+      await this._userService.findAndUpdate(userToReturn.email, {failed_login_attempts: 0, lock_until: null})
       return result;
     }
     if (!!userToReturn && (!bcrypt.compareSync(user.password, userToReturn.password) || userToReturn.failed_login_attempts > 2)) {

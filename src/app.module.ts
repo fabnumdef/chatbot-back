@@ -29,6 +29,7 @@ import { FeedbackModule } from './feedback/feedback.module';
 import { UpdateModule } from './update/update.module';
 import { HandlebarsAdapter } from "@nestjs-modules/mailer/dist/adapters/handlebars.adapter";
 import { LoggerModule } from "./logger/logger.module";
+import { FaqModule } from './faq/faq.module';
 
 @Module({
   imports: [
@@ -75,7 +76,8 @@ import { LoggerModule } from "./logger/logger.module";
     SharedModule,
     FeedbackModule,
     UpdateModule,
-    LoggerModule
+    LoggerModule,
+    FaqModule
   ],
   controllers: [RefDataController, HealthController, PublicController],
   providers: [

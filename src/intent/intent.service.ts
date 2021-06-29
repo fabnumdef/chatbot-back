@@ -1,6 +1,6 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from "@nestjs/typeorm";
-import { FindManyOptions, In, QueryBuilder, Repository } from "typeorm";
+import { FindManyOptions, In, Repository } from "typeorm";
 import { Intent } from "@core/entities/intent.entity";
 import { IntentModel } from "@core/models/intent.model";
 import { UpdateResult } from "typeorm/query-builder/result/UpdateResult";
@@ -50,6 +50,8 @@ export class IntentService {
   findByCategory(category: string): Promise<Intent[]> {
     return this.getIntentAndResponseQueryBuilder()
       .andWhere(`category = '${category}'`)
+      .andWhere("intent.id NOT LIKE 'st\\_%' ESCAPE '\\'")
+      .andWhere('intent.id NOT IN (:...excludedIds)', {excludedIds: AppConstants.General.excluded_Ids})
       .getMany();
   }
 
@@ -154,6 +156,7 @@ export class IntentService {
   getIntentAndResponseQueryBuilder() {
     return this._intentsRepository.createQueryBuilder('intent')
       .select('intent.main_question')
+      .addSelect('intent.id')
       .addSelect('intent.category')
       .leftJoinAndSelect('intent.responses', 'responses')
       .where('intent.status IN (:...status)', {
@@ -175,6 +178,7 @@ export class IntentService {
     const query = this._intentsRepository.createQueryBuilder('intent')
       .select('DISTINCT category', 'category')
       .where("intent.id NOT LIKE 'st\\_%' ESCAPE '\\'")
+      .andWhere('intent.id NOT IN (:...excludedIds)', {excludedIds: AppConstants.General.excluded_Ids})
       .orderBy('category', 'ASC');
 
     if (active) {
@@ -212,9 +216,11 @@ export class IntentService {
     return intent;
   }
 
-  findIntentsMatching(query: string, intentsNumber = 1000, getResponses = false): Promise<Intent[]> {
+  findIntentsMatching(query: string, intentsNumber = 1000, getResponses = false, excludeSt = false): Promise<Intent[]> {
     const queryBuilder = this.getIntentQueryBuilder(PaginationUtils.setQuery(<PaginationQueryDto>{query: query}, Intent.getAttributesToSearch(), 'intent'), null, getResponses)
       .andWhere('hidden = False')
+      .andWhere("intent.id NOT LIKE 'st\\_%' ESCAPE '\\'")
+      .andWhere('intent.id NOT IN (:...excludedIds)', {excludedIds: AppConstants.General.excluded_Ids})
       .select('intent.id')
       .addSelect('intent.main_question')
       .addSelect('intent.category')
