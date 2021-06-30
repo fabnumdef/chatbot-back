@@ -14,6 +14,7 @@ const bcrypt = require('bcrypt');
 @Injectable()
 export class AuthService {
   private saltRounds = 10;
+  private _failedLoginAttempts = 5;
 
   constructor(private readonly _userService: UserService,
               private readonly _jwtService: JwtService,
@@ -84,17 +85,17 @@ export class AuthService {
 
   private async _validateUser(user: LoginUserDto): Promise<any> {
     const userToReturn = await this._userService.findOne(user.email, true);
-    if(!!userToReturn && userToReturn.lock_until && moment.duration(moment(userToReturn.lock_until).add(1, 'd').diff(moment())).asHours() < 0) {
+    if (!!userToReturn && userToReturn.lock_until && moment.duration(moment(userToReturn.lock_until).add(1, 'd').diff(moment())).asHours() < 0) {
       await this._userService.findAndUpdate(userToReturn.email, {failed_login_attempts: 0, lock_until: null});
       userToReturn.lock_until = null;
       userToReturn.failed_login_attempts = 0;
     }
-    if (!!userToReturn && bcrypt.compareSync(user.password, userToReturn.password) && userToReturn.failed_login_attempts < 3) {
+    if (!!userToReturn && bcrypt.compareSync(user.password, userToReturn.password) && userToReturn.failed_login_attempts < this._failedLoginAttempts) {
       const {password, ...result} = userToReturn;
       await this._userService.findAndUpdate(userToReturn.email, {failed_login_attempts: 0, lock_until: null})
       return result;
     }
-    if (!!userToReturn && (!bcrypt.compareSync(user.password, userToReturn.password) || userToReturn.failed_login_attempts > 2)) {
+    if (!!userToReturn && (!bcrypt.compareSync(user.password, userToReturn.password) || userToReturn.failed_login_attempts >= this._failedLoginAttempts)) {
       return await this._wrongPassword(userToReturn);
     }
     throw new HttpException('Mauvais identifiant ou mot de passe.',
@@ -104,16 +105,23 @@ export class AuthService {
   private async _wrongPassword(user: User): Promise<any> {
     user = await this._userService.findOne(user.email);
     user.failed_login_attempts++;
-    if(user.failed_login_attempts > 2 && !user.lock_until) {
+    if (user.failed_login_attempts >= this._failedLoginAttempts && !user.lock_until) {
       // @ts-ignore
       user.lock_until = new Date((Date.now()));
     }
-    await this._userService.findAndUpdate(user.email, {failed_login_attempts: user.failed_login_attempts, lock_until: user.lock_until})
-    if(user.failed_login_attempts >= 3) {
+    await this._userService.findAndUpdate(user.email, {
+      failed_login_attempts: user.failed_login_attempts,
+      lock_until: user.lock_until
+    })
+    if (user.failed_login_attempts >= this._failedLoginAttempts) {
       let unlockTime = moment.duration(moment(user.lock_until).add(1, 'd').diff(moment()));
       // @ts-ignore
       unlockTime = unlockTime.asHours().toFixed(1);
       throw new HttpException(`Votre compte est bloqué suite à de trop nombreuses tentatives. Vous devez attendre ${unlockTime}h pour de nouveau vous connecter ou bien cliquer sur Mot de passe oublié.`,
+        HttpStatus.UNAUTHORIZED);
+    }
+    if (user.failed_login_attempts === (this._failedLoginAttempts - 1)) {
+      throw new HttpException('Mauvais identifiant ou mot de passe. Une seule tentative restante avant de bloquer votre compte pour 24h.',
         HttpStatus.UNAUTHORIZED);
     }
     throw new HttpException('Mauvais identifiant ou mot de passe.',
