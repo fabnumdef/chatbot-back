@@ -90,12 +90,12 @@ export class AuthService {
       userToReturn.lock_until = null;
       userToReturn.failed_login_attempts = 0;
     }
-    if (!!userToReturn && bcrypt.compareSync(user.password, userToReturn.password) && userToReturn.failed_login_attempts < this._failedLoginAttempts) {
+    if (!!userToReturn && !!userToReturn.password && bcrypt.compareSync(user.password, userToReturn.password) && userToReturn.failed_login_attempts < this._failedLoginAttempts) {
       const {password, ...result} = userToReturn;
       await this._userService.findAndUpdate(userToReturn.email, {failed_login_attempts: 0, lock_until: null})
       return result;
     }
-    if (!!userToReturn && (!bcrypt.compareSync(user.password, userToReturn.password) || userToReturn.failed_login_attempts >= this._failedLoginAttempts)) {
+    if (!!userToReturn && !!userToReturn.password && (!bcrypt.compareSync(user.password, userToReturn.password) || userToReturn.failed_login_attempts >= this._failedLoginAttempts)) {
       return await this._wrongPassword(userToReturn);
     }
     throw new HttpException('Mauvais identifiant ou mot de passe.',
