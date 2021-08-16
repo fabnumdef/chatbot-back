@@ -15,8 +15,8 @@ import { forkJoin } from "rxjs";
 export class StatsController {
   constructor(private readonly _statsService: StatsService) {}
 
-  @Post('linedata')
-  @ApiOperation({ summary: 'Return data for line chart' })
+  @Post('line_data')
+  @ApiOperation({summary: 'Return data for line chart'})
   async sendLineData(@Body() filters: StatsFilterDto) {
     return forkJoin({
       askedQuestionsNumber: this._statsService.getNbAskedQuestions(filters),
@@ -26,8 +26,8 @@ export class StatsController {
     });
   }
 
-  @Post('bestdata')
-  @ApiOperation({ summary: 'Return the most relevant data' })
+  @Post('best_data')
+  @ApiOperation({summary: 'Return the most relevant data'})
   async sendBestData(@Body() filters: StatsFilterDto) {
     const result = {};
     result['mostAskedQuestions'] = plainToClass(StatsMostAskedQuestionsDto, await this._statsService.getMostAskedQuestions(filters));
@@ -42,16 +42,16 @@ export class StatsController {
     return result;
   }
 
-  @Post('worstdata')
-  @ApiOperation({ summary: 'Return the less revelant data' })
+  @Post('worst_data')
+  @ApiOperation({summary: 'Return the less revelant data'})
   async sendWorstData(@Body() filters: StatsFilterDto) {
     const result = {};
     result['lessAskedQuestions'] = await this._statsService.getNeverAskedQuestions(filters);
     return result;
   }
 
-  @Post('kpidata')
-  @ApiOperation({ summary: 'Return kpi indicators' })
+  @Post('kpi_data')
+  @ApiOperation({summary: 'Return kpi indicators'})
   async sendKPIData(@Body() filters: StatsFilterDto) {
     return forkJoin({
       uniqueVisitorsNumber: this._statsService.getNbUniqueVisitors(filters),
@@ -59,6 +59,31 @@ export class StatsController {
       avgChatbotResponseTime: this._statsService.getAvgResponseTime(filters),
       ratioChatbotResponseOk: this._statsService.getRatioResponseOk(filters),
       ratioChatbotResponseSure: this._statsService.getRatioResponseSure(filters)
+    });
+  }
+
+  @Post('faq_most_questions')
+  @ApiOperation({summary: 'Return the most relevant questions for FAQ'})
+  async sendFaqMostQuestions(@Body() filters: StatsFilterDto) {
+    const result = {};
+    result['mostAskedQuestions'] = plainToClass(StatsMostAskedQuestionsDto, await this._statsService.getFaqMostAskedQuestions(filters));
+    return result;
+  }
+
+  @Post('faq_most_categories')
+  @ApiOperation({summary: 'Return the most relevant categories for FAQ'})
+  async sendFaqMostCategories(@Body() filters: StatsFilterDto) {
+    const result = {};
+    result['mostAskedCategories'] = plainToClass(StatsMostAskedCategoriesDto, await this._statsService.getFaqMostAskedCategories(filters));
+    return result;
+  }
+
+  @Post('faq_kpi_data')
+  @ApiOperation({summary: 'Return faq kpi indicators'})
+  async sendFaqKPIData(@Body() filters: StatsFilterDto) {
+    return forkJoin({
+      uniqueVisitorsNumber: this._statsService.getFaqNbUniqueVisitors(filters),
+      avgQuestionPerVisitor: this._statsService.getFaqAvgQuestPerVisitors(filters)
     });
   }
 }

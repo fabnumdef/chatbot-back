@@ -6,6 +6,7 @@ import { InboxService } from "../inbox/inbox.service";
 import { StatsMostAskedQuestionsDto } from "@core/dto/stats-most-asked-questions.dto";
 import { FeedbackService } from "../feedback/feedback.service";
 import { StatsMostAskedCategoriesDto } from "@core/dto/stats-most-asked-categories.dto";
+import { FaqService } from "../faq/faq.service";
 
 
 
@@ -15,7 +16,8 @@ export class StatsService {
   constructor(private readonly _intentService: IntentService,
               private readonly _knowledgeService: KnowledgeService,
               private readonly _inboxService: InboxService,
-              private readonly _feedbackService: FeedbackService) {
+              private readonly _feedbackService: FeedbackService,
+              private readonly _faqService: FaqService) {
 
   }
 
@@ -31,6 +33,10 @@ export class StatsService {
     return this._inboxService.findNbUniqueVisitors(filters);
   }
 
+  getFaqNbUniqueVisitors(filters: StatsFilterDto): Promise<string> {
+    return this._faqService.findNbUniqueVisitors(filters);
+  }
+
   getNbIntent(filters: StatsFilterDto): Promise<Array<string>> {
     return this._intentService.findNbIntentByTime(filters);
   }
@@ -43,8 +49,16 @@ export class StatsService {
     return this._inboxService.findMostAskedQuestions(filters);
   }
 
+  getFaqMostAskedQuestions(filters: StatsFilterDto): Promise<StatsMostAskedQuestionsDto[]> {
+    return this._faqService.findMostAskedQuestions(filters);
+  }
+
   getMostAskedCategories(filters: StatsFilterDto): Promise<StatsMostAskedCategoriesDto[]> {
     return this._inboxService.findMostAskedCategories(filters);
+  }
+
+  getFaqMostAskedCategories(filters: StatsFilterDto): Promise<StatsMostAskedCategoriesDto[]> {
+    return this._faqService.findMostAskedCategories(filters);
   }
 
   getNeverAskedQuestions(filters: StatsFilterDto): Promise<Array<string>> {
@@ -53,6 +67,10 @@ export class StatsService {
 
   getAvgQuestPerVisitors(filters: StatsFilterDto): Promise<string> {
     return this._inboxService.findAvgQuestPerVisitor(filters);
+  }
+
+  getFaqAvgQuestPerVisitors(filters: StatsFilterDto): Promise<string> {
+    return this._faqService.findAvgQuestPerVisitor(filters);
   }
 
   getAvgResponseTime(filters: StatsFilterDto): Promise<string> {

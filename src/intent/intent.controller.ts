@@ -69,6 +69,9 @@ export class IntentController {
   async createEditIntent(@Body() intentDto: IntentDto): Promise<IntentDto> {
     let intent = this._formatIntent(intentDto);
     intent.status = IntentStatus.to_deploy;
+    if (await this._intentService.intentExists(intent.id)) {
+      throw new HttpException(`Impossible de créer cette connaissance, l'identifiant existe déjà.`, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
     intent = await this._intentService.createEdit(intent);
     return plainToClass(IntentDto, camelcaseKeys(intent, {deep: true}));
   }
@@ -77,10 +80,7 @@ export class IntentController {
   @ApiOperation({summary: 'Edit an intent'})
   async editIntent(@Param('id') intentId: string, @Body() intentDto: IntentDto): Promise<IntentDto> {
     let intent = this._formatIntent(intentDto);
-    if (await this._intentService.intentExists(intent.id)) {
-      throw new HttpException(`Impossible de créer cette connaissance, l'identifiant existe déjà.`, HttpStatus.INTERNAL_SERVER_ERROR);
-    }
-    intent = await this._intentService.createEdit(intent, intentId);
+    intent = await this._intentService.createEdit(intent, intent.id != intentId ? intentId : null);
     return plainToClass(IntentDto, camelcaseKeys(intent, {deep: true}));
   }
 
