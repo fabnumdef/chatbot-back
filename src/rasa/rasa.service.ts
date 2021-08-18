@@ -76,6 +76,10 @@ export class RasaService {
       await execShellCommand(`pkill screen`, this._chatbotTemplateDir).then(res => {
         this._logger.log(res);
       });
+      this._logger.log('DISABLE TELEMETRY');
+      await execShellCommand(`rasa telemetry disable`, this._chatbotTemplateDir).then(res => {
+        this._logger.log(res);
+      });
       this._logger.log('LAUNCHING SCREEN');
       await execShellCommand(`screen -S rasa -dmS rasa run -m models --log-file out.log --cors "*" --debug`, this._chatbotTemplateDir).then(res => {
         this._logger.log(res);
