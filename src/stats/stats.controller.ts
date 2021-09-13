@@ -7,6 +7,7 @@ import { plainToClass } from "class-transformer";
 import { StatsMostAskedQuestionsDto } from "@core/dto/stats-most-asked-questions.dto";
 import { StatsMostAskedCategoriesDto } from "@core/dto/stats-most-asked-categories.dto";
 import { forkJoin } from "rxjs";
+import { FeedbackStatus } from "@core/enums/feedback-status.enum";
 
 @ApiTags('stats')
 @Controller('stats')
@@ -84,6 +85,67 @@ export class StatsController {
     return forkJoin({
       uniqueVisitorsNumber: this._statsService.getFaqNbUniqueVisitors(filters),
       avgQuestionPerVisitor: this._statsService.getFaqAvgQuestPerVisitors(filters)
+    });
+  }
+
+  @Post('feedback_relevant_questions')
+  @ApiOperation({summary: 'Return the most flaged relevant questions'})
+  async sendFeedbackRelevantQuestions(@Body() filters: StatsFilterDto) {
+    const result = {};
+    result['mostAskedQuestions'] = plainToClass(StatsMostAskedQuestionsDto, await this._statsService.getFeedbackQuestions(filters, FeedbackStatus.relevant));
+    return result;
+  }
+
+  @Post('feedback_relevant_categories')
+  @ApiOperation({summary: 'Return the most flaged relevant categories'})
+  async sendFeedbackRelevantCategories(@Body() filters: StatsFilterDto) {
+    const result = {};
+    result['mostAskedCategories'] = plainToClass(StatsMostAskedQuestionsDto, await this._statsService.getFeedbackCategories(filters, FeedbackStatus.relevant));
+    return result;
+  }
+
+  @Post('feedback_wrong_questions')
+  @ApiOperation({summary: 'Return the most flaged wrong questions'})
+  async sendFeedbackWrongQuestions(@Body() filters: StatsFilterDto) {
+    const result = {};
+    result['mostAskedQuestions'] = plainToClass(StatsMostAskedQuestionsDto, await this._statsService.getFeedbackQuestions(filters, FeedbackStatus.wrong));
+    return result;
+  }
+
+  @Post('feedback_wrong_categories')
+  @ApiOperation({summary: 'Return the most flaged wrong categories'})
+  async sendFeedbackWrongCategories(@Body() filters: StatsFilterDto) {
+    const result = {};
+    result['mostAskedCategories'] = plainToClass(StatsMostAskedQuestionsDto, await this._statsService.getFeedbackCategories(filters, FeedbackStatus.wrong));
+    return result;
+  }
+
+  @Post('feedback_off_topic_questions')
+  @ApiOperation({summary: 'Return the most flaged off_topic questions'})
+  async sendFeedbackOfftopicQuestions(@Body() filters: StatsFilterDto) {
+    const result = {};
+    result['mostAskedQuestions'] = plainToClass(StatsMostAskedQuestionsDto, await this._statsService.getFeedbackQuestions(filters, FeedbackStatus.off_topic));
+    return result;
+  }
+
+  @Post('feedback_off_topic_categories')
+  @ApiOperation({summary: 'Return the most flaged off_topic categories'})
+  async sendFeedbackOfftopicCategories(@Body() filters: StatsFilterDto) {
+    const result = {};
+    result['mostAskedCategories'] = plainToClass(StatsMostAskedQuestionsDto, await this._statsService.getFeedbackCategories(filters, FeedbackStatus.off_topic));
+    return result;
+  }
+
+  @Post('feedback_kpi_data')
+  @ApiOperation({summary: 'Return feedback kpi indicators'})
+  async sendFeedbackKPIData(@Body() filters: StatsFilterDto) {
+    return forkJoin({
+      relevantQuestions: this._statsService.getFeedbackKpi(filters, FeedbackStatus.relevant),
+      relevantQuestionsPct: this._statsService.getFeedbackPctKpi(filters, FeedbackStatus.relevant),
+      wrongQuestions: this._statsService.getFeedbackKpi(filters, FeedbackStatus.wrong),
+      wrongQuestionsPct: this._statsService.getFeedbackPctKpi(filters, FeedbackStatus.wrong),
+      offtopicQuestions: this._statsService.getFeedbackKpi(filters, FeedbackStatus.off_topic),
+      offtopicQuestionsPct: this._statsService.getFeedbackPctKpi(filters, FeedbackStatus.off_topic)
     });
   }
 }

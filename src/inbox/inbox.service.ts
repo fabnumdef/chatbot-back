@@ -1,4 +1,4 @@
-import { StatsFilterDto } from './../core/dto/stats-filter.dto';
+import { StatsFilterDto } from '@core/dto/stats-filter.dto';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from "@nestjs/typeorm";
 import { FindManyOptions, LessThan, Repository } from "typeorm";
@@ -25,6 +25,7 @@ import { Events } from "@core/entities/events.entity";
 import * as fs from "fs";
 import { WorkBook } from "xlsx";
 import { StatsMostAskedCategoriesDto } from "@core/dto/stats-most-asked-categories.dto";
+import { FeedbackStatus } from "@core/enums/feedback-status.enum";
 
 const XLSX = require('xlsx');
 const uuid = require('uuid');
@@ -176,7 +177,7 @@ export class InboxService {
     return query.getRawOne();
   }
 
-  findMostAskedQuestions(filters: StatsFilterDto): Promise<StatsMostAskedQuestionsDto[]> {
+  findMostAskedQuestions(filters: StatsFilterDto, feedbackStatus?: FeedbackStatus): Promise<StatsMostAskedQuestionsDto[]> {
     const startDate = filters.startDate ? (moment(filters.startDate, 'DD/MM/YYYY').format('YYYY-MM-DD')) : null;
     const endDate = filters.endDate ? moment(filters.endDate, 'DD/MM/YYYY').format('YYYY-MM-DD') : null;
 
@@ -189,10 +190,13 @@ export class InboxService {
       // Remove small talks
       .andWhere(`int.id NOT LIKE 'st\\_%' ESCAPE '\\'`)
     if (startDate) {
-      query.andWhere(`DATE(to_timestamp(inbox.timestamp)) >= '${startDate}'`)
+      query.andWhere(`DATE(to_timestamp(inbox.${feedbackStatus ? 'feedback_timestamp' : 'timestamp'})) >= '${startDate}'`)
     }
     if (endDate) {
-      query.andWhere(`DATE(to_timestamp(inbox.timestamp)) <= '${endDate}'`)
+      query.andWhere(`DATE(to_timestamp(inbox.${feedbackStatus ? 'feedback_timestamp' : 'timestamp'})) <= '${endDate}'`)
+    }
+    if (feedbackStatus) {
+      query.andWhere(`inbox.feedback_status = '${feedbackStatus}'`)
     }
     query.groupBy('int.main_question')
       .orderBy('count', 'DESC', 'NULLS LAST')
@@ -200,7 +204,7 @@ export class InboxService {
     return query.getRawMany();
   }
 
-  findMostAskedCategories(filters: StatsFilterDto): Promise<StatsMostAskedCategoriesDto[]> {
+  findMostAskedCategories(filters: StatsFilterDto, feedbackStatus?: FeedbackStatus): Promise<StatsMostAskedCategoriesDto[]> {
     const startDate = filters.startDate ? (moment(filters.startDate, 'DD/MM/YYYY').format('YYYY-MM-DD')) : null;
     const endDate = filters.endDate ? moment(filters.endDate, 'DD/MM/YYYY').format('YYYY-MM-DD') : null;
 
@@ -217,6 +221,9 @@ export class InboxService {
     }
     if (endDate) {
       query.andWhere(`DATE(to_timestamp(inbox.timestamp)) <= '${endDate}'`)
+    }
+    if (feedbackStatus) {
+      query.andWhere(`inbox.feedback_status = '${feedbackStatus}'`)
     }
     query.groupBy('int.category')
       .orderBy('count', 'DESC', 'NULLS LAST')
@@ -276,6 +283,45 @@ export class InboxService {
     return query.getRawOne();
   }
 
+  async findCountFeedback(filters: StatsFilterDto, feedbackStatus: FeedbackStatus) {
+    const startDate = filters.startDate ? moment(filters.startDate, 'DD/MM/YYYY').format('YYYY-MM-DD') : null;
+    const endDate = filters.endDate ? moment(filters.endDate, 'DD/MM/YYYY').format('YYYY-MM-DD') : null;
+
+    let additionnalWhereClause = startDate ? `AND DATE(to_timestamp(inbox.timestamp)) >= '${startDate}'` : '';
+    additionnalWhereClause += endDate ? ` AND DATE(to_timestamp(inbox.timestamp)) <= '${endDate}'` : additionnalWhereClause;
+
+    const query = this._inboxesRepository.createQueryBuilder('inbox')
+      .select(`COUNT(inbox.id)`, 'countFeedback')
+      .where(`inbox.feedback_status = '${feedbackStatus}' ${additionnalWhereClause}`);
+    if (startDate) {
+      query.andWhere(`DATE(to_timestamp(inbox.timestamp)) >= '${startDate}'`)
+    }
+    if (endDate) {
+      query.andWhere(`DATE(to_timestamp(inbox.timestamp)) <= '${endDate}'`)
+    }
+
+    return query.getRawOne();
+  }
+
+  async findRatioFeedback(filters: StatsFilterDto, feedbackStatus: FeedbackStatus) {
+    const startDate = filters.startDate ? moment(filters.startDate, 'DD/MM/YYYY').format('YYYY-MM-DD') : null;
+    const endDate = filters.endDate ? moment(filters.endDate, 'DD/MM/YYYY').format('YYYY-MM-DD') : null;
+
+    let additionnalWhereClause = startDate ? `AND DATE(to_timestamp(inbox.timestamp)) >= '${startDate}'` : '';
+    additionnalWhereClause += endDate ? ` AND DATE(to_timestamp(inbox.timestamp)) <= '${endDate}'` : additionnalWhereClause;
+
+    const query = this._inboxesRepository.createQueryBuilder('inbox')
+      .select(`100 * (SELECT COUNT(inbox.id) from inbox WHERE inbox.feedback_status = '${feedbackStatus}' ${additionnalWhereClause})/COUNT(inbox.id)`, 'ratioFeedback');
+    if (startDate) {
+      query.where(`DATE(to_timestamp(inbox.timestamp)) >= '${startDate}'`)
+    }
+    if (endDate) {
+      query.andWhere(`DATE(to_timestamp(inbox.timestamp)) <= '${endDate}'`)
+    }
+
+    return query.getRawOne();
+  }
+
   /**
    * Update inbox status with feedback
    * @param feedback
@@ -297,7 +343,12 @@ export class InboxService {
     }
 
     // @ts-ignore
-    this._inboxesRepository.update(inbox.id, {status: feedback.status});
+    this._inboxesRepository.update(inbox.id, {
+      // @ts-ignore
+      status: feedback.status,
+      feedback_status: feedback.status,
+      feedback_timestamp: parseFloat(moment(feedback.created_at).format('x'))
+    });
     return true;
   }
 

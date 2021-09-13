@@ -7,8 +7,7 @@ import { StatsMostAskedQuestionsDto } from "@core/dto/stats-most-asked-questions
 import { FeedbackService } from "../feedback/feedback.service";
 import { StatsMostAskedCategoriesDto } from "@core/dto/stats-most-asked-categories.dto";
 import { FaqService } from "../faq/faq.service";
-
-
+import { FeedbackStatus } from "@core/enums/feedback-status.enum";
 
 @Injectable()
 export class StatsService {
@@ -83,6 +82,22 @@ export class StatsService {
 
   getRatioResponseSure(filters: StatsFilterDto): Promise<string> {
     return this._inboxService.findRatioResponseOk(filters, 0.95);
+  }
+
+  getFeedbackQuestions(filters: StatsFilterDto, feedbackStatus: FeedbackStatus): Promise<StatsMostAskedQuestionsDto[]> {
+    return this._inboxService.findMostAskedQuestions(filters, feedbackStatus);
+  }
+
+  getFeedbackCategories(filters: StatsFilterDto, feedbackStatus: FeedbackStatus): Promise<StatsMostAskedCategoriesDto[]> {
+    return this._inboxService.findMostAskedCategories(filters, feedbackStatus);
+  }
+
+  getFeedbackKpi(filters: StatsFilterDto, feedbackStatus: FeedbackStatus): Promise<StatsMostAskedCategoriesDto[]> {
+    return this._inboxService.findCountFeedback(filters, feedbackStatus);
+  }
+
+  getFeedbackPctKpi(filters: StatsFilterDto, feedbackStatus: FeedbackStatus): Promise<StatsMostAskedCategoriesDto[]> {
+    return this._inboxService.findRatioFeedback(filters, feedbackStatus);
   }
 
 }
