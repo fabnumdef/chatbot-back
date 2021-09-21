@@ -6,6 +6,12 @@
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <style>
+        img {
+            border: none;
+            -ms-interpolation-mode: bicubic;
+            max-width: 100%;
+        }
+
         body {
             background-color: #f6f6f6;
             font-family: 'Roboto', sans-serif;
@@ -279,7 +285,7 @@
 </head>
 
 <body class="">
-<span class="preheader">Confirmation de création de compte.</span>
+<span class="preheader">Assignation d'une connaissance.</span>
 <table role="presentation" border="0" cellpadding="0" cellspacing="0" class="body">
     <tr>
         <td>&nbsp;</td>
@@ -302,12 +308,11 @@
                             <table role="presentation" border="0" cellpadding="0" cellspacing="0">
                                 <tr>
                                     <td class="align-center">
-                                        <h1>Bienvenue sur l'Usine à Chatbots</h1>
+                                        <h1>Une requête vous a été attribuée !</h1>
                                         <p>Bonjour <b>{{ firstName }}</b>,<br/>
-                                            Nous sommes heureux de vous compter parmis les utilisateurs de l'Usine à
-                                            Chatbots.</p>
-                                        <p>Afin d'utiliser votre compte,<br/>
-                                            Merci de cliquer sur le bouton ci-dessous pour définir votre mot de passe.
+                                            Une question vous a été attribuée et nécessite votre réponse :
+                                            <br/>
+                                            <i>{{ question }}</i>
                                         </p>
                                         <table role="presentation"
                                                border="0"
@@ -325,7 +330,7 @@
                                                         <tr>
                                                             <td>
                                                                 <a href="{{url}}"
-                                                                   target="_blank">Confirmer inscription</a>
+                                                                   target="_blank">Se connecter</a>
                                                             </td>
                                                         </tr>
                                                         </tbody>

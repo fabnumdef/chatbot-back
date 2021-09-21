@@ -150,9 +150,11 @@ export class ChatbotConfigController {
   @ApiOperation({summary: 'Update the api-key'})
   @ApiBearerAuth()
   @UseGuards(JwtGuard)
-  async updateApiKey(): Promise<ConfigDto> {
+  async updateApiKey(): Promise<{ apiKey: string }> {
     const config = await this._configService.updateApiKey();
-    return plainToClass(ConfigDto, camelcaseKeys(config, {deep: true}));
+    return plainToClass(class {
+      apiKey: string
+    }, camelcaseKeys(config, {deep: true}));
   }
 
   @Get('training')

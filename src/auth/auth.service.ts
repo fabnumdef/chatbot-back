@@ -40,7 +40,7 @@ export class AuthService {
     const userUpdated = await this._userService.setPasswordResetToken(userWithoutPassword);
 
     await this._mailService.sendEmail(userUpdated.email,
-      'Fabrique à Chatbots - Réinitialisation de mot de passe',
+      'Usine à Chatbots - Réinitialisation de mot de passe',
       'forgot-password',
       {  // Data to be sent to template engine.
         firstName: userUpdated.first_name,
@@ -69,7 +69,7 @@ export class AuthService {
     const userUpdated = await this._userService.findAndUpdate(userWithoutPassword.email, valuesToUpdate);
 
     await this._mailService.sendEmail(userUpdated.email,
-      'Fabrique à Chatbots - Mot de passe modifié',
+      'Usine à Chatbots - Mot de passe modifié',
       'reset-password',
       {  // Data to be sent to template engine.
         firstName: userUpdated.first_name,
@@ -85,6 +85,10 @@ export class AuthService {
 
   private async _validateUser(user: LoginUserDto): Promise<any> {
     const userToReturn = await this._userService.findOne(user.email, true);
+    if (!!userToReturn && userToReturn.disabled) {
+      throw new HttpException('Votre compte a été supprimé. Merci de prendre contact avec l\'administrateur si vous souhaitez réactiver votre compte.',
+        HttpStatus.UNAUTHORIZED);
+    }
     if (!!userToReturn && userToReturn.lock_until && moment.duration(moment(userToReturn.lock_until).add(1, 'd').diff(moment())).asHours() < 0) {
       await this._userService.findAndUpdate(userToReturn.email, {failed_login_attempts: 0, lock_until: null});
       userToReturn.lock_until = null;

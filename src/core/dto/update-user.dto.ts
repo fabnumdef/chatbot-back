@@ -1,4 +1,4 @@
-import { IsEnum, IsNotEmpty, IsOptional, IsString } from "class-validator";
+import { IsBoolean, IsEnum, IsNotEmpty, IsOptional, IsString } from "class-validator";
 import { UserRole } from "@core/enums/user-role.enum";
 
 export class UpdateUserDto {
@@ -13,6 +13,10 @@ export class UpdateUserDto {
   @IsString()
   @IsOptional()
   function: string;
+
+  @IsBoolean()
+  @IsOptional()
+  disabled: boolean;
 
   @IsEnum(UserRole)
   @IsOptional()

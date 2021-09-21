@@ -39,4 +39,7 @@ export class User {
 
   @OneToMany(type => Inbox, inbox => inbox.user)
   inboxes: Inbox[];
+
+  @Column({default: false})
+  disabled: boolean;
 }

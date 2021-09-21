@@ -60,7 +60,7 @@ export class InboxFillService {
     }
     if (inboxes.length > 0) {
       await this._inboxesRepository.save(inboxes);
-      this._logger.log('Finishing updating ${inboxes.length} inbox');
+      this._logger.log(`Finishing updating ${inboxes.length} inbox`);
     }
   }
 

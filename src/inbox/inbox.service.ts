@@ -26,6 +26,7 @@ import * as fs from "fs";
 import { WorkBook } from "xlsx";
 import { StatsMostAskedCategoriesDto } from "@core/dto/stats-most-asked-categories.dto";
 import { FeedbackStatus } from "@core/enums/feedback-status.enum";
+import { MailService } from "../shared/services/mail.service";
 
 const XLSX = require('xlsx');
 const uuid = require('uuid');
@@ -38,6 +39,7 @@ export class InboxService {
               private readonly _knowledgeService: KnowledgeService,
               private readonly _intentService: IntentService,
               private readonly _userService: UserService,
+              private readonly _mailService: MailService,
               @InjectRepository(Events)
               private readonly _eventsRepository: Repository<Events>,) {
   }
@@ -126,7 +128,21 @@ export class InboxService {
 
   async assign(inboxId, userEmail): Promise<UpdateResult> {
     const user = await this._userService.findOne(userEmail);
-    return this._inboxesRepository.update({id: inboxId}, {user: user});
+    const inbox = await this.findOne(inboxId);
+    const toReturn = await this._inboxesRepository.update({id: inboxId}, {user: user});
+
+    await this._mailService.sendEmail(user.email,
+      'Usine à Chatbots - Une requête vous a été attribuée',
+      'assign-intent',
+      {  // Data to be sent to template engine.
+        firstName: user.first_name,
+        question: inbox.question,
+        url: `${process.env.HOST_URL}/backoffice`
+      })
+      .then(() => {
+      });
+
+    return toReturn;
   }
 
   delete(inboxId): Promise<UpdateResult> {

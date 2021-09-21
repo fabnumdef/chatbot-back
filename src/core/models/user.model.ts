@@ -1,4 +1,4 @@
-import { IsEmail, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsBoolean, IsEmail, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 import { UserRole } from "@core/enums/user-role.enum";
 
 export class UserModel {
@@ -17,6 +17,10 @@ export class UserModel {
   @IsString()
   @IsNotEmpty()
   function: string;
+
+  @IsBoolean()
+  @IsNotEmpty()
+  disabled: boolean;
 
   @IsString()
   @IsOptional()

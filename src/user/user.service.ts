@@ -16,7 +16,13 @@ export class UserService {
   }
 
   findAll(): Promise<User[]> {
-    return this._usersRepository.find();
+    return this._usersRepository.find({
+      order: {
+        disabled: 'ASC',
+        first_name: 'ASC',
+        last_name: 'ASC'
+      }
+    });
   }
 
   findOne(email: string, password: boolean = false): Promise<User> {
@@ -60,7 +66,7 @@ export class UserService {
   }
 
   async delete(email: string): Promise<void> {
-    await this._usersRepository.delete(email);
+    await this._usersRepository.update({email: email}, {disabled: true});
   }
 
   async generateAdminUser(user: UserModel): Promise<UserModel> {
@@ -81,7 +87,7 @@ export class UserService {
   async sendEmailPasswordToken(user: User) {
     const userUpdated = await this.setPasswordResetToken(user);
     await this._mailService.sendEmail(userUpdated.email,
-      'Fabrique à Chatbots - Création de compte',
+      'Usine à Chatbots - Création de compte',
       'create-account',
       {  // Data to be sent to template engine.
         firstName: userUpdated.first_name,

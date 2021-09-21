@@ -57,7 +57,7 @@ export class FeedbackService {
       await this._feedbacksRepository.delete({
         id: In(toDelete)
       });
-      this._logger.log('Finishing updating ${toDelete.length} feedbacks');
+      this._logger.log(`Finishing updating ${toDelete.length} feedbacks`);
     }
   }
 
