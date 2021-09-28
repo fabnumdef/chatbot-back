@@ -1,0 +1,68 @@
+- name: Copy chatbot-back
+  synchronize:
+    src: '{{ gitDir }}/{{ backDir }}/'
+    dest: '{{ appsDir }}/{{ backDir }}'
+    rsync_opts:
+      - '--exclude=mediatheque/'
+      - '--exclude=historic/'
+  when: updateBack
+
+- name: Copy env-file
+  copy:
+    src: '{{ gitDir }}/.env'
+    dest: '{{ appsDir }}/{{ backDir }}/.env'
+  when: updateBack
+
+- name: Copy chatbot-front
+  synchronize:
+    src: '{{ gitDir }}/{{ frontDir }}/dist/{{ frontDir }}/'
+    dest: '{{ appsDir }}/{{ frontDir }}'
+    delete: yes
+  when: updateFront
+
+- name: Copy webchat
+  synchronize:
+    src: '{{ gitDir }}/{{ frontDir }}/dist/{{ webchatDir }}/'
+    dest: '{{ appsDir }}/{{ webchatDir }}'
+    delete: yes
+  when: updateFront
+
+- name: Copy chatbot-template
+  synchronize:
+    src: '{{ gitDir }}/{{ botDir }}/'
+    dest: '{{ appsDir }}/{{ botDir }}'
+    rsync_opts:
+      - '--exclude=models/'
+  when: updateRasa
+
+- name: npm install chatbot-back
+  command:
+    cmd: npm install
+    chdir: '{{ appsDir }}/{{ backDir }}'
+  when: updateBack
+
+- name: npm build chatbot-back
+  command:
+    cmd: 'npm run build'
+    chdir: '{{ appsDir }}/{{ backDir }}'
+  when: updateBack
+
+- name: npm copy env file
+  command:
+    cmd: 'npm run copy'
+    chdir: '{{ appsDir }}/{{ backDir }}'
+  when: updateBack
+
+- name: Copy endpoints.yml rasa file
+  copy:
+    src: '{{ appsDir }}/{{ botDir }}/endpoints.example.yml'
+    dest: '{{ appsDir }}/{{ botDir }}/endpoints.yml'
+    remote_src: yes
+  when: updateRasa
+
+- name: Update endpoints.yml rasa file
+  lineinfile:
+    path: '{{ appsDir }}/{{ botDir }}/endpoints.yml'
+    regexp: '^  password:'
+    line: '  password: "{{ DB_PASSWORD }}"'
+  when: updateRasa

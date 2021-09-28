@@ -5,6 +5,7 @@ import { ChatbotConfigService } from "../chatbot-config/chatbot-config.service";
 import * as fs from "fs";
 import { BotLogger } from "../logger/bot.logger";
 import { ChatbotConfig } from "@core/entities/chatbot-config.entity";
+import { dotenvToJson, jsonToDotenv } from "@core/utils";
 
 @Injectable()
 export class UpdateService {
@@ -64,25 +65,25 @@ export class UpdateService {
         DB_PASSWORD: process.env.DATABASE_PASSWORD
       }
     };
-    this._logger.log('UPDATING CHATBOT');
-    await ansiblePlaybook.command(`generate-chatbot.yml -e '${JSON.stringify(extraVars)}'`).then(async (result) => {
+    this._logger.log('DEPLOYING CHATBOT APP');
+    await ansiblePlaybook.command(`playDeployapp.yml -e '${JSON.stringify(extraVars)}'`).then(async (result) => {
       this._logger.log(JSON.stringify(result));
-      if (updateChatbot.updateLogs && updateChatbot.elastic_host && updateChatbot.elastic_username && updateChatbot.elastic_password) {
-        await ansiblePlaybook.command(`elastic/elastic.yml -e '${JSON.stringify(extraVars)}'`).then((result) => {
-          this._logger.log(JSON.stringify(result));
-        })
-      }
+      // if (updateChatbot.updateLogs && updateChatbot.elastic_host && updateChatbot.elastic_username && updateChatbot.elastic_password) {
+      //   await ansiblePlaybook.command(`elastic/elastic.yml -e '${JSON.stringify(extraVars)}'`).then((result) => {
+      //     this._logger.log(JSON.stringify(result));
+      //   })
+      // }
       if (updateChatbot.updateBack) {
-        await ansiblePlaybook.command(`reload-back.yml -e '${JSON.stringify(extraVars)}'`).then((result) => {
+        await ansiblePlaybook.command(`playReloadback.yml -e '${JSON.stringify(extraVars)}'`).then((result) => {
           this._logger.log(JSON.stringify(result));
         })
       }
     }).catch((e) => {
-      this._logger.error('ERROR UPDATING CHATBOT', e);
+      this._logger.error('ERROR DEPLOYING CHATBOT APP', e);
     });
   }
 
-  async updateDomainName(domainName) {
+  async updateDomainName(domainName: string) {
     const playbookOptions = new Options(`${this._gitDir}/ansible`);
     const ansiblePlaybook = new AnsiblePlaybook(playbookOptions);
     const extraVars = {
@@ -91,18 +92,37 @@ export class UpdateService {
       }
     };
     this._logger.log('UPDATING DOMAIN NAME');
-    await ansiblePlaybook.command(`nginx-conf.yml -e '${JSON.stringify(extraVars)}'`).then(async (result) => {
+    await ansiblePlaybook.command(`playUpdatenginx.yml -e '${JSON.stringify(extraVars)}'`).then(async (result) => {
       this._logger.log(JSON.stringify(result));
+      this._updateDomainNameEnv(domainName);
     }).catch((e) => {
       this._logger.error('ERROR UPDATING DOMAIN NAME', e);
     });
+  }
+
+  private async _updateDomainNameEnv(domainName: string) {
+    this._logger.log('UPDATING DOMAIN NAME ENV');
+    let dotenv = dotenvToJson(fs.readFileSync(`${this._appDir}/.env`, 'utf8'));
+    dotenv.HOST_URL = `https://${domainName}`;
+
+    try {
+      fs.writeFileSync(`${this._appDir}/.env`, jsonToDotenv(dotenv), 'utf8');
+      fs.writeFileSync(`${this._appDir}/dist/.env`, jsonToDotenv(dotenv), 'utf8');
+      const playbookOptions = new Options(`${this._gitDir}/ansible`);
+      const ansiblePlaybook = new AnsiblePlaybook(playbookOptions);
+      await ansiblePlaybook.command(`playReloadback.yml -e '{"updateBack": true}'`).then((result) => {
+        this._logger.log(JSON.stringify(result));
+      });
+    } catch (e) {
+      this._logger.error('ERROR UPDATING DOMAIN NAME ENV', e);
+    }
   }
 
   private async _updateChatbotRepos(updateChatbot: UpdateChatbotDto) {
     const playbookOptions = new Options(`${this._appDir}/ansible`);
     const ansiblePlaybook = new AnsiblePlaybook(playbookOptions);
     this._logger.log('UPDATING CHATBOTS REPOSITORIES');
-    await ansiblePlaybook.command(`update-chatbot-repo.yml -e '${JSON.stringify(updateChatbot)}'`).then(async (result) => {
+    await ansiblePlaybook.command(`playUpdaterepos.yml -e '${JSON.stringify(updateChatbot)}'`).then(async (result) => {
       this._logger.log(JSON.stringify(result));
     }).catch(error => {
       this._logger.log('ERRROR UPDATING CHATBOTS REPOSITORIES', error);

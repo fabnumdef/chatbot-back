@@ -1,0 +1,16 @@
+- name: NODE | Start APP
+  shell: pm2 restart main.js --name ChatbotBack
+  args:
+    chdir: '{{ appsDir }}/{{ backDir }}/dist'
+  when: updateBack
+  ignore_errors: true
+
+- name: Update PM2 script at startup
+  shell: pm2 startup
+  when: updateBack
+
+- name: reload pm2 startup script
+  when: updateBack
+  systemd:
+    name: pm2-root.service
+    state: reloaded

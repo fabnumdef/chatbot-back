@@ -1,0 +1,7 @@
+---
+- name: Mise à jour de la version de Nginx et sa configuration
+  hosts: localhost
+  vars_files:
+    - roles/vars/main.yml
+  roles:
+    - updateNginx

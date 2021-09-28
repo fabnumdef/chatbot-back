@@ -1,0 +1,7 @@
+---
+- name: Mise à jour des différents repos git + build des fronts si besoin
+  hosts: localhost
+  vars_files:
+    - roles/vars/main.yml
+  roles:
+    - updateRepos

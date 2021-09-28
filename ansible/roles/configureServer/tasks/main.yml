@@ -1,0 +1,45 @@
+- name: Update and upgrade apt packages
+  apt:
+    upgrade: 'yes'
+    update_cache: 'yes'
+
+- name: Set right rights on www directory
+  file:
+    path: '{{appsDir}}'
+    group: www-data
+    mode: '774'
+    recurse: yes
+
+- name: Install RASA version
+  pip:
+    executable: pip3
+    name:
+      - rasa==2.8.3
+      - psycopg2-binary
+      - python-socketio==5.3.0
+
+- name: Train rasa
+  command:
+    chdir: '{{ appsDir }}/{{ botDir }}/'
+    cmd: 'rasa train --num-threads 8'
+
+- name: Stop rasa chatbot
+  command: 'pkill screen'
+  ignore_errors: true
+
+- name: Start rasa chatbot
+  command:
+    chdir: '{{ appsDir }}/{{ botDir }}/'
+    cmd: 'screen -S rasa -dmS rasa run -m models --log-file out.log --cors "*" --debug'
+
+- name: copy rc.local file to restart bot on boot
+  copy:
+    src: '{{ gitDir }}/rc.local'
+    dest: '/etc/rc.local'
+  when: updateRasa
+
+- name: Set right rights on rc.local file
+  when: updateRasa
+  file:
+    path: '/etc/rc.local'
+    mode: '755'
