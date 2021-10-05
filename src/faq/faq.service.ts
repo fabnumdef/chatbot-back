@@ -39,10 +39,10 @@ export class FaqService {
       // Remove small talks
       .andWhere(`int.id NOT LIKE 'st\\_%' ESCAPE '\\'`)
     if (startDate) {
-      query.andWhere(`DATE(to_timestamp(faq_events.timestamp)) >= '${startDate}'`)
+      query.andWhere(`DATE(faq_events.timestamp) >= '${startDate}'`)
     }
     if (endDate) {
-      query.andWhere(`DATE(to_timestamp(faq_events.timestamp)) <= '${endDate}'`)
+      query.andWhere(`DATE(faq_events.timestamp) <= '${endDate}'`)
     }
     query.groupBy('int.main_question')
       .orderBy('count', 'DESC', 'NULLS LAST')
@@ -63,10 +63,10 @@ export class FaqService {
       // Remove small talks
       .andWhere(`int.id NOT LIKE 'st\\_%' ESCAPE '\\'`)
     if (startDate) {
-      query.andWhere(`DATE(to_timestamp(faq_events.timestamp)) >= '${startDate}'`)
+      query.andWhere(`DATE(faq_events.timestamp) >= '${startDate}'`)
     }
     if (endDate) {
-      query.andWhere(`DATE(to_timestamp(faq_events.timestamp)) <= '${endDate}'`)
+      query.andWhere(`DATE(faq_events.timestamp) <= '${endDate}'`)
     }
     query.groupBy('int.category')
       .orderBy('count', 'DESC', 'NULLS LAST')
@@ -81,10 +81,10 @@ export class FaqService {
     const query = this._faqEventsRepository.createQueryBuilder('faq_events')
       .select("COUNT(DISTINCT sender_id) AS visitors");
     if (startDate) {
-      query.where(`DATE(to_timestamp(faq_events.timestamp)) >= '${startDate}'`)
+      query.where(`DATE(faq_events.timestamp) >= '${startDate}'`)
     }
     if (endDate) {
-      query.andWhere(`DATE(to_timestamp(faq_events.timestamp)) <= '${endDate}'`)
+      query.andWhere(`DATE(faq_events.timestamp) <= '${endDate}'`)
     }
 
     return query.getRawOne();
@@ -96,12 +96,12 @@ export class FaqService {
 
     const query = this._faqEventsRepository
       .createQueryBuilder('faq_events')
-      .select("ROUND(count(*) * 1.0 / count(distinct faq_events.sender_id), 2) as averageQuestions")
+      .select("COALESCE(ROUND(count(*) * 1.0 / NULLIF(count(distinct faq_events.sender_id),0), 2), 0) as averageQuestions")
     if (startDate) {
-      query.where(`DATE(to_timestamp(faq_events.timestamp)) >= '${startDate}'`)
+      query.where(`DATE(faq_events.timestamp) >= '${startDate}'`)
     }
     if (endDate) {
-      query.andWhere(`DATE(to_timestamp(faq_events.timestamp)) <= '${endDate}'`)
+      query.andWhere(`DATE(faq_events.timestamp) <= '${endDate}'`)
     }
 
     return query.getRawOne();

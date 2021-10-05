@@ -16,6 +16,7 @@ import { IntentModel } from "@core/models/intent.model";
 import { ChatbotConfig } from "@core/entities/chatbot-config.entity";
 import { Response } from "express";
 import { Intent } from "@core/entities/intent.entity";
+import { BotLogger } from "../logger/bot.logger";
 
 const getSize = require('get-folder-size');
 const archiver = require('archiver');
@@ -24,6 +25,7 @@ const archiver = require('archiver');
 export class MediaService {
 
   private _filesDirectory = path.resolve(__dirname, '../../mediatheque');
+  private readonly _logger = new BotLogger('MediaService');
 
   constructor(@InjectRepository(Media)
               private readonly _mediasRepository: Repository<Media>,
@@ -101,6 +103,7 @@ export class MediaService {
     try {
       fs.unlinkSync(path.resolve(this._filesDirectory, oldFile.file));
     } catch (e) {
+      this._logger.error(`Error unlinking old file`, e);
     }
     fs.writeFileSync(path.resolve(this._filesDirectory, fileName), file.buffer);
     this._updateMediaSize();
@@ -111,7 +114,8 @@ export class MediaService {
       // size in KB
       size: Math.round(stats['size'] / 1000),
       added_by: `${user.first_name} ${user.last_name}`,
-      created_at: new Date().getTime()
+      // @ts-ignore
+      created_at: new Date()
     }
     const mediaUpdated = await this._mediasRepository.save(fileToSave);
 
