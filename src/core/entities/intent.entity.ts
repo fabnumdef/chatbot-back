@@ -1,8 +1,9 @@
-import { Column, CreateDateColumn, Entity, OneToMany, PrimaryColumn, UpdateDateColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, ManyToOne, OneToMany, PrimaryColumn, UpdateDateColumn } from "typeorm";
 import { Knowledge } from "@core/entities/knowledge.entity";
 import { Response } from "@core/entities/response.entity";
 import { IntentStatus } from "@core/enums/intent-status.enum";
 import { Inbox } from "@core/entities/inbox.entity";
+import { User } from "@core/entities/user.entity";
 
 @Entity('intent')
 export class Intent {
@@ -29,6 +30,9 @@ export class Intent {
 
   @OneToMany(type => Inbox, inbox => inbox.intent)
   inboxes: Inbox[];
+
+  @ManyToOne(type => User, user => user.intents)
+  user: User;
 
   @Column({type: "timestamp", nullable: true})
   expires_at: number;

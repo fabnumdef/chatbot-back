@@ -1,7 +1,4 @@
-import { Column, CreateDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
-import { Intent } from "@core/entities/intent.entity";
-import { InboxStatus } from "@core/enums/inbox-status.enum";
-import { User } from "@core/entities/user.entity";
+import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn } from "typeorm";
 import { FeedbackStatus } from "@core/enums/feedback-status.enum";
 
 @Entity('feedback')

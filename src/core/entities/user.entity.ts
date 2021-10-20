@@ -1,6 +1,7 @@
 import { Entity, Column, PrimaryColumn, CreateDateColumn, OneToMany } from 'typeorm';
 import { UserRole } from "../enums/user-role.enum";
 import { Inbox } from "@core/entities/inbox.entity";
+import { Intent } from "@core/entities/intent.entity";
 
 @Entity('chatbot_user')
 export class User {
@@ -39,6 +40,9 @@ export class User {
 
   @OneToMany(type => Inbox, inbox => inbox.user)
   inboxes: Inbox[];
+
+  @OneToMany(type => Intent, intent => intent.user)
+  intents: Intent[];
 
   @Column({default: false})
   disabled: boolean;

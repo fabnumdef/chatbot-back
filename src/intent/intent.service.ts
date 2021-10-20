@@ -443,6 +443,9 @@ export class IntentService {
     if (filters.intentInError) {
       query.andWhere('(SELECT count(*) FROM "knowledge" WHERE "knowledge"."intentId" = "intent"."id") < 2');
     }
+    if (filters.users && filters.users.length > 0) {
+      query.andWhere('intent.userEmail IN (:...users)', {users: filters.users});
+    }
 
     return query;
   }

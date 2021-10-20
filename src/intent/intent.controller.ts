@@ -8,7 +8,7 @@ import {
   Param,
   Post,
   Put,
-  Query,
+  Query, Req,
   UseGuards
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from "@nestjs/swagger";
@@ -25,6 +25,7 @@ import { IntentModel } from "@core/models/intent.model";
 import { IntentStatus } from "@core/enums/intent-status.enum";
 import camelcaseKeys = require("camelcase-keys");
 import snakecaseKeys = require("snakecase-keys");
+import { User } from "@core/entities/user.entity";
 
 @ApiTags('intent')
 @Controller('intent')
@@ -66,13 +67,15 @@ export class IntentController {
 
   @Post('')
   @ApiOperation({summary: 'Create an intent'})
-  async createEditIntent(@Body() intentDto: IntentDto): Promise<IntentDto> {
+  async createEditIntent(@Body() intentDto: IntentDto,
+                         @Req() req): Promise<IntentDto> {
     let intent = this._formatIntent(intentDto);
+    intent.user = req.user;
     intent.status = IntentStatus.to_deploy;
     if (await this._intentService.intentExists(intent.id)) {
       throw new HttpException(`Impossible de créer cette connaissance, l'identifiant existe déjà.`, HttpStatus.INTERNAL_SERVER_ERROR);
     }
-    intent = await this._intentService.createEdit(intent);
+    intent = await this._intentService.createEdit(intent, null);
     return plainToClass(IntentDto, camelcaseKeys(intent, {deep: true}));
   }
 
