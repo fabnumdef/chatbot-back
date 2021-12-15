@@ -2,11 +2,7 @@ import { TypeOrmModuleOptions } from "@nestjs/typeorm";
 
 const config: TypeOrmModuleOptions = {
   type: "postgres",
-  host: process.env.DATABASE_HOST,
-  port: Number(process.env.DATABSE_PORT),
-  username: process.env.DATABASE_USER,
-  password: process.env.DATABASE_PASSWORD,
-  database: process.env.DATABASE_NAME,
+  url: `postgres://${process.env.DATABASE_USER}:${process.env.DATABASE_PASSWORD}@${process.env.DATABASE_HOST}:${process.env.DATABASE_PORT}/${process.env.DATABASE_NAME}?${process.env.DATABASE_SSL_CERT ? 'sslmode=require' : ''}`,
   entities: [__dirname + '/core/entities/**/*.entity{.ts,.js}'],
   synchronize: true,
   // synchronize: !(process.env.NODE_ENV === 'prod'),
@@ -23,7 +19,11 @@ const config: TypeOrmModuleOptions = {
     // Location of migration should be inside src folder
     // to be compiled into dist/ folder.
     migrationsDir: "src/migrations"
-  }
+  },
+  ssl: {
+    rejectUnauthorized: false,
+    ca: process.env.DATABASE_SSL_CERT,
+  },
 };
 
 export = config;

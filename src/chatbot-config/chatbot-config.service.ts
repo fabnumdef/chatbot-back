@@ -21,6 +21,7 @@ export class ChatbotConfigService {
   constructor(@InjectRepository(ChatbotConfig)
               private readonly _configRepository: Repository<ChatbotConfig>,
               private readonly _mediaService: MediaService) {
+    this._initConfig();
   }
 
   getChatbotConfig(options?: FindOneOptions): Promise<ChatbotConfig> {
@@ -96,6 +97,13 @@ export class ChatbotConfigService {
     const frontDir = path.resolve(__dirname, '../../../chatbot-front');
     if (!fs.existsSync(path.resolve(frontDir, 'assets/icons/icon.png'))) {
       this.updateFrontManifest();
+    }
+  }
+
+  private async _initConfig() {
+    const config = await this.getChatbotConfig();
+    if (!config) {
+      await this.save(<ChatbotConfig>{});
     }
   }
 

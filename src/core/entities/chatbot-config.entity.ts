@@ -8,7 +8,7 @@ export class ChatbotConfig {
   @Exclude()
   id: number = 1;
 
-  @Column({nullable: false, length: 50})
+  @Column({nullable: false, length: 50, default: 'Chatbot'})
   name: string;
 
   @Column({nullable: true, length: 50})
@@ -17,19 +17,19 @@ export class ChatbotConfig {
   @Column({nullable: true, length: 50})
   function: string;
 
-  @Column({nullable: false, length: 50})
+  @Column({nullable: false, length: 50, default: ''})
   icon: string;
 
-  @Column({nullable: false, length: 20})
+  @Column({nullable: false, length: 20, default: '#001369'})
   primary_color: string;
 
-  @Column({nullable: false, length: 20})
+  @Column({nullable: false, length: 20, default: '#ececec'})
   secondary_color: string;
 
-  @Column({nullable: false, length: 200})
+  @Column({nullable: false, length: 200, default: 'Problématique'})
   problematic: string;
 
-  @Column({nullable: false, length: 200})
+  @Column({nullable: false, length: 200, default: 'Audience'})
   audience: string;
 
   @Column({nullable: false, default: 0, type: 'real'})
