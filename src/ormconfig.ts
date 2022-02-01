@@ -20,10 +20,14 @@ const config: TypeOrmModuleOptions = {
     // to be compiled into dist/ folder.
     migrationsDir: "src/migrations"
   },
-  ssl: {
+};
+
+if (!process.env.INTRADEF) {
+  // @ts-ignore
+  config.ssl = {
     rejectUnauthorized: false,
     ca: process.env.DATABASE_SSL_CERT,
-  },
-};
+  }
+}
 
 export = config;

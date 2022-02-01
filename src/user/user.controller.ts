@@ -20,11 +20,20 @@ export class UserController {
   constructor(private readonly _userService: UserService) {}
 
   @Get('')
-  @ApiOperation({ summary: 'Return all users' })
+  @ApiOperation({summary: 'Return all users'})
   @ApiBearerAuth()
   @UseGuards(JwtGuard)
-  async getUsers(): Promise<UserDto[]> {
-    const users: User[] = await this._userService.findAll();
+  async getUsers(@Req() req): Promise<UserDto[]> {
+    let users: User[] = await this._userService.findAll();
+
+    // Si on est sur l'environnement de test, on ne renvoie que l'utilisateur courant (sauf si mail en @fabnum.fr ou @beta.gouv.fr)
+    const userRequest: User = req.user;
+    if ((process.env.NODE_ENV === 'local' || process.env.NODE_ENV === 'dev') &&
+      !userRequest.email.includes('@beta.gouv.fr') &&
+      !userRequest.email.includes('@fabnum.fr')) {
+      users = users.filter(u => u.email === userRequest.email);
+    }
+
     return plainToClass(UserDto, camelcaseKeys(users, {deep: true}));
   }
 
