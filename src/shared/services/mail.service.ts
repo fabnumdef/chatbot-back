@@ -22,7 +22,7 @@ export class MailService {
     return this._mailerService
       .sendMail({
         to: email,
-        from: `${process.env.MAIL_USER}`,
+        from: `${process.env.MAIL_FROM ? process.env.MAIL_FROM : process.env.MAIL_USER}`,
         subject: subject,
         template: path.resolve(this._appDir, 'templates', template),
         context: context,
