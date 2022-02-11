@@ -1,4 +1,5 @@
 import {
+  Body,
   Controller,
   Delete,
   Get,
@@ -107,6 +108,19 @@ export class MediaController {
                      @Req() req): Promise<MediaDto> {
     const userRequest: User = req.user;
     const media = await this._mediaService.update(parseInt(mediaId), file, userRequest);
+    return plainToClass(MediaDto, camelcaseKeys(media, {deep: true}));
+  }
+
+  @Put(':id/edit')
+  @ApiBody({
+    description: 'Fichier à modifier',
+    type: MediaDto,
+  })
+  @ApiOperation({summary: 'Replace media'})
+  async editMedia(@Param('id') mediaId: string,
+                  @Body() file: { file: string }): Promise<MediaDto> {
+    const fileName = escape(file.file.trim());
+    const media = await this._mediaService.edit(parseInt(mediaId), fileName);
     return plainToClass(MediaDto, camelcaseKeys(media, {deep: true}));
   }
 

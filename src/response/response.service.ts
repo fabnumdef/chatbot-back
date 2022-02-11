@@ -35,21 +35,21 @@ export class ResponseService {
   }
 
   async updateFileResponses(oldFile: string, newFile: string) {
-    this._responsesRepository.createQueryBuilder('response')
+    await this._responsesRepository.createQueryBuilder('response')
       .update()
       .set({
-        response: `REPLACE(response, '${oldFile}', '${newFile}')`
+        response: () => `REPLACE(response, '${oldFile}', '${newFile}')`
       })
-      .where(`response LIKE '%${oldFile}%'`);
+      .where(`response LIKE '%${oldFile}%'`).execute();
   }
 
   async updateIntentResponses(oldIntentId: string, newIntentId: string) {
-    this._responsesRepository.createQueryBuilder('response')
+    await this._responsesRepository.createQueryBuilder('response')
       .update()
       .set({
-        response: `REPLACE(response, '${oldIntentId}', '${newIntentId}')`
+        response: () => `REPLACE(response, '${oldIntentId}', '${newIntentId}')`
       })
-      .where(`response LIKE '%<${oldIntentId}>%'`);
+      .where(`response LIKE '%<${oldIntentId}>%'`).execute();
   }
 
   async deleteByIntent(intent: Intent): Promise<void> {

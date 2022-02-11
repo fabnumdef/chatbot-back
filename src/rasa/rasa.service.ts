@@ -72,18 +72,25 @@ export class RasaService {
           });
         }
       });
-      this._logger.log('KILLING SCREEN');
-      await execShellCommand(`pkill screen`, this._chatbotTemplateDir).then(res => {
-        this._logger.log(res);
-      });
       this._logger.log('DISABLE TELEMETRY');
       await execShellCommand(`rasa telemetry disable`, this._chatbotTemplateDir).then(res => {
         this._logger.log(res);
       });
-      this._logger.log('LAUNCHING SCREEN');
-      await execShellCommand(`screen -S rasa -dmS rasa run -m models --log-file out.log --cors "*" --debug`, this._chatbotTemplateDir).then(res => {
-        this._logger.log(res);
-      });
+      if (!process.env.INTRADEF) {
+        this._logger.log('KILLING SCREEN');
+        await execShellCommand(`pkill screen`, this._chatbotTemplateDir).then(res => {
+          this._logger.log(res);
+        });
+        this._logger.log('LAUNCHING SCREEN');
+        await execShellCommand(`screen -S rasa -dmS rasa run -m models --log-file out.log --cors "*" --debug`, this._chatbotTemplateDir).then(res => {
+          this._logger.log(res);
+        });
+      } else {
+        this._logger.log('RESTART RASA SERVICE');
+        await execShellCommand(`systemctl restart rasa-core`, this._chatbotTemplateDir).then(res => {
+          this._logger.log(res);
+        });
+      }
       await this._intentService.updateManyByCondition({status: IntentStatus.in_training}, {status: IntentStatus.active});
       await this._intentService.updateManyByCondition({status: IntentStatus.to_archive}, {status: IntentStatus.archived});
       await this._configService.update(<ChatbotConfig>{last_training_at: new Date()});

@@ -17,6 +17,7 @@ import { ChatbotConfig } from "@core/entities/chatbot-config.entity";
 import { Response } from "express";
 import { Intent } from "@core/entities/intent.entity";
 import { BotLogger } from "../logger/bot.logger";
+import { MediaDto } from "@core/dto/media.dto";
 
 const getSize = require('get-folder-size');
 const archiver = require('archiver');
@@ -118,6 +119,24 @@ export class MediaService {
       created_at: new Date()
     }
     const mediaUpdated = await this._mediasRepository.save(fileToSave);
+
+    await this._responseService.updateFileResponses(oldFile.file, mediaUpdated.file);
+
+    return mediaUpdated;
+  }
+
+  async edit(mediaId: number, fileName: string): Promise<Media> {
+    if (fileName.length > 255) {
+      throw new HttpException('Le nom du fichier ne doit pas dépasser 255 caractères.', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+    const fileExists = await this.findOneWithParam({file: fileName});
+    if (fileExists && fileExists.id !== mediaId) {
+      throw new HttpException('Un média avec le même nom existe déjà.', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+    const oldFile = await this.findOne(mediaId);
+    fs.renameSync(path.resolve(this._filesDirectory, oldFile.file), path.resolve(this._filesDirectory, fileName));
+    await this._mediasRepository.update({id: mediaId}, {file: fileName});
+    const mediaUpdated = await this.findOne(mediaId);
 
     await this._responseService.updateFileResponses(oldFile.file, mediaUpdated.file);
 
