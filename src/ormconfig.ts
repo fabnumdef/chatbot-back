@@ -22,7 +22,7 @@ const config: TypeOrmModuleOptions = {
   },
 };
 
-if (!process.env.INTRADEF) {
+if (!process.env.INTRADEF || process.env.INTRADEF == 'false') {
   // @ts-ignore
   config.ssl = {
     rejectUnauthorized: false,

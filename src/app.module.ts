@@ -41,7 +41,7 @@ import { FaqModule } from './faq/faq.module';
       transport: {
         host: `${process.env.MAIL_HOST}`,
         port: `${process.env.MAIL_PORT}`,
-        secure: true, // true for 465, false for other ports
+        secure: !process.env.INTRADEF, // true for 465, false for other ports
         auth: {
           user: `${process.env.MAIL_USER}`,
           pass: `${process.env.MAIL_PASSWORD}`
