@@ -106,6 +106,10 @@ export class ConfigDto {
   @IsNotEmpty()
   showFaq: boolean;
 
+  @IsBoolean()
+  @IsNotEmpty()
+  showFallbackSuggestions: boolean;
+
   @IsNumber()
   @IsNotEmpty()
   delayBetweenMessages: number;

@@ -139,6 +139,10 @@ export class ChatbotConfigController {
       // @ts-ignore
       chatbotConfig.showFaq = (chatbotConfig.showFaq == 'true');
     }
+    if (chatbotConfig.showFallbackSuggestions) {
+      // @ts-ignore
+      chatbotConfig.showFallbackSuggestions = (chatbotConfig.showFallbackSuggestions == 'true');
+    }
     const configEntity = await this._configService.update(plainToClass(ChatbotConfig, snakecaseKeys(botConfig)));
     if (icon || botConfig.name) {
       await this._configService.updateFrontManifest();

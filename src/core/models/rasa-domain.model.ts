@@ -5,6 +5,7 @@ import { RasaRuleModel } from "@core/models/rasa-rule.model";
 export class RasaDomainModel {
   version: string;
   intents: string[];
+  actions: string[];
   responses: { [key: string]: RasaUtterResponseModel[] };
   session_config: {
     session_expiration_time: number;
@@ -21,6 +22,7 @@ export class RasaDomainModel {
     // this.nlu = [];
     // this.stories = [];
     // this.rules = [];
+    this.actions = ['action_fallback'];
     this.session_config = {
       session_expiration_time: 60,
       carry_over_slots_to_new_session: true

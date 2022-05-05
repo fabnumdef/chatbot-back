@@ -104,4 +104,8 @@ export class ConfigUpdateDto {
   @IsString()
   @IsOptional()
   showFaq: boolean;
+
+  @IsString()
+  @IsOptional()
+  showFallbackSuggestions: boolean;
 }

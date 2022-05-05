@@ -98,6 +98,9 @@ export class ChatbotConfig {
   @Column({default: true})
   show_faq: boolean;
 
+  @Column({default: true})
+  show_fallback_suggestions: boolean;
+
   @Column({default: 2000})
   delay_between_messages: number;
 }

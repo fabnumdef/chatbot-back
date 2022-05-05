@@ -19,9 +19,11 @@ import { AppConstants } from "@core/constant";
 import { Response } from "@core/entities/response.entity";
 import { ResponseType } from "@core/enums/response-type.enum";
 import { SelectQueryBuilder } from "typeorm/query-builder/SelectQueryBuilder";
+import { BotLogger } from "../logger/bot.logger";
 
 @Injectable()
 export class IntentService {
+  private readonly _logger = new BotLogger('IntentService');
 
   constructor(@InjectRepository(Intent)
               private readonly _intentsRepository: Repository<Intent>,
@@ -217,7 +219,8 @@ export class IntentService {
   }
 
   findIntentsMatching(query: string, intentsNumber = 1000, getResponses = false, excludeSt = false): Promise<Intent[]> {
-    const queryBuilder = this.getIntentQueryBuilder(PaginationUtils.setQuery(<PaginationQueryDto>{query: query}, Intent.getAttributesToSearch(), 'intent'), null, getResponses)
+    const findManyOptions = PaginationUtils.setQuery(<PaginationQueryDto>{query: query}, Intent.getAttributesToSearch(), 'intent');
+    const queryBuilder = this.getIntentQueryBuilder({}, null, getResponses)
       .andWhere('hidden = False')
       .andWhere("intent.id NOT LIKE 'st\\_%' ESCAPE '\\'")
       .andWhere('intent.id NOT IN (:...excludedIds)', {excludedIds: AppConstants.General.excluded_Ids})
@@ -226,15 +229,37 @@ export class IntentService {
       .addSelect('intent.category')
 
     if (getResponses) {
+      const responseWhereClause = PaginationUtils.setQuery(<PaginationQueryDto>{query: query}, ['response'], 'responses');
+      findManyOptions.where = `${findManyOptions.where} or ${responseWhereClause.where}`;
       return queryBuilder.leftJoinAndSelect('intent.responses', 'responses')
         .orderBy({
           'intent.main_question': 'ASC',
           'responses.id': 'ASC'
         })
+        .andWhere(!!findManyOptions.where ? findManyOptions.where.toString() : `'1'`)
         .getMany();
     }
-    return queryBuilder.take(intentsNumber)
+    return queryBuilder
+      .andWhere(!!findManyOptions.where ? findManyOptions.where.toString() : `'1'`)
+      .take(intentsNumber)
       .getMany();
+  }
+
+  findIntentsMainQuestions(intentsId: string[]): Promise<Intent[]> {
+    const status = [
+      IntentStatus.to_deploy,
+      IntentStatus.active,
+      IntentStatus.active_modified,
+      IntentStatus.in_training
+    ];
+    return this._intentsRepository.find({
+      select: ['id', 'main_question'],
+      where: {
+        id: In(intentsId),
+        status: In(status),
+        hidden: false
+      }
+    });
   }
 
   async intentExists(id: string): Promise<boolean> {
