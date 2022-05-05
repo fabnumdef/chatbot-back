@@ -45,6 +45,13 @@ export class PublicController {
     return plainToClass(IntentDto, camelcaseKeys(intents, {deep: true}));
   }
 
+  @Post('/intents')
+  @ApiOperation({summary: 'Return the intents main questions'})
+  async getIntentsName(@Body() intentsId: string[]): Promise<IntentDto[]> {
+    const intents: Intent[] = await this._intentService.findIntentsMainQuestions(intentsId);
+    return plainToClass(IntentDto, camelcaseKeys(intents, {deep: true}));
+  }
+
   @Post('/faq')
   @ApiOperation({summary: 'User connects to the FAQ'})
   async connectToFaq(@Body() body: { senderId: string }): Promise<void> {

@@ -64,10 +64,10 @@ export class RasaService {
     await this._intentService.updateManyByCondition({status: In([IntentStatus.to_deploy, IntentStatus.active_modified])}, {status: IntentStatus.in_training});
     try {
       this._logger.log(`TRAINING RASA`);
-      await execShellCommand(`rasa train --finetune --epoch-fraction 0.2 --num-threads 8`, this._chatbotTemplateDir).then(async (res: string) => {
+      await execShellCommand(`${!!process.env.INTRADEF ? 'export PYTHONPATH=/opt/chatbot/site-packages/;python3 -m' : ''} rasa train --finetune --epoch-fraction 0.2 --num-threads 8`, this._chatbotTemplateDir).then(async (res: string) => {
         this._logger.log(res);
         if (res.includes('can not be finetuned')) {
-          await execShellCommand(`rasa train --num-threads 8`, this._chatbotTemplateDir).then(res => {
+          await execShellCommand(`${!!process.env.INTRADEF ? 'export PYTHONPATH=/opt/chatbot/site-packages/;python3 -m' : ''} rasa train --num-threads 8`, this._chatbotTemplateDir).then(res => {
             this._logger.log(res);
           });
         }
@@ -85,9 +85,12 @@ export class RasaService {
         await execShellCommand(`screen -S rasa -dmS rasa run -m models --log-file out.log --cors "*" --debug`, this._chatbotTemplateDir).then(res => {
           this._logger.log(res);
         });
+        await execShellCommand(`screen -S rasa-action -dmS rasa run actions`, this._chatbotTemplateDir).then(res => {
+          this._logger.log(res);
+        });
       } else {
         this._logger.log('RESTART RASA SERVICE');
-        await execShellCommand(`systemctl restart rasa-core`, this._chatbotTemplateDir).then(res => {
+        await execShellCommand(`systemctl --user restart rasa-core`, this._chatbotTemplateDir).then(res => {
           this._logger.log(res);
         });
       }
@@ -140,21 +143,19 @@ export class RasaService {
       // });
 
       // Fill RULES
-      rules.push(new RasaRuleModel(intent.id));
+      const id = intent.id === 'phrase_hors_sujet' ? 'nlu_fallback' : intent.id;
+      rules.push(new RasaRuleModel(id));
       const steps = rules[rules.length - 1].steps;
-      steps.push({intent: intent.id});
+      steps.push({intent: id});
       Object.keys(responses).forEach(utter => {
         steps.push({action: utter});
       });
+      if (intent.id === 'phrase_hors_sujet') {
+        steps.push({action: 'action_fallback'});
+      }
 
       domain.responses = Object.assign(responses, domain.responses);
     });
-
-    // Add fallback rule
-    rules.push(new RasaRuleModel('nlu_fallback'));
-    const steps = rules[rules.length - 1].steps;
-    steps.push({intent: 'nlu_fallback'});
-    steps.push({action: 'utter_phrase_hors_sujet_0'});
 
     fs.writeFileSync(`${this._chatbotTemplateDir}/domain.yml`, yaml.safeDump(domain), 'utf8');
     fs.writeFileSync(`${this._chatbotTemplateDir}/data/nlu.yml`, yaml.safeDump({version: "2.0", nlu: nlu}), 'utf8');

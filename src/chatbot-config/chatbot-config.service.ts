@@ -61,7 +61,6 @@ export class ChatbotConfigService {
   };
 
   async updateFrontManifest() {
-    this._logger.log('UPDATING MANIFESTS');
     const frontDir = path.resolve(__dirname, '../../../chatbot-front');
     const webchatDir = path.resolve(__dirname, '../../../webchat');
 

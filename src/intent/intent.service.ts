@@ -237,6 +237,13 @@ export class IntentService {
       .getMany();
   }
 
+  findIntentsMainQuestions(intentsId: string[]): Promise<Intent[]> {
+    return this._intentsRepository.find({
+      select: ['id', 'main_question'],
+      where: {id: In(intentsId)}
+    });
+  }
+
   async intentExists(id: string): Promise<boolean> {
     return !!(await this.findOne(id));
   }
