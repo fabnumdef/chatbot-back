@@ -99,6 +99,11 @@ export class ChatbotConfigController {
   async updateChatbotConfig(@UploadedFiles() files,
                             @Body() chatbotConfig: ConfigUpdateDto): Promise<ConfigDto> {
     let botConfig: any = chatbotConfig;
+    ['showIntentSearch', 'dismissQuickReplies', 'showFeedback', 'blockTypeText', 'showRebootBtn', 'isTree', 'showFaq', 'showFallbackSuggestions'].forEach(attribute => {
+      if (chatbotConfig[attribute]) {
+        chatbotConfig[attribute] = (chatbotConfig[attribute] == 'true')
+      }
+    });
     const icon = files.icon ? files.icon[0] : null;
     const embeddedIcon = files.embeddedIcon ? files.embeddedIcon[0] : null;
     if (icon) {
@@ -111,38 +116,7 @@ export class ChatbotConfigController {
       const embeddedIconName = await this._mediaService.storeFile(embeddedIcon);
       botConfig = {...chatbotConfig, ...{embeddedIcon: embeddedIconName}};
     }
-    if(chatbotConfig.showIntentSearch) {
-      // @ts-ignore
-      chatbotConfig.showIntentSearch = (chatbotConfig.showIntentSearch == 'true');
-    }
-    if(chatbotConfig.dismissQuickReplies) {
-      // @ts-ignore
-      chatbotConfig.dismissQuickReplies = (chatbotConfig.dismissQuickReplies == 'true');
-    }
-    if(chatbotConfig.showFeedback) {
-      // @ts-ignore
-      chatbotConfig.showFeedback = (chatbotConfig.showFeedback == 'true');
-    }
-    if (chatbotConfig.blockTypeText) {
-      // @ts-ignore
-      chatbotConfig.blockTypeText = (chatbotConfig.blockTypeText == 'true');
-    }
-    if (chatbotConfig.showRebootBtn) {
-      // @ts-ignore
-      chatbotConfig.showRebootBtn = (chatbotConfig.showRebootBtn == 'true');
-    }
-    if (chatbotConfig.isTree) {
-      // @ts-ignore
-      chatbotConfig.isTree = (chatbotConfig.isTree == 'true');
-    }
-    if (chatbotConfig.showFaq) {
-      // @ts-ignore
-      chatbotConfig.showFaq = (chatbotConfig.showFaq == 'true');
-    }
-    if (chatbotConfig.showFallbackSuggestions) {
-      // @ts-ignore
-      chatbotConfig.showFallbackSuggestions = (chatbotConfig.showFallbackSuggestions == 'true');
-    }
+
     const configEntity = await this._configService.update(plainToClass(ChatbotConfig, snakecaseKeys(botConfig)));
     if (icon || botConfig.name) {
       await this._configService.updateFrontManifest();
@@ -172,8 +146,8 @@ export class ChatbotConfigController {
   @Put('block')
   @ApiOperation({summary: 'Block the chatbot for training rasa'})
   @UseGuards(ApiKeyGuard)
-  async updateBlockChatbot(@Body() isBlocked: {isBlocked: boolean}): Promise<ConfigDto> {
-    if(await this.isChatbotTraining()) {
+  async updateBlockChatbot(@Body() isBlocked: { isBlocked: boolean }): Promise<ConfigDto> {
+    if (await this.isChatbotTraining()) {
       throw new HttpException(`Le chatbot est entrain d'être mis à jour. Merci de patienter quelques minutes.`, HttpStatus.NOT_ACCEPTABLE);
     }
     const configEntity = await this._configService.update(plainToClass(ChatbotConfig, snakecaseKeys(isBlocked)));
