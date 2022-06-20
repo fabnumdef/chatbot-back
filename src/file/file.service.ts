@@ -68,7 +68,7 @@ export class FileService {
     const workbook: WorkBook = XLSX.read(file.buffer);
     const worksheet: WorkSheet = workbook.Sheets[workbook.SheetNames[0]];
     const templateFile: TemplateFileDto[] = this._convertExcelToJson(worksheet);
-    return await this._templateFileToDb(templateFile, importFileDto.deleteIntents);
+    return await this._templateFileToDb(templateFile, importFileDto);
   }
 
   exportXls(): Promise<fs.ReadStream> {
@@ -223,7 +223,7 @@ export class FileService {
     keyValueObject[index] += message;
   }
 
-  private async _templateFileToDb(templateFile: TemplateFileDto[], deleteIntents: boolean): Promise<ImportResponseDto> {
+  private async _templateFileToDb(templateFile: TemplateFileDto[], importFileDto: ImportFileDto): Promise<ImportResponseDto> {
     // Save intents
     const intents: IntentModel[] = [];
     templateFile.forEach(t => {
@@ -242,7 +242,7 @@ export class FileService {
     });
     const intentsSaved: Intent[] = await this._intentService.saveMany(plainToClass(IntentModel, snakecaseKeys(intents)));
 
-    if (deleteIntents) {
+    if (importFileDto.deleteIntents) {
       this._intentService.updateManyByCondition({id: Not(In([...intentsSaved.map(i => i.id), ...AppConstants.General.excluded_Ids]))},
         {status: IntentStatus.to_archive});
     }
@@ -266,7 +266,7 @@ export class FileService {
           id: null,
           intent: intentsSaved.find(i => i.id === t.id),
           response_type: t.response_type,
-          response: t.response
+          response: !!importFileDto.oldURL && !!importFileDto.newURL ? this._changeURL(t.response, importFileDto) : t.response
         })
       }
     });
@@ -305,7 +305,7 @@ export class FileService {
       })
       .getMany();
     let idx = 1;
-    const rows = [['ID', 'Catégorie', 'Question', 'Type de réponse', 'Réponse(s)', '', 'Questions synonymes (à séparer par un point-virgule ;)', 'Expire le (DD/MM/YYYY)',  'Date de dernière mise à jour']];
+    const rows = [['ID', 'Catégorie', 'Question', 'Type de réponse', 'Réponse(s)', '', 'Questions synonymes (à séparer par un point-virgule ;)', 'Expire le (DD/MM/YYYY)', 'Date de dernière mise à jour']];
     intents.forEach((intent: Intent) => {
       intent.responses.forEach((r, idxResponse) => {
         idx += 1;
@@ -346,6 +346,12 @@ export class FileService {
       intent.expires_at ? moment(intent.expires_at).format('DD/MM/YYYY') : '',
       intent.updated_at ? moment(intent.updated_at).format('DD/MM/YYYY HH:mm:ss') : ''
     ]
+  }
+
+  private _changeURL(string: string, importFileDto: ImportFileDto): string {
+    const newUrl = importFileDto.newURL.slice(-1) === '/' ? importFileDto.newURL.slice(0, -1) : importFileDto.newURL;
+    const regex = new RegExp(`https?:\/\/${importFileDto.oldURL}[^#?\\/]?`, 'gm');
+    return string.replace(regex, newUrl);
   }
 
 
