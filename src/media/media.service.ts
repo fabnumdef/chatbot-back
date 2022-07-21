@@ -17,7 +17,7 @@ import { ChatbotConfig } from "@core/entities/chatbot-config.entity";
 import { Response } from "express";
 import { Intent } from "@core/entities/intent.entity";
 import { BotLogger } from "../logger/bot.logger";
-import { MediaDto } from "@core/dto/media.dto";
+import { IntentStatus } from "@core/enums/intent-status.enum";
 
 const getSize = require('get-folder-size');
 const archiver = require('archiver');
@@ -175,7 +175,7 @@ export class MediaService {
 
   export(res: Response) {
     const archive = archiver('zip', {
-      zlib: { level: 9 } // Sets the compression level.
+      zlib: {level: 9} // Sets the compression level.
     });
 
     //set the archive name
@@ -207,9 +207,20 @@ export class MediaService {
   private _findIntentsByMedia(media: MediaModel): Promise<Intent[]> {
     return this._intentsRepository.find({
       select: ['id', 'main_question', 'category'],
-      join: {alias: 'intents', innerJoin: {responses: 'intents.responses'}},
+      join: {
+        alias: 'intents',
+        innerJoin: {responses: 'intents.responses'}
+      },
       where: qb => {
         qb.where(`responses.response like '%/${encodeURI(media.file)}%'`)
+        qb.andWhere('intents.status IN (:...status)', {
+          status: [
+            IntentStatus.to_deploy,
+            IntentStatus.active,
+            IntentStatus.active_modified,
+            IntentStatus.in_training
+          ]
+        })
       },
     });
   }
