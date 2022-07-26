@@ -8,15 +8,16 @@ import { StatsMostAskedQuestionsDto } from "@core/dto/stats-most-asked-questions
 import { StatsMostAskedCategoriesDto } from "@core/dto/stats-most-asked-categories.dto";
 import { forkJoin } from "rxjs";
 import { FeedbackStatus } from "@core/enums/feedback-status.enum";
+import { ApiKeyGuard } from "@core/guards/api-key.guard";
 
 @ApiTags('stats')
 @Controller('stats')
-@ApiBearerAuth()
-@UseGuards(JwtGuard)
 export class StatsController {
   constructor(private readonly _statsService: StatsService) {}
 
   @Post('line_data')
+  @ApiBearerAuth()
+  @UseGuards(JwtGuard)
   @ApiOperation({summary: 'Return data for line chart'})
   async sendLineData(@Body() filters: StatsFilterDto) {
     return forkJoin({
@@ -28,6 +29,8 @@ export class StatsController {
   }
 
   @Post('best_data')
+  @ApiBearerAuth()
+  @UseGuards(JwtGuard)
   @ApiOperation({summary: 'Return the most relevant data'})
   async sendBestData(@Body() filters: StatsFilterDto) {
     const result = {};
@@ -36,7 +39,9 @@ export class StatsController {
   }
 
   @Post('best_categories')
-  @ApiOperation({ summary: 'Return the most relevant categories' })
+  @ApiBearerAuth()
+  @UseGuards(JwtGuard)
+  @ApiOperation({summary: 'Return the most relevant categories'})
   async sendBestCategories(@Body() filters: StatsFilterDto) {
     const result = {};
     result['mostAskedCategories'] = plainToClass(StatsMostAskedCategoriesDto, await this._statsService.getMostAskedCategories(filters));
@@ -44,6 +49,8 @@ export class StatsController {
   }
 
   @Post('worst_data')
+  @ApiBearerAuth()
+  @UseGuards(JwtGuard)
   @ApiOperation({summary: 'Return the less revelant data'})
   async sendWorstData(@Body() filters: StatsFilterDto) {
     const result = {};
@@ -52,6 +59,8 @@ export class StatsController {
   }
 
   @Post('kpi_data')
+  @ApiBearerAuth()
+  @UseGuards(JwtGuard)
   @ApiOperation({summary: 'Return kpi indicators'})
   async sendKPIData(@Body() filters: StatsFilterDto) {
     return forkJoin({
@@ -64,6 +73,8 @@ export class StatsController {
   }
 
   @Post('faq_most_questions')
+  @ApiBearerAuth()
+  @UseGuards(JwtGuard)
   @ApiOperation({summary: 'Return the most relevant questions for FAQ'})
   async sendFaqMostQuestions(@Body() filters: StatsFilterDto) {
     const result = {};
@@ -72,6 +83,8 @@ export class StatsController {
   }
 
   @Post('faq_most_categories')
+  @ApiBearerAuth()
+  @UseGuards(JwtGuard)
   @ApiOperation({summary: 'Return the most relevant categories for FAQ'})
   async sendFaqMostCategories(@Body() filters: StatsFilterDto) {
     const result = {};
@@ -80,6 +93,8 @@ export class StatsController {
   }
 
   @Post('faq_kpi_data')
+  @ApiBearerAuth()
+  @UseGuards(JwtGuard)
   @ApiOperation({summary: 'Return faq kpi indicators'})
   async sendFaqKPIData(@Body() filters: StatsFilterDto) {
     return forkJoin({
@@ -89,6 +104,8 @@ export class StatsController {
   }
 
   @Post('feedback_relevant_questions')
+  @ApiBearerAuth()
+  @UseGuards(JwtGuard)
   @ApiOperation({summary: 'Return the most flaged relevant questions'})
   async sendFeedbackRelevantQuestions(@Body() filters: StatsFilterDto) {
     const result = {};
@@ -97,6 +114,8 @@ export class StatsController {
   }
 
   @Post('feedback_relevant_categories')
+  @ApiBearerAuth()
+  @UseGuards(JwtGuard)
   @ApiOperation({summary: 'Return the most flaged relevant categories'})
   async sendFeedbackRelevantCategories(@Body() filters: StatsFilterDto) {
     const result = {};
@@ -105,6 +124,8 @@ export class StatsController {
   }
 
   @Post('feedback_wrong_questions')
+  @ApiBearerAuth()
+  @UseGuards(JwtGuard)
   @ApiOperation({summary: 'Return the most flaged wrong questions'})
   async sendFeedbackWrongQuestions(@Body() filters: StatsFilterDto) {
     const result = {};
@@ -113,6 +134,8 @@ export class StatsController {
   }
 
   @Post('feedback_wrong_categories')
+  @ApiBearerAuth()
+  @UseGuards(JwtGuard)
   @ApiOperation({summary: 'Return the most flaged wrong categories'})
   async sendFeedbackWrongCategories(@Body() filters: StatsFilterDto) {
     const result = {};
@@ -121,6 +144,8 @@ export class StatsController {
   }
 
   @Post('feedback_off_topic_questions')
+  @ApiBearerAuth()
+  @UseGuards(JwtGuard)
   @ApiOperation({summary: 'Return the most flaged off_topic questions'})
   async sendFeedbackOfftopicQuestions(@Body() filters: StatsFilterDto) {
     const result = {};
@@ -129,6 +154,8 @@ export class StatsController {
   }
 
   @Post('feedback_off_topic_categories')
+  @ApiBearerAuth()
+  @UseGuards(JwtGuard)
   @ApiOperation({summary: 'Return the most flaged off_topic categories'})
   async sendFeedbackOfftopicCategories(@Body() filters: StatsFilterDto) {
     const result = {};
@@ -137,6 +164,8 @@ export class StatsController {
   }
 
   @Post('feedback_kpi_data')
+  @ApiBearerAuth()
+  @UseGuards(JwtGuard)
   @ApiOperation({summary: 'Return feedback kpi indicators'})
   async sendFeedbackKPIData(@Body() filters: StatsFilterDto) {
     return forkJoin({
@@ -146,6 +175,18 @@ export class StatsController {
       wrongQuestionsPct: this._statsService.getFeedbackPctKpi(filters, FeedbackStatus.wrong),
       offtopicQuestions: this._statsService.getFeedbackKpi(filters, FeedbackStatus.off_topic),
       offtopicQuestionsPct: this._statsService.getFeedbackPctKpi(filters, FeedbackStatus.off_topic)
+    });
+  }
+
+  @Post('external_data')
+  @UseGuards(ApiKeyGuard)
+  @ApiOperation({summary: 'Return external stats'})
+  async sendExternalData() {
+    return forkJoin({
+      askedQuestionsNumber: this._statsService.getNbAskedQuestions(null),
+      visitorNumber: this._statsService.getNbVisitors(null),
+      dbQuestionSize: this._statsService.getNbIntent(null),
+      ratioChatbotResponseOk: this._statsService.getRatioResponseOk(null),
     });
   }
 }
