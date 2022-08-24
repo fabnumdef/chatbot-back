@@ -152,9 +152,8 @@ export class RasaService {
       });
       if (intent.id === 'phrase_hors_sujet') {
         const config: ChatbotConfig = await this._configService.getChatbotConfig();
-        if (config.show_fallback_suggestions) {
-          steps.push({action: 'action_fallback'});
-        }
+        domain.slots.return_suggestions.initial_value = config.show_fallback_suggestions;
+        steps.push({action: 'action_fallback'});
       }
 
       domain.responses = Object.assign(responses, domain.responses);

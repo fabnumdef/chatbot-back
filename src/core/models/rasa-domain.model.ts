@@ -6,6 +6,7 @@ export class RasaDomainModel {
   version: string;
   intents: string[];
   actions: string[];
+  slots: any;
   responses: { [key: string]: RasaUtterResponseModel[] };
   session_config: {
     session_expiration_time: number;
@@ -23,6 +24,11 @@ export class RasaDomainModel {
     // this.stories = [];
     // this.rules = [];
     this.actions = ['action_fallback'];
+    this.slots = {
+      return_suggestions: {
+        type: 'bool'
+      }
+    };
     this.session_config = {
       session_expiration_time: 60,
       carry_over_slots_to_new_session: true
