@@ -118,6 +118,10 @@ export class RasaService {
     // const stories: RasaStoryModel[] = [];
     const rules: RasaRuleModel[] = [];
 
+    intents = intents.map(i => {
+      i.id = i.id === 'phrase_hors_sujet' ? 'nlu_fallback' : i.id;
+      return i;
+    });
     domain.intents = intents.map(i => i.id);
     for (const intent of intents) {
       // Fill NLU
@@ -143,14 +147,14 @@ export class RasaService {
       // });
 
       // Fill RULES
-      const id = intent.id === 'phrase_hors_sujet' ? 'nlu_fallback' : intent.id;
+      const id = intent.id;
       rules.push(new RasaRuleModel(id));
       const steps = rules[rules.length - 1].steps;
       steps.push({intent: id});
       Object.keys(responses).forEach(utter => {
         steps.push({action: utter});
       });
-      if (intent.id === 'phrase_hors_sujet') {
+      if (intent.id === 'nlu_fallback') {
         const config: ChatbotConfig = await this._configService.getChatbotConfig();
         domain.slots.return_suggestions.initial_value = config.show_fallback_suggestions;
         steps.push({action: 'action_fallback'});
