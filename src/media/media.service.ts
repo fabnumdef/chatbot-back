@@ -80,9 +80,10 @@ export class MediaService {
 
   async create(file: any, user: User): Promise<Media> {
     const fileName = await this.storeFile(file, true);
+    const existFile = await this.findOneWithParam({file: fileName});
     const stats = fs.statSync(path.resolve(this._filesDirectory, fileName));
     const fileToSave: Media = {
-      id: null,
+      id: !!existFile ? existFile.id : null,
       file: fileName,
       // size in KB
       size: Math.round(stats['size'] / 1000),

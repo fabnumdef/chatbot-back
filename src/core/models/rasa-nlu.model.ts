@@ -1,9 +1,9 @@
 export class RasaNluModel {
   intent: string;
-  examples: string[];
+  examples: string;
 
   constructor(intentId) {
     this.intent = intentId;
-    this.examples = [];
+    this.examples = '';
   }
 }

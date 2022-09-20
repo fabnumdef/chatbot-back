@@ -126,12 +126,12 @@ export class RasaService {
     for (const intent of intents) {
       // Fill NLU
       nlu.push(new RasaNluModel(intent.id));
-      let examples = [];
+      let examples = '';
       if (intent.main_question) {
-        examples.push(intent.main_question);
+        examples += `- ${intent.main_question}\n`;
       }
       intent.knowledges.forEach(knowledge => {
-        examples.push(knowledge.question);
+        examples += `- ${knowledge.question}\n`;
       });
       nlu[nlu.length - 1].examples = examples;
 
