@@ -163,9 +163,9 @@ export class RasaService {
       domain.responses = Object.assign(responses, domain.responses);
     }
 
-    fs.writeFileSync(`${this._chatbotTemplateDir}/domain.yml`, yaml.safeDump(domain), 'utf8');
-    fs.writeFileSync(`${this._chatbotTemplateDir}/data/nlu.yml`, yaml.safeDump({version: "2.0", nlu: nlu}), 'utf8');
-    fs.writeFileSync(`${this._chatbotTemplateDir}/data/rules.yml`, yaml.safeDump({
+    fs.writeFileSync(`${this._chatbotTemplateDir}/domain.yml`, yaml.dump(domain), 'utf8');
+    fs.writeFileSync(`${this._chatbotTemplateDir}/data/nlu.yml`, yaml.dump({version: "2.0", nlu: nlu}), 'utf8');
+    fs.writeFileSync(`${this._chatbotTemplateDir}/data/rules.yml`, yaml.dump({
       version: "2.0",
       rules: rules
     }), 'utf8');

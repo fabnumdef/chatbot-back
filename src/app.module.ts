@@ -77,9 +77,13 @@ import { FaqModule } from './faq/faq.module';
     FeedbackModule,
     UpdateModule,
     LoggerModule,
-    FaqModule
+    FaqModule,
   ],
-  controllers: [RefDataController, HealthController, PublicController],
+  controllers: [
+    RefDataController,
+    HealthController,
+    PublicController
+  ],
   providers: [
     {
       provide: APP_INTERCEPTOR,

@@ -19,13 +19,12 @@ import { plainToClass } from "class-transformer";
 import { Intent } from "@core/entities/intent.entity";
 import { UpdateResult } from "typeorm/query-builder/result/UpdateResult";
 import { PaginationQueryDto } from "@core/dto/pagination-query.dto";
-import { Pagination } from "nestjs-typeorm-paginate/index";
+import { Pagination } from "nestjs-typeorm-paginate";
 import { IntentFilterDto } from "@core/dto/intent-filter.dto";
 import { IntentModel } from "@core/models/intent.model";
 import { IntentStatus } from "@core/enums/intent-status.enum";
 import camelcaseKeys = require("camelcase-keys");
 import snakecaseKeys = require("snakecase-keys");
-import { User } from "@core/entities/user.entity";
 
 @ApiTags('intent')
 @Controller('intent')

@@ -6,12 +6,15 @@ import { ResponseModel } from "@core/models/response.model";
 import { Intent } from "@core/entities/intent.entity";
 import { IntentModel } from "@core/models/intent.model";
 import { UpdateResult } from "typeorm/query-builder/result/UpdateResult";
+import { ChatbotConfig } from "@core/entities/chatbot-config.entity";
 
 @Injectable()
 export class ResponseService {
 
   constructor(@InjectRepository(Response)
-              private readonly _responsesRepository: Repository<Response>) {
+              private readonly _responsesRepository: Repository<Response>,
+              @InjectRepository(ChatbotConfig)
+              private readonly _configRepository: Repository<ChatbotConfig>) {
   }
 
   findByIntent(intent: IntentModel): Promise<Response[]> {
@@ -35,12 +38,15 @@ export class ResponseService {
   }
 
   async updateFileResponses(oldFile: string, newFile: string) {
-    await this._responsesRepository.createQueryBuilder('response')
+    const result = await this._responsesRepository.createQueryBuilder('response')
       .update()
       .set({
         response: () => `REPLACE(response, '${oldFile}', '${newFile}')`
       })
       .where(`response LIKE '%${oldFile}%'`).execute();
+    if (result.affected && result.affected > 0) {
+      await this._configRepository.update({id: 1}, {need_training: true});
+    }
   }
 
   async updateIntentResponses(oldIntentId: string, newIntentId: string) {
@@ -60,4 +66,5 @@ export class ResponseService {
 
   async remove(id: string): Promise<void> {
     await this._responsesRepository.delete(id);
-  }}
+  }
+}

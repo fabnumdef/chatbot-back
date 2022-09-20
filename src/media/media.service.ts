@@ -71,7 +71,7 @@ export class MediaService {
   }
 
   findOne(id: number): Promise<Media> {
-    return this._mediasRepository.findOne(id);
+    return this._mediasRepository.findOne({where: {id}});
   }
 
   findOneWithParam(param: any): Promise<Media> {
@@ -79,7 +79,7 @@ export class MediaService {
   }
 
   async create(file: any, user: User): Promise<Media> {
-    const fileName = await this.storeFile(file);
+    const fileName = await this.storeFile(file, true);
     const stats = fs.statSync(path.resolve(this._filesDirectory, fileName));
     const fileToSave: Media = {
       id: null,
@@ -155,13 +155,13 @@ export class MediaService {
     return this._mediasRepository.delete(id);
   }
 
-  async storeFile(file): Promise<string> {
+  async storeFile(file, replaceIfExists = false): Promise<string> {
     const fileName = escape(file.originalname.trim());
     if (fileName.length > 255) {
       throw new HttpException('Le nom du fichier ne doit pas dépasser 255 caractères.', HttpStatus.INTERNAL_SERVER_ERROR);
     }
     const fileExists = await this.findOneWithParam({file: fileName});
-    if (fileExists) {
+    if (fileExists && !replaceIfExists) {
       throw new HttpException('Un média avec le même nom existe déjà.', HttpStatus.INTERNAL_SERVER_ERROR);
     }
     fs.writeFileSync(path.resolve(this._filesDirectory, fileName), file.buffer);
@@ -173,7 +173,7 @@ export class MediaService {
     fs.unlinkSync(path.resolve(this._filesDirectory, filePath));
   }
 
-  export(res: Response) {
+  async export(res: Response) {
     const archive = archiver('zip', {
       zlib: {level: 9} // Sets the compression level.
     });
@@ -183,7 +183,10 @@ export class MediaService {
 
     //this is the streaming magic
     archive.pipe(res);
-    archive.directory(this._filesDirectory, false);
+    const medias = await this.findAll();
+    medias.forEach((m: Media) => {
+      archive.directory(path.resolve(this._filesDirectory, m.file), {name: unescape(m.file)});
+    });
     archive.finalize();
   }
 
