@@ -185,7 +185,7 @@ export class MediaService {
     archive.pipe(res);
     const medias = await this.findAll();
     medias.forEach((m: Media) => {
-      archive.directory(path.resolve(this._filesDirectory, m.file), {name: unescape(m.file)});
+      archive.append(path.resolve(this._filesDirectory, m.file), {name: unescape(m.file)});
     });
     archive.finalize();
   }
