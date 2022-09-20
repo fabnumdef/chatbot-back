@@ -185,7 +185,10 @@ export class MediaService {
     archive.pipe(res);
     const medias = await this.findAll();
     medias.forEach((m: Media) => {
-      archive.append(path.resolve(this._filesDirectory, m.file), {name: unescape(m.file)});
+      const filePath = path.resolve(this._filesDirectory, m.file);
+      if (fs.existsSync(filePath)) {
+        archive.file(filePath, {name: unescape(m.file)});
+      }
     });
     archive.finalize();
   }
