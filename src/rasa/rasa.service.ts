@@ -128,10 +128,10 @@ export class RasaService {
       nlu.push(new RasaNluModel(intent.id));
       let examples = '';
       if (intent.main_question) {
-        examples += `- ${intent.main_question}\n`;
+        examples += this._cleanStringForYaml(intent.main_question);
       }
       intent.knowledges.forEach(knowledge => {
-        examples += `- ${knowledge.question}\n`;
+        examples += this._cleanStringForYaml(knowledge.question);
       });
       nlu[nlu.length - 1].examples = examples;
 
@@ -215,5 +215,21 @@ export class RasaService {
     } catch (e) {
       this._logger.error('DELETE OLD MODELS', e);
     }
+  }
+
+  /**
+   * Clean string d'emojis et d'espaces en début et fin de string
+   * @param s
+   * @private
+   */
+  private _cleanStringForYaml(s: string): string {
+    const stringToReturn = s?.replace(/([\uE000-\uF8FF]|\uD83C[\uDF00-\uDFFF]|\uD83D[\uDC00-\uDDFF])/g, '')
+      .replace(/\r?\n|\r|\s/g, ' ')
+      .replace(/[\/\\"'`]/g, '')
+      .trim();
+    if (!stringToReturn) {
+      return '';
+    }
+    return `- ${stringToReturn}\n`
   }
 }
