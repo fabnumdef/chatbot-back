@@ -17,7 +17,7 @@ export class RasaDomainModel {
   // rules: RasaRuleModel[];
 
   constructor() {
-    this.version = "2.0";
+    this.version = "3.1";
     this.intents = [];
     this.responses = {};
     // this.nlu = [];
@@ -26,7 +26,10 @@ export class RasaDomainModel {
     this.actions = ['action_fallback'];
     this.slots = {
       return_suggestions: {
-        type: 'bool'
+        type: 'bool',
+        mappings: [
+          {type: 'custom'}
+        ]
       }
     };
     this.session_config = {
