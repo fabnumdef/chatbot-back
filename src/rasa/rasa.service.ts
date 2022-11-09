@@ -164,9 +164,9 @@ export class RasaService {
     }
 
     fs.writeFileSync(`${this._chatbotTemplateDir}/domain.yml`, yaml.dump(domain), 'utf8');
-    fs.writeFileSync(`${this._chatbotTemplateDir}/data/nlu.yml`, yaml.dump({version: "2.0", nlu: nlu}), 'utf8');
+    fs.writeFileSync(`${this._chatbotTemplateDir}/data/nlu.yml`, yaml.dump({version: "3.1", nlu: nlu}), 'utf8');
     fs.writeFileSync(`${this._chatbotTemplateDir}/data/rules.yml`, yaml.dump({
-      version: "2.0",
+      version: "3.1",
       rules: rules
     }), 'utf8');
     // fs.writeFileSync(`${this._chatbotTemplateDir}/data/stories.yml`, yaml.safeDump({version: "2.0", stories: stories}), 'utf8');
