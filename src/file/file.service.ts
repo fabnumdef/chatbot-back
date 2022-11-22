@@ -42,7 +42,7 @@ export class FileService {
               private readonly _configService: ChatbotConfigService,
               @InjectRepository(FileHistoric)
               private readonly _fileHistoricRepository: Repository<FileHistoric>) {
-    // Create folder if it does not exists
+    // Création du dossier si il n'existe pas
     mkdirp(this._historicDir);
   }
 

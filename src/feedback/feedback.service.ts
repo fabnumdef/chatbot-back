@@ -32,7 +32,9 @@ export class FeedbackService {
     return feedback;
   }
 
-  // Check last feedbacks to update Inbox
+  /**
+   * Vérification des derniers feedbacks pour mettre à jour les Inbox
+   */
   @Cron(CronExpression.EVERY_10_SECONDS)
   async checkFeedbacks() {
     const feedbacks: Feedback[] = await this._feedbacksRepository.find({

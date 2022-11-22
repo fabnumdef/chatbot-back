@@ -53,7 +53,7 @@ export class FileController {
     description: 'Base de connaissance (excel)',
     type: FileUploadDto,
   })
-  @ApiOperation({summary: 'Check excel file'})
+  @ApiOperation({summary: 'Vérification du fichier excel'})
   checkTemplateFile(@UploadedFile() file): TemplateFileCheckResumeDto {
     return this._fileService.checkFile(file);
   }
@@ -75,7 +75,7 @@ export class FileController {
     description: 'Base de connaissance (excel)',
     type: ImportFileDto,
   })
-  @ApiOperation({summary: 'Upload de la base de connaissance'})
+  @ApiOperation({summary: 'Téléchargement de la base de connaissance'})
   async importFile(@UploadedFile() file,
                    @Body() importFile: ImportFileDto): Promise<ImportResponseDto> {
     const errors = this._fileService.checkFile(file).errors;
@@ -88,6 +88,7 @@ export class FileController {
   }
 
   @Get('export')
+  @ApiOperation({summary: 'Export de la base de connaissance'})
   async exportFile(@Res() res): Promise<any> {
     try{
       const streamFile = await this._fileService.exportXls();
@@ -102,7 +103,7 @@ export class FileController {
   }
 
   @Get('historic')
-  @ApiOperation({ summary: 'Return history' })
+  @ApiOperation({summary: "Retourne l'historique de la base de connaissances"})
   async getHistory(): Promise<FileHistoricDto[]> {
     const files: FileHistoric[] = await this._fileService.findAll();
     return plainToClass(FileHistoricDto, camelcaseKeys(files, {deep: true}));

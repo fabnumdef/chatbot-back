@@ -156,6 +156,14 @@ export class MediaService {
     return this._mediasRepository.delete(id);
   }
 
+  async deleteMultiples(ids: number[]) {
+    const promises = [];
+    ids.forEach(id => {
+      promises.push(this.delete(id));
+    });
+    return Promise.all(promises);
+  }
+
   async storeFile(file, replaceIfExists = false): Promise<string> {
     const fileName = escape(file.originalname.trim());
     if (fileName.length > 255) {

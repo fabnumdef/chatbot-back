@@ -21,7 +21,7 @@ import camelcaseKeys = require("camelcase-keys");
 import { FileInterceptor, FilesInterceptor } from "@nestjs/platform-express";
 import { FileUploadDto } from "@core/dto/file-upload.dto";
 import { PaginationQueryDto } from "@core/dto/pagination-query.dto";
-import { Pagination } from "nestjs-typeorm-paginate/index";
+import { Pagination } from "nestjs-typeorm-paginate";
 import { User } from "@core/entities/user.entity";
 import { MediaModel } from "@core/models/media.model";
 import { Response } from "express";
@@ -36,20 +36,20 @@ export class MediaController {
   }
 
   @Get('')
-  @ApiOperation({summary: 'Return all medias'})
+  @ApiOperation({summary: 'Returne tout les médias'})
   async getMedias(): Promise<MediaDto[]> {
     const medias: Media[] = await this._mediaService.findAll();
     return plainToClass(MediaDto, camelcaseKeys(medias, {deep: true}));
   }
 
   @Get('export')
-  @ApiOperation({summary: 'Export all medias in .zip'})
+  @ApiOperation({summary: 'Exporte tout les médias en .zip'})
   async exportMedias(@Res() res: Response): Promise<any> {
     return this._mediaService.export(res);
   }
 
   @Post('search')
-  @ApiOperation({summary: 'Return medias paginated'})
+  @ApiOperation({summary: 'Retourne les médias paginés'})
   async getMediasPagination(@Query() options: PaginationQueryDto): Promise<Pagination<MediaDto>> {
     const medias: Pagination<MediaModel> = await this._mediaService.paginate(options);
     medias.items.map(i => plainToClass(MediaDto, camelcaseKeys(i, {deep: true})));
@@ -102,7 +102,7 @@ export class MediaController {
     description: 'Fichier à remplacer',
     type: FileUploadDto,
   })
-  @ApiOperation({summary: 'Replace media'})
+  @ApiOperation({summary: "Remplacement d'un média"})
   async replaceMedia(@Param('id') mediaId: string,
                      @UploadedFile() file,
                      @Req() req): Promise<MediaDto> {
@@ -116,7 +116,7 @@ export class MediaController {
     description: 'Fichier à modifier',
     type: MediaDto,
   })
-  @ApiOperation({summary: 'Replace media'})
+  @ApiOperation({summary: "Edition d'un media"})
   async editMedia(@Param('id') mediaId: string,
                   @Body() file: { file: string }): Promise<MediaDto> {
     const fileName = escape(file.file.trim());
@@ -125,8 +125,14 @@ export class MediaController {
   }
 
   @Delete(':id')
-  @ApiOperation({summary: 'Delete media'})
+  @ApiOperation({summary: "Suppression d'un média"})
   async deleteMedia(@Param('id') mediaId: number): Promise<void> {
     await this._mediaService.delete(mediaId);
+  }
+
+  @Post('delete')
+  @ApiOperation({summary: "Suppression de plusieurs médias"})
+  async deleteMedias(@Body() ids: number[]): Promise<void> {
+    await this._mediaService.deleteMultiples(ids);
   }
 }

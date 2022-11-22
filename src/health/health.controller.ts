@@ -12,7 +12,7 @@ export class HealthController {
 
   @Get()
   @HealthCheck()
-  @ApiOperation({ summary: 'Server health' })
+  @ApiOperation({summary: 'Etat de santé du serveur'})
   check() {
     return this.health.check([
       () => this.dns.pingCheck('backoffice', 'http://127.0.0.1'),

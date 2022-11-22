@@ -34,13 +34,14 @@ export class InboxController {
   constructor(private readonly _inboxService: InboxService) {}
 
   @Get('')
-  @ApiOperation({ summary: 'Return all inboxes' })
+  @ApiOperation({summary: 'Retourne toutes les requêtes'})
   async getInboxes(@Query() query: PaginationQueryDto): Promise<InboxDto[]> {
     const inboxes: Inbox[] = await this._inboxService.findAll();
     return plainToClass(InboxDto, camelcaseKeys(inboxes, {deep: true}));
   }
 
   @Post('export')
+  @ApiOperation({summary: 'Exporte toutes les requêtes'})
   async exportFile(@Query() options: PaginationQueryDto,
                    @Body() filters: InboxFilterDto,
                    @Res() res): Promise<any> {
@@ -57,7 +58,7 @@ export class InboxController {
   }
 
   @Post('search')
-  @ApiOperation({ summary: 'Return all inboxes' })
+  @ApiOperation({summary: 'Retournes les requêtes paginées'})
   async getInboxesPaginated(@Query() options: PaginationQueryDto,
                             @Body() filters: InboxFilterDto): Promise<InboxDto[]> {
     const inboxes: Pagination<Inbox> = await this._inboxService.paginate(options, filters);
@@ -71,26 +72,26 @@ export class InboxController {
   }
 
   @Post(':inboxId/validate')
-  @ApiOperation({ summary: 'Validate an inbox' })
+  @ApiOperation({summary: 'Valide une requête'})
   async validateInbox(@Param('inboxId') inboxId: number): Promise<UpdateResult> {
     return this._inboxService.validate(inboxId);
   }
 
   @Post(':inboxId/assign')
-  @ApiOperation({ summary: 'Assign an inbox' })
+  @ApiOperation({summary: 'Désassigne une requête'})
   async unassignInbox(@Param('inboxId') inboxId: number): Promise<UpdateResult> {
     return this._inboxService.assign(inboxId, null);
   }
 
   @Post(':inboxId/assign/:userEmail')
-  @ApiOperation({ summary: 'Assign an inbox' })
+  @ApiOperation({summary: 'Assigne une requête'})
   async assignInbox(@Param('inboxId') inboxId: number,
                     @Param('userEmail') userEmail: string): Promise<UpdateResult> {
     return this._inboxService.assign(inboxId, userEmail);
   }
 
   @Put(':inboxId')
-  @ApiOperation({ summary: 'Edit an inbox' })
+  @ApiOperation({summary: "Edition d'une requête"})
   async editInbox(@Param('inboxId') inboxId: string,
                   @Body() inboxEdit: InboxUpdateDto): Promise<InboxDto> {
     const inboxEntity = await this._inboxService.save(<Inbox> {...{id: parseInt(inboxId, 10)}, ...inboxEdit});
@@ -98,7 +99,7 @@ export class InboxController {
   }
 
   @Delete(':inboxId')
-  @ApiOperation({ summary: 'Archive an inbox' })
+  @ApiOperation({summary: 'Archive une requête'})
   async deleteInbox(@Param('inboxId') inboxId: number): Promise<UpdateResult> {
     return this._inboxService.delete(inboxId);
   }

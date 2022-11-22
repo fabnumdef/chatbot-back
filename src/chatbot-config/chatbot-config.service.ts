@@ -60,11 +60,14 @@ export class ChatbotConfigService {
     return callback(null, true);
   };
 
+  /**
+   * Mise à jour du manifeste afin d'utiliser le bot comme une application Android / IOS
+   */
   async updateFrontManifest() {
     const frontDir = path.resolve(__dirname, '../../../chatbot-front');
     const webchatDir = path.resolve(__dirname, '../../../webchat');
 
-    // Create folder if it does not exists
+    // Création du dossier si il n'existe pas
     mkdirp(`${frontDir}/assets/icons`);
     mkdirp(`${webchatDir}/assets/icons`);
 
@@ -90,8 +93,8 @@ export class ChatbotConfigService {
     }
   }
 
-  // Check icons to update manifests
-  @Cron(CronExpression.EVERY_30_SECONDS)
+  // Check des icônes pour le manifeste
+  @Cron(CronExpression.EVERY_MINUTE)
   private async _checkIcons() {
     const frontDir = path.resolve(__dirname, '../../../chatbot-front');
     if (!fs.existsSync(path.resolve(frontDir, 'assets/icons/icon.png'))) {

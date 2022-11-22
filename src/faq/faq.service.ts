@@ -34,9 +34,9 @@ export class FaqService {
       .select('int.main_question AS question')
       .addSelect("COUNT(faq_events.intent_name) AS count")
       .innerJoin("intent", "int", 'int.id = faq_events.intent_name')
-      // Remove phrase_presentation & co
+      // On exclut les phrases génériques
       .where('int.id NOT IN (:...excludedIds)', {excludedIds: AppConstants.General.excluded_Ids})
-      // Remove small talks
+      // On exclut les small talks
       .andWhere(`int.id NOT LIKE 'st\\_%' ESCAPE '\\'`)
     if (startDate) {
       query.andWhere(`DATE(faq_events.timestamp) >= '${startDate}'`)
@@ -58,9 +58,9 @@ export class FaqService {
       .select('int.category AS category')
       .addSelect("COUNT(faq_events.intent_name) AS count")
       .innerJoin("intent", "int", 'int.id = faq_events.intent_name')
-      // Remove phrase_presentation & co
+      // On exclut les phrases génériques
       .where('int.id NOT IN (:...excludedIds)', {excludedIds: AppConstants.General.excluded_Ids})
-      // Remove small talks
+      // On exclut les small talks
       .andWhere(`int.id NOT LIKE 'st\\_%' ESCAPE '\\'`)
     if (startDate) {
       query.andWhere(`DATE(faq_events.timestamp) >= '${startDate}'`)

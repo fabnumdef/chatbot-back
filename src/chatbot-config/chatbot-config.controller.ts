@@ -42,7 +42,7 @@ export class ChatbotConfigController {
   }
 
   @Get('')
-  @ApiOperation({summary: 'Return the chatbot chatbot-config'})
+  @ApiOperation({summary: 'Retourne la configuration du chatbot'})
   @ApiBearerAuth()
   @UseGuards(JwtGuard)
   async getChabotConfig(): Promise<ConfigDto> {
@@ -64,7 +64,7 @@ export class ChatbotConfigController {
     })
   )
   @ApiConsumes('multipart/form-data')
-  @ApiOperation({summary: 'Set the chatbot config'})
+  @ApiOperation({summary: 'Sauvegarde la configuration du chatbot'})
   @ApiBearerAuth()
   @UseGuards(JwtGuard, RolesGuard)
   @Roles(UserRole.admin)
@@ -92,7 +92,7 @@ export class ChatbotConfigController {
     })
   )
   @ApiConsumes('multipart/form-data')
-  @ApiOperation({summary: 'Update the chatbot config'})
+  @ApiOperation({summary: 'Met à jour la configuration du chatbot'})
   @ApiBearerAuth()
   @UseGuards(JwtGuard, RolesGuard)
   @Roles(UserRole.admin)
@@ -125,7 +125,7 @@ export class ChatbotConfigController {
   }
 
   @Post('api-key')
-  @ApiOperation({summary: 'Update the api-key'})
+  @ApiOperation({summary: 'Met à jour l\'api-key'})
   @ApiBearerAuth()
   @UseGuards(JwtGuard)
   async updateApiKey(): Promise<ConfigDto> {
@@ -135,7 +135,7 @@ export class ChatbotConfigController {
   }
 
   @Get('training')
-  @ApiOperation({summary: 'Return if the chatbot is training or not'})
+  @ApiOperation({summary: "Retourne si l'IA est en entraînement"})
   @UseGuards(ApiKeyGuard)
   async isChatbotTraining(): Promise<boolean> {
     const config: ChatbotConfig = await this._configService.getChatbotConfig();
@@ -143,7 +143,7 @@ export class ChatbotConfigController {
   }
 
   @Put('block')
-  @ApiOperation({summary: 'Block the chatbot for training rasa'})
+  @ApiOperation({summary: "Bloque le chatbot pour l'entraînement de l'IA"})
   @UseGuards(ApiKeyGuard)
   async updateBlockChatbot(@Body() isBlocked: { isBlocked: boolean }): Promise<ConfigDto> {
     if (await this.isChatbotTraining()) {
@@ -154,7 +154,7 @@ export class ChatbotConfigController {
   }
 
   @Put('maintenance')
-  @ApiOperation({summary: 'Set the bot in maintenance mode'})
+  @ApiOperation({summary: "Met à jour le mode maintenance"})
   @UseGuards(ApiKeyGuard)
   async updateMaintenanceMode(@Body() maintenanceMode: { maintenanceMode: boolean }): Promise<ConfigDto> {
     const configEntity = await this._configService.update(plainToClass(ChatbotConfig, snakecaseKeys(maintenanceMode)));
@@ -162,7 +162,7 @@ export class ChatbotConfigController {
   }
 
   @Post('domain-name')
-  @ApiOperation({summary: 'Update domain name'})
+  @ApiOperation({summary: "Met à jour le nom de domaine"})
   @UseGuards(ApiKeyGuard)
   async updateDomainName(@Body() updateDomainName: UpdateDomainNameDto) {
     await this._updateService.updateDomainName(updateDomainName.domainName);

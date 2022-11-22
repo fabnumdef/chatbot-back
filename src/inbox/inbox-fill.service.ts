@@ -22,7 +22,9 @@ export class InboxFillService {
               private readonly _intentService: IntentService) {
   }
 
-  // Check last events of the chatbot to fill Inbox
+  /**
+   * Vérification des derniers événements de Rasa pour remplir la table des requêtes
+   */
   @Cron(CronExpression.EVERY_10_SECONDS)
   async checkEvents() {
     // Get max timestamp of inbox

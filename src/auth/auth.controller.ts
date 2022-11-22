@@ -13,19 +13,19 @@ export class AuthController {
   constructor(private readonly _authService: AuthService) {}
 
   @Post('reset-password/:email')
-  @ApiOperation({ summary: 'Generate reset password token & send email' })
+  @ApiOperation({summary: 'Génération du token de reset password & envoi d\'email'})
   async forgotPassword(@Param('email') email: string): Promise<any> {
     return await this._authService.sendEmailPasswordToken(email);
   }
 
   @Post('reset-password')
-  @ApiOperation({ summary: 'Reset password & send mail' })
+  @ApiOperation({summary: 'Reset password & envoi d\'email'})
   async resetPassword(@Body() resetPassword: ResetPasswordDto): Promise<any> {
     return await this._authService.resetPassword(resetPassword);
   }
 
   @Post('login')
-  @ApiOperation({ summary: 'Return jwt token' })
+  @ApiOperation({summary: 'Retourne le token jwt'})
   async login(@Body() user: LoginUserDto): Promise<AuthResponseDto> {
     const login = await this._authService.login(user);
     return plainToClass(AuthResponseDto, camelcaseKeys(login, {deep: true}));

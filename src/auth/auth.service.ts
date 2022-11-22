@@ -89,6 +89,7 @@ export class AuthService {
       throw new HttpException('Votre compte a été supprimé. Merci de prendre contact avec l\'administrateur si vous souhaitez réactiver votre compte.',
         HttpStatus.UNAUTHORIZED);
     }
+    // Si l'user était bloqué depuis plus de 24h on reset son blocage
     if (!!userToReturn && userToReturn.lock_until && moment.duration(moment(userToReturn.lock_until).add(1, 'd').diff(moment())).asHours() < 0) {
       await this._userService.findAndUpdate(userToReturn.email, {failed_login_attempts: 0, lock_until: null});
       userToReturn.lock_until = null;

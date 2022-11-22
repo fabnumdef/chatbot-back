@@ -2,7 +2,7 @@ import { ExecOptions } from "child_process";
 import { parse } from "dotenv";
 
 /**
- * Executes a shell command and return it as a Promise.
+ * Execution d'une commande shell et retour de celle-ci comme une Promise
  * @param cmd {string}
  * @param curDir {string}
  * @return {Promise<string>}
