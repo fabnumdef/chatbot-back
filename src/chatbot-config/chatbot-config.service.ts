@@ -86,8 +86,10 @@ export class ChatbotConfigService {
       manifestWebchat.short_name = botConfig.name;
       fs.writeFileSync(path.resolve(frontDir, 'manifest.webmanifest'), JSON.stringify(manifest));
       fs.writeFileSync(path.resolve(webchatDir, 'manifest.webmanifest'), JSON.stringify(manifestWebchat));
-      fs.copyFileSync(path.resolve(__dirname, '../../mediatheque', botConfig.icon), path.resolve(frontDir, 'assets/icons/icon.png'));
-      fs.copyFileSync(path.resolve(__dirname, '../../mediatheque', botConfig.icon), path.resolve(webchatDir, 'assets/icons/icon.png'));
+      if (botConfig.icon) {
+        fs.copyFileSync(path.resolve(__dirname, '../../mediatheque', botConfig.icon), path.resolve(frontDir, 'assets/icons/icon.png'));
+        fs.copyFileSync(path.resolve(__dirname, '../../mediatheque', botConfig.icon), path.resolve(webchatDir, 'assets/icons/icon.png'));
+      }
     } catch (e) {
       this._logger.error('ERROR UPDATING MANIFESTS', e);
     }
