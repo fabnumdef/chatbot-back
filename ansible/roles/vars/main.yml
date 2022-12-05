@@ -1,5 +1,5 @@
 ---
-gitDir: '/var/www/git/'
+gitDir: '/var/www/git'
 appsDir: '/var/www'
 backDir: 'chatbot-back'
 botDir: 'chatbot-template'

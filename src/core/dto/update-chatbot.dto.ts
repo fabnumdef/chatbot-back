@@ -34,30 +34,6 @@ export class UpdateChatbotDto {
   @IsOptional()
   domainName: string;
 
-  @IsString()
-  @IsOptional()
-  elastic_host: string;
-
-  @IsString()
-  @IsOptional()
-  elastic_username: string;
-
-  @IsString()
-  @IsOptional()
-  elastic_password: string;
-
-  @IsString()
-  @IsOptional()
-  elastic_metricbeat_index: string;
-
-  @IsString()
-  @IsOptional()
-  elastic_packetbeat_index: string;
-
-  @IsString()
-  @IsOptional()
-  elastic_filebeat_index: string;
-
   @IsOptional()
   @ApiProperty({type: 'string', format: 'binary'})
   nginx_conf: any;
@@ -75,4 +51,8 @@ export class UpdateDomainNameDto {
   @IsString()
   @IsNotEmpty()
   domainName: string;
+
+  @IsString()
+  @IsNotEmpty()
+  userPassword: string;
 }

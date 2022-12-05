@@ -1,5 +1,5 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { UpdateChatbotDto } from "@core/dto/update-chatbot.dto";
+import { UpdateChatbotDto, UpdateDomainNameDto } from "@core/dto/update-chatbot.dto";
 import { AnsiblePlaybook, Options } from "ansible-playbook-cli-js";
 import { ChatbotConfigService } from "../chatbot-config/chatbot-config.service";
 import * as fs from "fs";
@@ -83,18 +83,20 @@ export class UpdateService {
     });
   }
 
-  async updateDomainName(domainName: string) {
+  async updateDomainName(domainName: UpdateDomainNameDto) {
     const playbookOptions = new Options(`${this._gitDir}/ansible`);
     const ansiblePlaybook = new AnsiblePlaybook(playbookOptions);
     const extraVars = {
       ...{
-        botDomain: domainName
+        botDomain: domainName.domainName,
+        ansible_user: 'ansible',
+        ansible_become_pass: domainName.userPassword
       }
     };
     this._logger.log('UPDATING DOMAIN NAME');
     await ansiblePlaybook.command(`playUpdatenginx.yml -e '${JSON.stringify(extraVars)}'`).then(async (result) => {
       this._logger.log(JSON.stringify(result));
-      this._updateDomainNameEnv(domainName);
+      this._updateDomainNameEnv(domainName.domainName);
     }).catch((e) => {
       this._logger.error('ERROR UPDATING DOMAIN NAME', e);
     });
@@ -108,6 +110,7 @@ export class UpdateService {
     try {
       fs.writeFileSync(`${this._appDir}/.env`, jsonToDotenv(dotenv), 'utf8');
       fs.writeFileSync(`${this._appDir}/dist/.env`, jsonToDotenv(dotenv), 'utf8');
+      fs.writeFileSync(`${this._gitDir}/../.env`, jsonToDotenv(dotenv), 'utf8');
       const playbookOptions = new Options(`${this._gitDir}/ansible`);
       const ansiblePlaybook = new AnsiblePlaybook(playbookOptions);
       await ansiblePlaybook.command(`playReloadback.yml -e '{"updateBack": true}'`).then((result) => {
