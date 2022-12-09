@@ -45,7 +45,6 @@ export class UpdateService {
       // @ts-ignore
       await this._configService.update({domain_name: updateChatbot.domainName});
     }
-    const chatbotConfig = await this._configService.getChatbotConfig();
 
     if (files && files.env && files.env[0]) {
       fs.writeFileSync(`${this._appDir}/../git/.env`, files.env[0], 'utf8');
@@ -60,7 +59,13 @@ export class UpdateService {
     const playbookOptions = new Options(`${this._gitDir}/ansible`);
     const ansiblePlaybook = new AnsiblePlaybook(playbookOptions);
     const extraVars = {
-      ...updateChatbot
+      ...updateChatbot, ...{
+        DATABASE_HOST: process.env.DATABASE_HOST,
+        DATABASE_PORT: process.env.DATABASE_PORT,
+        DATABASE_USER: process.env.DATABASE_USER,
+        DATABASE_PASSWORD: process.env.DATABASE_PASSWORD,
+        DATABASE_NAME: process.env.DATABASE_NAME
+      }
     };
     this._logger.log('DEPLOYING CHATBOT APP');
     await ansiblePlaybook.command(`playDeployapp.yml -e '${JSON.stringify(extraVars)}'`).then(async (result) => {

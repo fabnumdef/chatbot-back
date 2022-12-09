@@ -65,3 +65,38 @@
     dest: '{{ appsDir }}/{{ botDir }}/endpoints.yml'
     remote_src: yes
   when: updateRasa
+
+- name: Mise à jour du fichier rasa endpoints.yml - DB_HOST
+  lineinfile:
+    path: '{{ appsDir }}/{{ botDir }}/endpoints.yml'
+    regexp: '^  url:'
+    line: '  url: "{{ DATABASE_HOST }}"'
+  when: updateRasa
+
+- name: Mise à jour du fichier rasa endpoints.yml - DB_PORT
+  lineinfile:
+    path: '{{ appsDir }}/{{ botDir }}/endpoints.yml'
+    regexp: '^  port:'
+    line: '  port: "{{ DATABASE_PORT }}"'
+  when: updateRasa
+
+- name: Mise à jour du fichier rasa endpoints.yml - DB_USERNAME
+  lineinfile:
+    path: '{{ appsDir }}/{{ botDir }}/endpoints.yml'
+    regexp: '^  username:'
+    line: '  username: "{{ DATABASE_USER }}"'
+  when: updateRasa
+
+- name: Mise à jour du fichier rasa endpoints.yml - DB_PASSWORD
+  lineinfile:
+    path: '{{ appsDir }}/{{ botDir }}/endpoints.yml'
+    regexp: '^  password:'
+    line: '  password: "{{ DATABASE_PASSWORD }}"'
+  when: updateRasa
+
+- name: Mise à jour du fichier rasa endpoints.yml - DB_NAME
+  lineinfile:
+    path: '{{ appsDir }}/{{ botDir }}/endpoints.yml'
+    regexp: '^  db:'
+    line: '  db: "{{ DATABASE_NAME }}"'
+  when: updateRasa
