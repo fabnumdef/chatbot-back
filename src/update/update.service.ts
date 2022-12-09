@@ -60,10 +60,7 @@ export class UpdateService {
     const playbookOptions = new Options(`${this._gitDir}/ansible`);
     const ansiblePlaybook = new AnsiblePlaybook(playbookOptions);
     const extraVars = {
-      ...updateChatbot, ...{
-        botDomain: chatbotConfig.domain_name,
-        DB_PASSWORD: process.env.DATABASE_PASSWORD
-      }
+      ...updateChatbot
     };
     this._logger.log('DEPLOYING CHATBOT APP');
     await ansiblePlaybook.command(`playDeployapp.yml -e '${JSON.stringify(extraVars)}'`).then(async (result) => {
