@@ -18,7 +18,7 @@ export class PaginationUtils {
         options.where += idx > 0 ? ') or (' : '';
         queries.forEach((q, idxQuery) => {
           options.where += idxQuery > 0 ? ' and ' : '';
-          options.where += escape(`unaccent(upper(${entity ? entity + '.' : ''}%I)) like unaccent(%L)`, a, q.toUpperCase());
+          options.where += escape(`upper(${entity ? entity + '.' : ''}%I) like %L`, a, q.toUpperCase());
         });
       });
       options.where += '))';

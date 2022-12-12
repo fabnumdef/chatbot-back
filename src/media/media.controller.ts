@@ -119,7 +119,7 @@ export class MediaController {
   @ApiOperation({summary: "Edition d'un media"})
   async editMedia(@Param('id') mediaId: string,
                   @Body() file: { file: string }): Promise<MediaDto> {
-    const fileName = escape(file.file.trim());
+    const fileName = encodeURI(file.file.trim());
     const media = await this._mediaService.edit(parseInt(mediaId), fileName);
     return plainToClass(MediaDto, camelcaseKeys(media, {deep: true}));
   }

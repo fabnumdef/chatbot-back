@@ -93,7 +93,7 @@ export class MediaService {
   }
 
   async update(mediaId: number, file: any, user: User): Promise<Media> {
-    const fileName = escape(file.originalname.trim());
+    const fileName = encodeURI(file.originalname.trim());
     if (fileName.length > 255) {
       throw new HttpException('Le nom du fichier ne doit pas dépasser 255 caractères.', HttpStatus.INTERNAL_SERVER_ERROR);
     }
@@ -165,7 +165,7 @@ export class MediaService {
   }
 
   async storeFile(file, replaceIfExists = false): Promise<string> {
-    const fileName = escape(file.originalname.trim());
+    const fileName = encodeURI(file.originalname.trim());
     if (fileName.length > 255) {
       throw new HttpException('Le nom du fichier ne doit pas dépasser 255 caractères.', HttpStatus.INTERNAL_SERVER_ERROR);
     }
@@ -196,7 +196,7 @@ export class MediaService {
     medias.forEach((m: Media) => {
       const filePath = path.resolve(this._filesDirectory, m.file);
       if (fs.existsSync(filePath)) {
-        archive.file(filePath, {name: unescape(m.file)});
+        archive.file(filePath, {name: encodeURI(m.file)});
       }
     });
     archive.finalize();
