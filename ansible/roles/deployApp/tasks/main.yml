@@ -1,4 +1,4 @@
-- name: Copy chatbot-back
+- name: Copie chatbot-back
   synchronize:
     src: '{{ gitDir }}/{{ backDir }}/'
     dest: '{{ appsDir }}/{{ backDir }}'
@@ -7,27 +7,27 @@
       - '--exclude=historic/'
   when: updateBack
 
-- name: Copy env-file
+- name: Copie env-file
   copy:
     src: '{{ gitDir }}/.env'
     dest: '{{ appsDir }}/{{ backDir }}/.env'
   when: updateBack
 
-- name: Copy chatbot-front
+- name: Copie chatbot-front
   synchronize:
     src: '{{ gitDir }}/{{ frontDir }}/dist/{{ frontDir }}/'
     dest: '{{ appsDir }}/{{ frontDir }}'
     delete: yes
   when: updateFront
 
-- name: Copy webchat
+- name: Copie webchat
   synchronize:
     src: '{{ gitDir }}/{{ frontDir }}/dist/{{ webchatDir }}/'
     dest: '{{ appsDir }}/{{ webchatDir }}'
     delete: yes
   when: updateFront
 
-- name: Copy chatbot-template
+- name: Copie chatbot-template
   synchronize:
     src: '{{ gitDir }}/{{ botDir }}/'
     dest: '{{ appsDir }}/{{ botDir }}'
@@ -35,7 +35,7 @@
       - '--exclude=models/'
   when: updateRasa
 
-- name: Copy env-file bis
+- name: Copie env-file bis
   copy:
     src: '{{ gitDir }}/.env'
     dest: '{{ appsDir }}/{{ botDir }}/.env'
@@ -59,7 +59,7 @@
     chdir: '{{ appsDir }}/{{ backDir }}'
   when: updateBack
 
-- name: Copy endpoints.yml rasa file
+- name: Copie du fichier rasa endpoints.yml
   copy:
     src: '{{ appsDir }}/{{ botDir }}/endpoints.example.yml'
     dest: '{{ appsDir }}/{{ botDir }}/endpoints.yml'
