@@ -80,7 +80,8 @@ export class IntentController {
 
   @Put(':id')
   @ApiOperation({summary: 'Edit an intent'})
-  async editIntent(@Param('id') intentId: string, @Body() intentDto: IntentDto): Promise<IntentDto> {
+  async editIntent(@Param('id') intentId: string,
+                   @Body() intentDto: IntentDto): Promise<IntentDto> {
     let intent = this._formatIntent(intentDto);
     intent = await this._intentService.createEdit(intent, intent.id != intentId ? intentId : null);
     return plainToClass(IntentDto, camelcaseKeys(intent, {deep: true}));

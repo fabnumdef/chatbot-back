@@ -147,6 +147,7 @@ export class FileService {
       t.questions = t.questions ? (<any>t.questions).split(';').map(q => q.trim()).filter(q => !!q) : [];
       t.response_type = ResponseType[ResponseType_ReverseFr[t.response_type]];
       t.expires_at = t.expires_at ? moment(t.expires_at, 'DD/MM/YYYY') : null;
+      t.response = t.response.replace(new RegExp('\r\r\n', 'g'), '\r\n');
       return t;
     });
   }
