@@ -66,7 +66,7 @@ export class RasaService {
       this._logger.log(`TRAINING RASA`);
       await execShellCommand(`${!!process.env.INTRADEF ? 'export PYTHONPATH=/opt/chatbot/site-packages/;python3 -m' : ''} rasa train --finetune --epoch-fraction 0.2 --num-threads 8`, this._chatbotTemplateDir).then(async (res: string) => {
         this._logger.log(res);
-        if (res.includes('can not be finetuned') || res.includes('No model for finetuning')) {
+        if (res.includes('can not be finetuned') || res.includes('No model for finetuning') || res.includes('Cannot finetune')) {
           await execShellCommand(`${!!process.env.INTRADEF ? 'export PYTHONPATH=/opt/chatbot/site-packages/;python3 -m' : ''} rasa train --num-threads 8`, this._chatbotTemplateDir).then(res => {
             this._logger.log(res);
           });
