@@ -126,10 +126,14 @@ export class InboxService {
     return this._inboxesRepository.update({id: inboxId}, {status: InboxStatus.confirmed});
   }
 
-  async assign(inboxId, userEmail): Promise<UpdateResult> {
-    const user = await this._userService.findOne(userEmail);
+  async assign(inboxId: number, userEmail?: string): Promise<UpdateResult> {
+    const user = userEmail ? await this._userService.findOne(userEmail) : null;
     const inbox = await this.findOne(inboxId);
     const toReturn = await this._inboxesRepository.update({id: inboxId}, {user: user});
+
+    if (!user) {
+      return toReturn;
+    }
 
     await this._mailService.sendEmail(user.email,
       'Usine à Chatbots - Une requête vous a été attribuée',
@@ -406,6 +410,7 @@ export class InboxService {
     });
     return rows;
   }
+
   /**
    * Generate row for a worksheet
    * @param inbox
