@@ -17,8 +17,15 @@ export class UpdateService {
   constructor(private _configService: ChatbotConfigService) {
   }
 
+  /**
+   * Vérification si une mise à jour du code source peut se lancer
+   * @param updateChatbot
+   * @param files
+   * @param retry
+   */
   async launchUpdate(updateChatbot: UpdateChatbotDto, files, retry = false) {
     const config: ChatbotConfig = await this._configService.getChatbotConfig();
+    // Si une mise à jour est déjà planifiée, on arrête
     if (config.need_update && !retry) {
       this._logger.error('UPDATE - update already planned', null);
       throw new HttpException(`Une mise à jour est déjà prévue.`, HttpStatus.NOT_ACCEPTABLE);
@@ -26,6 +33,7 @@ export class UpdateService {
     await this._configService.update(<ChatbotConfig>{need_update: true});
     if (config.training_rasa) {
       this._logger.log('UPDATE - Waiting for RASA to train bot');
+      // On retente toutes les minutes
       setTimeout(() => {
         this.launchUpdate(updateChatbot, files, true)
       }, 60 * 1000);
@@ -38,14 +46,21 @@ export class UpdateService {
     }
   }
 
+  /**
+   * Mise à jour du code source du Chatbot
+   * @param updateChatbot
+   * @param files
+   */
   async update(updateChatbot: UpdateChatbotDto, files) {
     this._logger.log('Updating Chatbot...', JSON.stringify(updateChatbot));
+    // Mise à jour des repos git
     await this._updateChatbotRepos(updateChatbot);
     if (updateChatbot.domainName) {
       // @ts-ignore
       await this._configService.update({domain_name: updateChatbot.domainName});
     }
 
+    // Si il y a des nouveaux fichiers passés en paramètre, on les met à jour
     if (files && files.env && files.env[0]) {
       fs.writeFileSync(`${this._appDir}/../git/.env`, files.env[0], 'utf8');
     }
@@ -85,6 +100,10 @@ export class UpdateService {
     });
   }
 
+  /**
+   * Mise à jour du nom de domaine de l'application
+   * @param domainName
+   */
   async updateDomainName(domainName: UpdateDomainNameDto) {
     const playbookOptions = new Options(`${this._gitDir}/ansible`);
     const ansiblePlaybook = new AnsiblePlaybook(playbookOptions);
@@ -104,6 +123,11 @@ export class UpdateService {
     });
   }
 
+  /**
+   * Mise à jour du nom de domaine de l'application dans les fichiers .env
+   * @param domainName
+   * @private
+   */
   private async _updateDomainNameEnv(domainName: string) {
     this._logger.log('UPDATING DOMAIN NAME ENV');
     let dotenv = dotenvToJson(fs.readFileSync(`${this._appDir}/.env`, 'utf8'));
@@ -123,6 +147,11 @@ export class UpdateService {
     }
   }
 
+  /**
+   * Mise à jour des repos git
+   * @param updateChatbot
+   * @private
+   */
   private async _updateChatbotRepos(updateChatbot: UpdateChatbotDto) {
     const playbookOptions = new Options(`${this._appDir}/ansible`);
     const ansiblePlaybook = new AnsiblePlaybook(playbookOptions);

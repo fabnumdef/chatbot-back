@@ -17,26 +17,50 @@ export class ResponseService {
               private readonly _configRepository: Repository<ChatbotConfig>) {
   }
 
+  /**
+   * Récupération des réponses par rapport à une connaissance passée en argument
+   * @param intent
+   */
   findByIntent(intent: IntentModel): Promise<Response[]> {
     return this._responsesRepository.find({where: {'intent': intent}, order: {'id': 'ASC'}});
   }
 
+  /**
+   * Récupération de toutes les réponses
+   */
   findAll(): Promise<Response[]> {
     return this._responsesRepository.find();
   }
 
+  /**
+   * Création d'une réponse
+   * @param response
+   */
   create(response: ResponseModel): Promise<Response> {
     return this._responsesRepository.save(response);
   }
 
+  /**
+   * Edition d'une réponse
+   * @param response
+   */
   update(response: ResponseModel): Promise<UpdateResult> {
     return this._responsesRepository.update({id: response.id}, response);
   }
 
+  /**
+   * Sauvegarde de plusieurs réponses
+   * @param responses
+   */
   saveMany(responses: Response[]): Promise<Response[]> {
     return this._responsesRepository.save(responses);
   }
 
+  /**
+   * Remplacement d'une ancienne URL par une nouvelle URL dans toutes les réponses
+   * @param oldFile
+   * @param newFile
+   */
   async updateFileResponses(oldFile: string, newFile: string) {
     const result = await this._responsesRepository.createQueryBuilder('response')
       .update()
@@ -49,6 +73,11 @@ export class ResponseService {
     }
   }
 
+  /**
+   * Remplacement d'une ancienne connaissance par une nouvelle connaissance dans toutes les réponses
+   * @param oldIntentId
+   * @param newIntentId
+   */
   async updateIntentResponses(oldIntentId: string, newIntentId: string) {
     await this._responsesRepository.createQueryBuilder('response')
       .update()
@@ -58,12 +87,20 @@ export class ResponseService {
       .where(`response LIKE '%<${oldIntentId}>%'`).execute();
   }
 
+  /**
+   * Suppression des réponses d'une connaissance passée en argument
+   * @param intent
+   */
   async deleteByIntent(intent: Intent): Promise<void> {
     await this._responsesRepository.delete({
       intent: intent
     });
   }
 
+  /**
+   * Suppression d'une réponse
+   * @param id
+   */
   async remove(id: string): Promise<void> {
     await this._responsesRepository.delete(id);
   }

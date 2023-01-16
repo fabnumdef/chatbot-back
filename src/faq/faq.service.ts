@@ -14,18 +14,37 @@ export class FaqService {
               private readonly _faqEventsRepository: Repository<FaqEvents>) {
   }
 
+  /**
+   * Ajout d'un événement connection
+   * @param senderId
+   */
   connectToFaq(senderId: string) {
     return this._createFaqEvent(senderId, 'connection');
   }
 
+  /**
+   * Ajout d'un événement catégorie avec la catégorie correspondante
+   * @param senderId
+   * @param category
+   */
   searchCategory(senderId: string, category: string) {
     return this._createFaqEvent(senderId, 'category', category);
   }
 
+  /**
+   * Ajout d'un événement intent avec l'id correspondant
+   * @param senderId
+   * @param intentId
+   */
   clickIntent(senderId: string, intentId: string) {
     return this._createFaqEvent(senderId, 'intent', null, intentId);
   }
 
+  /**
+   * Récupération des questions les plus cherchées via la FAQ
+   * Possibilité de filtrer par dates
+   * @param filters
+   */
   findMostAskedQuestions(filters: StatsFilterDto): Promise<StatsMostAskedQuestionsDto[]> {
     const startDate = filters.startDate ? (moment(filters.startDate, 'DD/MM/YYYY').format('YYYY-MM-DD')) : null;
     const endDate = filters.endDate ? moment(filters.endDate, 'DD/MM/YYYY').format('YYYY-MM-DD') : null;
@@ -50,6 +69,11 @@ export class FaqService {
     return query.getRawMany();
   }
 
+  /**
+   * Récupération des catégories les plus cherchées via la FAQ
+   * Possibilité de filtrer par dates
+   * @param filters
+   */
   findMostAskedCategories(filters: StatsFilterDto): Promise<StatsMostAskedCategoriesDto[]> {
     const startDate = filters.startDate ? (moment(filters.startDate, 'DD/MM/YYYY').format('YYYY-MM-DD')) : null;
     const endDate = filters.endDate ? moment(filters.endDate, 'DD/MM/YYYY').format('YYYY-MM-DD') : null;
@@ -74,6 +98,11 @@ export class FaqService {
     return query.getRawMany();
   }
 
+  /**
+   * Récupération du nombre de visiteurs uniques sur la FAQ
+   * Possibilité de filtrer par dates
+   * @param filters
+   */
   findNbUniqueVisitors(filters: StatsFilterDto): Promise<string> {
     const startDate = filters.startDate ? (moment(filters.startDate, 'DD/MM/YYYY').format('YYYY-MM-DD')) : null;
     const endDate = filters.endDate ? moment(filters.endDate, 'DD/MM/YYYY').format('YYYY-MM-DD') : null;
@@ -90,6 +119,11 @@ export class FaqService {
     return query.getRawOne();
   }
 
+  /**
+   * Récupération du nombre moyen d'intéractions avec la FAQ par visiteur
+   * Possibilité de filtrer par dates
+   * @param filters
+   */
   findAvgQuestPerVisitor(filters: StatsFilterDto): Promise<string> {
     const startDate = filters.startDate ? (moment(filters.startDate, 'DD/MM/YYYY').format('YYYY-MM-DD')) : null;
     const endDate = filters.endDate ? moment(filters.endDate, 'DD/MM/YYYY').format('YYYY-MM-DD') : null;
@@ -107,6 +141,14 @@ export class FaqService {
     return query.getRawOne();
   }
 
+  /**
+   * Création d'une ligne correspondante à une intéraction avec la FAQ
+   * @param senderId
+   * @param type
+   * @param category
+   * @param intent
+   * @private
+   */
   private async _createFaqEvent(senderId: string, type: string, category?: string, intent?: string) {
     if (!senderId) {
       return;

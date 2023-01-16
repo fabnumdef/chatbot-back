@@ -4,7 +4,7 @@ import { Feedback } from "@core/entities/feedback.entity";
 import { Repository } from "typeorm";
 import { Cron, CronExpression } from "@nestjs/schedule";
 import { InboxService } from "../inbox/inbox.service";
-import { In } from "typeorm/index";
+import { In } from "typeorm";
 import * as moment from 'moment';
 import { StatsFilterDto } from "@core/dto/stats-filter.dto";
 import { BotLogger } from "../logger/bot.logger";
@@ -18,6 +18,12 @@ export class FeedbackService {
               private readonly _inboxService: InboxService) {
   }
 
+  /**
+   * Création d'un feedback
+   * On vérifie que l'utilisateur n'en ait pas déjà crée un pour la même question
+   * Si oui, on le met à jour avec le nouveau statut renvoyé, sinon on le crée
+   * @param feedback
+   */
   async createSafe(feedback: Feedback): Promise<Feedback> {
     const fEntity = await this._feedbacksRepository.findOne({
       where: {
@@ -29,7 +35,7 @@ export class FeedbackService {
       return this._feedbacksRepository.save(feedback);
     }
     if (fEntity && fEntity.status !== feedback.status) {
-      this._feedbacksRepository.update({id: fEntity.id}, {status: feedback.status});
+      await this._feedbacksRepository.update({id: fEntity.id}, {status: feedback.status});
     }
     return feedback;
   }
@@ -45,6 +51,7 @@ export class FeedbackService {
       }
     });
 
+    // S'il n'y en a pas on ne fait rien
     if (feedbacks.length < 1) {
       return;
     }
@@ -52,6 +59,7 @@ export class FeedbackService {
     const toDelete = [];
     for (let i = 0; i < feedbacks.length; i++) {
       const feedback = feedbacks[i];
+      // On associe une requête au feedback, si celle-ci est trouvée on peut supprimer le feedback
       const updated = await this._inboxService.updateInboxWithFeedback(feedback);
       if (updated) {
         toDelete.push(feedback.id);
@@ -65,6 +73,11 @@ export class FeedbackService {
     }
   }
 
+  /**
+   * Récupération du nombre de feedbacks par jour
+   * Possibilité de filtrer par dates
+   * @param filters
+   */
   findNbFeedbackByTime(filters: StatsFilterDto): Promise<Array<string>> {
     const startDate = filters.startDate ? (moment(filters.startDate, 'DD/MM/YYYY').format('YYYY-MM-DD')) : (moment().subtract(1, 'month').format('YYYY-MM-DD'));
     const endDate = filters.endDate ? moment(filters.endDate, 'DD/MM/YYYY').format('YYYY-MM-DD') : moment().format('YYYY-MM-DD');

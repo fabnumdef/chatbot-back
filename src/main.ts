@@ -17,16 +17,9 @@ async function bootstrap() {
       max: 300, // limit each IP to 300 requests per windowMs
     }),
   );
-  app.use(json({ limit: '100mb' }));
-  app.use(urlencoded({ extended: true, limit: '100mb' }));
-  if(process.env.NODE_ENV === 'prod') {
-    // app.enableCors({
-    //   origin: process.env.HOST_URL
-    // });
-    app.enableCors();
-  } else {
-    app.enableCors();
-  }
+  app.use(json({limit: '100mb'}));
+  app.use(urlencoded({extended: true, limit: '100mb'}));
+  app.enableCors();
   app.useGlobalPipes(new ValidationPipe({
     whitelist: true,
   }));
@@ -35,8 +28,8 @@ async function bootstrap() {
   const options = new DocumentBuilder()
     .addBearerAuth()
     .setTitle('Backoffice Chatbot')
-    .setDescription('The backoffice chatbot factory API description')
-    .setVersion('0.1')
+    .setDescription('Description API du Backoffice Chatbot')
+    .setVersion('1.8')
     .build();
   const document = SwaggerModule.createDocument(app, options);
   SwaggerModule.setup('api', app, document, {
@@ -45,4 +38,5 @@ async function bootstrap() {
 
   await app.listen(3000);
 }
+
 bootstrap();

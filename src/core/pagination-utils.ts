@@ -3,6 +3,14 @@ import { FindManyOptions } from "typeorm/find-options/FindManyOptions";
 import * as escape from "pg-escape";
 
 export class PaginationUtils {
+  /**
+   * Formatage de la clause Where lors du filtrage par pagination
+   * Récupération de la query et formatage de la clause avec les attributs possible à filtrer (OR)
+   * On splitte la query à chaque espace afin de pouvoir chercher les mots indépendamments
+   * @param pagination
+   * @param attributes
+   * @param entity
+   */
   static setQuery(pagination: PaginationQueryDto,
                   attributes: string[],
                   entity?: string): string {

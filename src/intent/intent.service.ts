@@ -1,6 +1,6 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from "@nestjs/typeorm";
-import { FindManyOptions, In, Repository } from "typeorm";
+import { In, Repository } from "typeorm";
 import { Intent } from "@core/entities/intent.entity";
 import { IntentModel } from "@core/models/intent.model";
 import { UpdateResult } from "typeorm/query-builder/result/UpdateResult";
@@ -19,11 +19,9 @@ import { AppConstants } from "@core/constant";
 import { Response } from "@core/entities/response.entity";
 import { ResponseType } from "@core/enums/response-type.enum";
 import { SelectQueryBuilder } from "typeorm/query-builder/SelectQueryBuilder";
-import { BotLogger } from "../logger/bot.logger";
 
 @Injectable()
 export class IntentService {
-  private readonly _logger = new BotLogger('IntentService');
 
   constructor(@InjectRepository(Intent)
               private readonly _intentsRepository: Repository<Intent>,
@@ -32,10 +30,23 @@ export class IntentService {
               private readonly _configService: ChatbotConfigService) {
   }
 
+  /**
+   * Récupération de toutes les connaissances
+   * Par défaut celles au statut Actif
+   * @param params
+   */
   findAll(params: any = {status: IntentStatus.active}): Promise<Intent[]> {
     return this._intentsRepository.find(params);
   }
 
+  /**
+   * Récupération de toutes les connaissances ainsi que leurs objets liés
+   * @param options
+   * @param filters
+   * @param getHidden
+   * @param getResponses
+   * @param getKnowledges
+   */
   findFullIntents(options: PaginationQueryDto = null,
                   filters: IntentFilterDto = null,
                   getHidden = true,
@@ -49,6 +60,10 @@ export class IntentService {
       getKnowledges).getMany();
   }
 
+  /**
+   * Récupération des connaissances par catégorie
+   * @param category
+   */
   findByCategory(category: string): Promise<Intent[]> {
     return this.getIntentAndResponseQueryBuilder()
       .andWhere(`category = '${category}'`)
@@ -57,13 +72,18 @@ export class IntentService {
       .getMany();
   }
 
+  /**
+   * Récupération des connaissances paginées
+   * @param options
+   * @param filters
+   */
   async paginate(options: PaginationQueryDto, filters: IntentFilterDto): Promise<Pagination<IntentModel>> {
     const results = await paginate(
       this.getIntentQueryBuilder(PaginationUtils.setQuery(options, Intent.getAttributesToSearch(), 'intent'), filters),
       options
     );
 
-    // Obligé de faire ça pour la pagination quand il y a des left join
+    // Quand il y a des left join obligé de récupérer les join à part sinon le nombre d'items retournés pas la pagination bug
     return new Pagination(
       // @ts-ignore
       await Promise.all(results.items.map(async (item: IntentModel) => {
@@ -89,6 +109,12 @@ export class IntentService {
     );
   }
 
+  /**
+   * Création de la requête SQL pour récupérer les connaissances
+   * @param whereClause
+   * @param filters
+   * @param getResponses
+   */
   getIntentQueryBuilder(whereClause: string, filters?: IntentFilterDto, getResponses?: boolean): SelectQueryBuilder<any> {
     let query = this._intentsRepository.createQueryBuilder('intent')
       .where('intent.status IN (:...status)', {
@@ -119,6 +145,15 @@ export class IntentService {
     return query;
   }
 
+  /**
+   * Création de la requête SQL pour récupérer les connaissances ainsi que les objets liés
+   * @param whereClause
+   * @param filters
+   * @param id
+   * @param getHidden
+   * @param getResponses
+   * @param getKnowledges
+   */
   getFullIntentQueryBuilder(whereClause: string,
                             filters: IntentFilterDto,
                             id?: string,
@@ -139,22 +174,25 @@ export class IntentService {
       .andWhere(getHidden ? `'1'` : `hidden = false`)
       .orderBy({
         'intent.id': 'ASC',
-      })
+      });
 
     query = this._addFilters(query, filters);
 
     if (getKnowledges) {
       query.leftJoinAndSelect('intent.knowledges', 'knowledges')
-      query.addOrderBy('knowledges.id', 'ASC')
+        .addOrderBy('knowledges.id', 'ASC');
     }
     if (getResponses) {
       query.leftJoinAndSelect('intent.responses', 'responses')
-      query.addOrderBy('responses.id', 'ASC')
+        .addOrderBy('responses.id', 'ASC');
     }
 
     return query;
   }
 
+  /**
+   * Récupération de toutes les connaissances ainsi que leurs réponses
+   */
   getIntentAndResponseQueryBuilder() {
     return this._intentsRepository.createQueryBuilder('intent')
       .select('intent.main_question')
@@ -173,9 +211,13 @@ export class IntentService {
       .orderBy({
         'intent.main_question': 'ASC',
         'responses.id': 'ASC'
-      })
+      });
   }
 
+  /**
+   * Récupération de toutes les catégories des connaissances
+   * @param active
+   */
   async findAllCategories(active = false): Promise<string[]> {
     const query = this._intentsRepository.createQueryBuilder('intent')
       .select('DISTINCT category', 'category')
@@ -196,9 +238,13 @@ export class IntentService {
 
     const intents: Intent[] = await query.getRawMany();
 
-    return intents.filter(i => !!i.category).map(i => i.category);
+    return intents.filter(i => i.category).map(i => i.category);
   }
 
+  /**
+   * Récupération d'une connaissance avec ses possibles connaissances liées
+   * @param id
+   */
   async findOne(id: string): Promise<Intent> {
     const intent = await this.getFullIntentQueryBuilder(null, null, id, true).getOne();
     if (!intent) {
@@ -218,6 +264,13 @@ export class IntentService {
     return intent;
   }
 
+  /**
+   * Recherche des connaissances par rapport à une query
+   * @param query
+   * @param intentsNumber
+   * @param getResponses
+   * @param excludeSt
+   */
   findIntentsMatching(query: string, intentsNumber = 1000, getResponses = false, excludeSt = false): Promise<Intent[]> {
     let intentWhereClause = PaginationUtils.setQuery(<PaginationQueryDto>{query: query}, Intent.getAttributesToSearch(), 'intent');
     const queryBuilder = this.getIntentQueryBuilder(null, null, getResponses)
@@ -245,6 +298,10 @@ export class IntentService {
       .getMany();
   }
 
+  /**
+   * Récupération uniquement des ids et des questions principales des connaissances
+   * @param intentsId
+   */
   findIntentsMainQuestions(intentsId: string[]): Promise<Intent[]> {
     const status = [
       IntentStatus.to_deploy,
@@ -262,18 +319,29 @@ export class IntentService {
     });
   }
 
+  /**
+   * Vérification si une connaissance existe
+   * @param id
+   */
   async intentExists(id: string): Promise<boolean> {
     return !!(await this.findOne(id));
   }
 
+  /**
+   * Création / Edition d'une connaissance
+   * @param intent
+   * @param id
+   */
   async createEdit(intent: Intent, id?: string): Promise<Intent> {
     switch (intent.status) {
+      // Si une connaissance existe on met à jour son statut pour qu'elle soit ingérée par RASA
       case IntentStatus.active:
       case IntentStatus.in_training:
         intent.status = IntentStatus.active_modified;
         break;
     }
     const intentCreatedEdited = await this._intentsRepository.save(intent);
+    // Si édition de l'ID d'une connaissance on doit supprimer l'ancienne
     if (id) {
       await this.delete(id);
       await this._responseService.updateIntentResponses(id, intent.id);
@@ -282,6 +350,10 @@ export class IntentService {
     return intentCreatedEdited;
   }
 
+  /**
+   * Archivation d'une connaissance
+   * @param intentId
+   */
   async delete(intentId): Promise<UpdateResult> {
     if (AppConstants.General.excluded_Ids.includes(intentId)) {
       throw new HttpException('Impossible de supprimer les phrases de présentation et d\'hors sujet.', HttpStatus.INTERNAL_SERVER_ERROR);
@@ -291,22 +363,39 @@ export class IntentService {
     return intentDeleted;
   }
 
+  /**
+   * Sauvegarde de plusieurs connaissances d'un coup
+   * @param intents
+   */
   async saveMany(intents: IntentModel[]): Promise<Intent[]> {
     const intentsCreated = await this._intentsRepository.save(intents);
     await this._updateNeedTraining();
     return intentsCreated;
   }
 
+  /**
+   * Mise à jour de plusieurs connaissances d'un coup
+   * @param condition
+   * @param params
+   */
   async updateManyByCondition(condition: any, params: any): Promise<UpdateResult> {
     const intentsUpdated = await this._intentsRepository.update(condition, params);
     await this._updateNeedTraining();
     return intentsUpdated;
   }
 
+  /**
+   * Récupération du repository
+   */
   getRepository(): Repository<Intent> {
     return this._intentsRepository;
   }
 
+  /**
+   * Récupération du nombre de connaissances créées par jour
+   * Possibilité de filtrer par dates
+   * @param filters
+   */
   findNbIntentByTime(filters: StatsFilterDto): Promise<Array<string>> {
     const startDate = filters.startDate ? (moment(filters.startDate, 'DD/MM/YYYY').format('YYYY-MM-DD')) : (moment().subtract(1, 'month').format('YYYY-MM-DD'));
     const endDate = filters.endDate ? moment(filters.endDate, 'DD/MM/YYYY').format('YYYY-MM-DD') : moment().format('YYYY-MM-DD');
@@ -320,6 +409,11 @@ export class IntentService {
     return query.getRawMany();
   }
 
+  /**
+   * Récupération des connaissances qui n'ont jamais été utilisée dans le Chatbot
+   * Possibilité de filtrer par dates
+   * @param filters
+   */
   findNeverUsedIntent(filters: StatsFilterDto): Promise<Array<string>> {
     const startDate = filters.startDate ? (moment(filters.startDate, 'DD/MM/YYYY').format('YYYY-MM-DD')) : null;
     const endDate = filters.endDate ? moment(filters.endDate, 'DD/MM/YYYY').format('YYYY-MM-DD') : null;
@@ -348,12 +442,22 @@ export class IntentService {
     return query.getRawMany();
   }
 
+  /**
+   * Récupération de l'arbre global des connaissances avec leurs liaisons
+   * @param options
+   * @param filters
+   */
   public async getFullTree(options: PaginationQueryDto, filters: IntentFilterDto): Promise<Intent[]> {
     const intents: Intent[] = await this.findFullIntents(options, filters, true, true, false);
     const allIntents: Intent[] = await this.findFullIntents(null, null, true, true, false);
     return this._buildIntentsTree(intents, allIntents);
   }
 
+  /**
+   * Récupération des connaissances qui pointe vers la connaissance passée en argument
+   * @param intent
+   * @private
+   */
   private _findPreviousIntents(intent: IntentModel): Promise<Intent[]> {
     const sql = this._intentsRepository.createQueryBuilder('intent')
       .select(['intent.id as id', 'main_question', 'category',
@@ -364,11 +468,19 @@ export class IntentService {
     return sql.getRawMany();
   }
 
+  /**
+   * Récupération des connaissances présentes dans la réponse de la connaissance passée en argument
+   * @param intent
+   * @private
+   */
   private async _findNextIntents(intent: IntentModel): Promise<Intent[]> {
+    // Récupération des réponses de la connaissance
     let intentsId = (await this._responseService.findByIntent(intent)).map((r: Response) => {
+      // Si la réponse n'est pas une réponse répide ou un bouton, on passe
       if (![ResponseType.quick_reply, ResponseType.button].includes(r.response_type) || !r.response) {
         return null;
       }
+      // On récupère tous les liens des réponses rapides / boutons
       return r.response.split(';').map(text => {
         return text.substring(text.indexOf('<') + 1, text.indexOf('>')).trim();
       })
@@ -387,14 +499,26 @@ export class IntentService {
     return sql.getRawMany();
   }
 
+  /**
+   * Mise à jour de la configuration si au moins une connaissance a besoin d'être ingérée par RASA
+   * @private
+   */
   private async _updateNeedTraining() {
     const needTraining = await this._intentsRepository.count({where: {status: In([IntentStatus.to_deploy, IntentStatus.active_modified, IntentStatus.to_archive])}});
     await this._configService.update(<ChatbotConfig>{need_training: (needTraining > 0)});
   }
 
+  /**
+   * Construction de l'arbre des connaissances
+   * @param intents
+   * @param allIntents
+   * @private
+   */
   private _buildIntentsTree(intents: Intent[], allIntents: Intent[]): Intent[] {
     const rootIntents: Intent[] = [];
     intents.forEach(intent => {
+      // On récupère les racines de l'arbre
+      // Toutes les connaissances qui ne sont pas présentes dans les réponses des autres
       if (!allIntents.find(i => i.responses.find(r => r.response.includes(intent.id)))) {
         // @ts-ignore
         intent.previousIntents = null;
@@ -405,7 +529,14 @@ export class IntentService {
     return rootIntents;
   }
 
+  /**
+   * Construction des branches des connaissances'
+   * @param rootIntents
+   * @param fullIntents
+   * @private
+   */
   private _buildIntentBranch(rootIntents: Intent[], fullIntents: Intent[]) {
+    // Pour chaque racine
     rootIntents.forEach(rootIntent => {
       let intentsId = rootIntent.responses.map((r: Response) => {
         if (![ResponseType.quick_reply, ResponseType.button].includes(r.response_type) || !r.response) {
@@ -416,9 +547,10 @@ export class IntentService {
         })
       });
       intentsId = [].concat(...intentsId);
+      // On exclut les connaissances qui sont déjà des racines pour éviter une boucle infinie ou des branches en doublon
       intentsId = intentsId.filter(id => {
         // @ts-ignore
-        return !!id && (!rootIntent.parents || !rootIntent.parents.includes(id));
+        return id && (!rootIntent.parents || !rootIntent.parents.includes(id));
       });
       if (intentsId.length < 1) {
         // @ts-ignore
@@ -447,9 +579,16 @@ export class IntentService {
     if (!nextRootIntents || nextRootIntents.length < 1) {
       return;
     }
+    // On itère pour construire la branche complète
     this._buildIntentBranch(nextRootIntents, fullIntents);
   }
 
+  /**
+   * Retourne le query builder avec les filtres pour les connaissances
+   * @param query
+   * @param filters
+   * @private
+   */
   private _addFilters(query: SelectQueryBuilder<any>, filters: IntentFilterDto): SelectQueryBuilder<any> {
     if (!filters) {
       return query;

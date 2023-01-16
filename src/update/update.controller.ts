@@ -38,7 +38,7 @@ export class UpdateController {
     description: 'Update the chatbot code',
     type: UpdateChatbotDto,
   })
-  @ApiOperation({summary: 'Update the chatbot code'})
+  @ApiOperation({summary: 'Mise à jour du code source du Chatbot'})
   async updateBot(@UploadedFiles() files,
                   @Body() updateChatbot: UpdateChatbotDto) {
     // @ts-ignore

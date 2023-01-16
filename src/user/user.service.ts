@@ -15,6 +15,9 @@ export class UserService {
               private readonly _mailService: MailService) {
   }
 
+  /**
+   * Récupération de tous les utilisateurs
+   */
   findAll(): Promise<User[]> {
     return this._usersRepository.find({
       order: {
@@ -25,6 +28,11 @@ export class UserService {
     });
   }
 
+  /**
+   * Récupération d'un seul utilisateur
+   * @param email
+   * @param password
+   */
   findOne(email: string, password: boolean = false): Promise<User> {
     if (!password) {
       return this._usersRepository.findOne({where: {email: email}});
@@ -35,10 +43,19 @@ export class UserService {
     });
   }
 
+  /**
+   * Récupération d'un seul utilisateur avec une clause
+   * @param param
+   */
   findOneWithParam(param: any): Promise<User> {
     return this._usersRepository.findOne(param);
   }
 
+  /**
+   * Récupération d'un utilisateur et mise à jour de celui-ci
+   * @param email
+   * @param data
+   */
   async findAndUpdate(email: string, data: any): Promise<User> {
     const userExists = await this.findOne(email);
     if (!userExists) {
@@ -50,30 +67,48 @@ export class UserService {
     });
   }
 
+  /**
+   * Mise à jour d'un utilisateur
+   * @param email
+   * @param data
+   */
   async update(email: string, data: any): Promise<User> {
     await this._usersRepository.update({email: email}, data);
     return this.findOne(email);
   }
 
+  /**
+   * Création d'un utilisateur si le mail n'est pas déjà pris
+   * @param user
+   */
   async create(user: UserModel): Promise<UserModel> {
     const userExists = await this.findOne(user.email);
     if (!userExists) {
       const userCreated = await this._usersRepository.save(user);
+      // Envoi d'un email de création de compte
       await this.sendEmailPasswordToken(userCreated);
       return userCreated;
     }
     throw new HttpException('Un utilisateur avec cet email existe déjà.', HttpStatus.FORBIDDEN);
   }
 
+  /**
+   * Désactivation d'un utilisateur
+   * @param email
+   */
   async delete(email: string): Promise<void> {
     await this._usersRepository.update({email: email}, {disabled: true});
   }
 
+  /**
+   * Génération du premier utilisateur administrateur
+   * @param user
+   */
   async generateAdminUser(user: UserModel): Promise<UserModel> {
     const adminExists = await this.findOneWithParam({
       role: UserRole.admin
     });
-    if(!!adminExists) {
+    if (adminExists) {
       throw new HttpException('Un administrateur existe déjà.', HttpStatus.FORBIDDEN);
     }
     user.role = UserRole.admin;
@@ -84,6 +119,10 @@ export class UserService {
     return userUpdated;
   }
 
+  /**
+   * Envoi d'un email de création de compte avec le lien pour changer son mot de passe
+   * @param user
+   */
   async sendEmailPasswordToken(user: User) {
     const userUpdated = await this.setPasswordResetToken(user);
     await this._mailService.sendEmail(userUpdated.email,
@@ -97,6 +136,10 @@ export class UserService {
       });
   }
 
+  /**
+   * Mise à jour du token de reset de mot de passe, valable 24h
+   * @param user
+   */
   async setPasswordResetToken(user: User) {
     // create the random token
     const tokenLength = 64;

@@ -21,13 +21,14 @@ export class UserController {
   }
 
   @Get('')
-  @ApiOperation({summary: 'Return all users'})
+  @ApiOperation({summary: 'Retourne tout les utilisateurs'})
   @ApiBearerAuth()
   @UseGuards(JwtGuard)
   async getUsers(@Req() req): Promise<UserDto[]> {
     let users: User[] = await this._userService.findAll();
 
-    // Si on est sur l'environnement de test, on ne renvoie que l'utilisateur courant (sauf si mail en @fabnum.fr ou @beta.gouv.fr)
+    // Si on est sur l'environnement de dev / test, on ne renvoie que l'utilisateur courant (sauf si mail en @fabnum.fr ou @beta.gouv.fr)
+    // Pour éviter que les utilisateurs des environnements de tests puissent voir tous les autres utilisateurs
     const userRequest: User = req.user;
     if ((process.env.NODE_ENV === 'local' || process.env.NODE_ENV === 'dev') &&
       !userRequest.email.includes('@beta.gouv.fr') &&
@@ -38,9 +39,8 @@ export class UserController {
     return plainToInstance(UserDto, camelcaseKeys(users, {deep: true}));
   }
 
-  // TODO: Pour le développement, à voir commencer insérer les users par la suite
   @Post('admin')
-  @ApiOperation({ summary: 'Generate admin user' })
+  @ApiOperation({summary: 'Génération du premier utilisateur administrateur'})
   @ApiBody({
     description: 'User',
     type: CreateUserDto,
@@ -51,7 +51,7 @@ export class UserController {
   }
 
   @Post('')
-  @ApiOperation({ summary: 'Create user' })
+  @ApiOperation({summary: 'Création d\'un utilisateur'})
   @ApiBody({
     description: 'User',
     type: CreateUserDto,
@@ -65,7 +65,7 @@ export class UserController {
   }
 
   @Put(':email')
-  @ApiOperation({ summary: 'Edit user' })
+  @ApiOperation({summary: 'Edition d\'un utilisateur'})
   @ApiBody({
     description: 'User',
     type: UpdateUserDto,
@@ -80,7 +80,7 @@ export class UserController {
   }
 
   @Delete(':email')
-  @ApiOperation({ summary: 'Delete user' })
+  @ApiOperation({summary: 'Suppression d\'un utilisateur'})
   @ApiBearerAuth()
   @UseGuards(JwtGuard, RolesGuard)
   @Roles(UserRole.admin)

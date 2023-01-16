@@ -12,7 +12,7 @@ export class MailService {
   }
 
   /**
-   * Send email
+   * Envoi d'un email
    * @param email: Adress to ship the email
    * @param subject: subject of the email
    * @param template: name of the template

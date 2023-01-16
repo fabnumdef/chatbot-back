@@ -8,6 +8,11 @@ const crypto = require('crypto');
 export class LoggerInterceptor implements NestInterceptor {
   private readonly _logger = new BotLogger('LoggerInterceptor');
 
+  /**
+   * Log de toutes les requêtes de l'application ainsi que la réponse correspondante
+   * @param context
+   * @param next
+   */
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     const id = crypto.randomBytes(8).toString("hex");
     const req = context.getArgByIndex(0);

@@ -12,7 +12,7 @@ export class RefDataController {
   }
 
   @Get('categories')
-  @ApiOperation({summary: 'Return all categories'})
+  @ApiOperation({summary: 'Retourne toutes les catégories'})
   async getCategories(): Promise<string[]> {
     return this._intentService.findAllCategories(true);
   }

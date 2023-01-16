@@ -34,6 +34,7 @@ export class ChatbotConfigController {
               private readonly _updateService: UpdateService,
               private readonly _mediaService: MediaService) {
     this._configService.updateFrontManifest();
+    // Lors du démarrage de l'application, si celle-ci a été KO de force on reboot certains paramètres pour éviter le blocage de certaines mises à jour
     this._configService.update(<ChatbotConfig>{
       is_blocked: false,
       training_rasa: false,

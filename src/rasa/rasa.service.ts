@@ -29,10 +29,13 @@ export class RasaService {
   constructor(private readonly _intentService: IntentService,
               private readonly _configService: ChatbotConfigService,
               private _fileService: FileService) {
-    // Create folder if it does not exists
+    // Création du répertoire si il n'existe pas
     mkdirp(`${this._chatbotTemplateDir}/data`).then();
   }
 
+  /**
+   * Vérification régulière si RASA a besoin et peut être entraîné
+   */
   @Cron(CronExpression.EVERY_10_SECONDS)
   async updateRasa() {
     if (!(await this.canTrainRasa()) || !(await this.needRasaTraining())) {
@@ -45,27 +48,42 @@ export class RasaService {
     this._logger.log('Finish updating Rasa');
   }
 
+  /**
+   * Vérification si on peut entraîner RASA
+   * Il ne doit pas être déjà en train d'être entrainé, le Chatbot ne doit pas être bloqué et le Chatbot ne doit pas avoir besoin d'une mise à jour
+   */
   async canTrainRasa(): Promise<boolean> {
     const config: ChatbotConfig = await this._configService.getChatbotConfig();
     return !config.training_rasa && !config.is_blocked && !config.need_update;
   }
 
+  /**
+   * Vérification si RASA a besoin d'être entrainé
+   */
   async needRasaTraining(): Promise<boolean> {
     return (await this._configService.getChatbotConfig()).need_training;
   }
 
+  /**
+   * Génération des fichiers pour RASA
+   */
   async generateFiles() {
     const intents: Intent[] = await this._intentService.findFullIntents(null, null, false);
     this._intentsToRasa(intents);
   }
 
+  /**
+   * Entraînement de RASA
+   */
   async trainRasa() {
+    // Mise à jour du statut d'entraînement du Chatbot et des connaissances.
     await this._configService.update(<ChatbotConfig>{training_rasa: true});
     await this._intentService.updateManyByCondition({status: In([IntentStatus.to_deploy, IntentStatus.active_modified])}, {status: IntentStatus.in_training});
     try {
       this._logger.log(`TRAINING RASA`);
       await execShellCommand(`${!!process.env.INTRADEF ? 'export PYTHONPATH=/opt/chatbot/site-packages/;python3 -m' : ''} rasa train --finetune --epoch-fraction 0.2 --num-threads 8`, this._chatbotTemplateDir).then(async (res: string) => {
         this._logger.log(res);
+        // Si le modèle ne peut pas être finetuné on le ré-entraine complétement
         if (res.includes('can not be finetuned') || res.includes('No model for finetuning') || res.includes('Cannot finetune')) {
           await execShellCommand(`${!!process.env.INTRADEF ? 'export PYTHONPATH=/opt/chatbot/site-packages/;python3 -m' : ''} rasa train --num-threads 8`, this._chatbotTemplateDir).then(res => {
             this._logger.log(res);
@@ -108,7 +126,7 @@ export class RasaService {
    */
 
   /**
-   * Converti des intents dans les 3 fichiers de Rasa
+   * Converti des connaissances dans les 3 fichiers de Rasa
    * @param intents
    * @private
    */
@@ -124,7 +142,7 @@ export class RasaService {
     });
     domain.intents = intents.map(i => i.id);
     for (const intent of intents) {
-      // Fill NLU
+      // Remplissage des NLU (questions similaires)
       nlu.push(new RasaNluModel(intent.id));
       let examples = '';
       if (intent.main_question) {
@@ -135,10 +153,10 @@ export class RasaService {
       });
       nlu[nlu.length - 1].examples = examples;
 
-      // Fill DOMAINS
+      // Remplissage DOMAIN
       const responses = this._generateDomainUtter(intent);
 
-      // Fill STORIES
+      // Remplissage STORIES
       // stories.push(new RasaStoryModel(intent.id));
       // const steps = stories[stories.length - 1].steps;
       // steps.push({intent: intent.id});
@@ -146,7 +164,7 @@ export class RasaService {
       //   steps.push({action: utter});
       // });
 
-      // Fill RULES
+      // Remplissage RULES
       const id = intent.id;
       rules.push(new RasaRuleModel(id));
       const steps = rules[rules.length - 1].steps;
@@ -163,6 +181,7 @@ export class RasaService {
       domain.responses = Object.assign(responses, domain.responses);
     }
 
+    // Enregistrement des fichiers RASA
     fs.writeFileSync(`${this._chatbotTemplateDir}/domain.yml`, yaml.dump(domain), 'utf8');
     fs.writeFileSync(`${this._chatbotTemplateDir}/data/nlu.yml`, yaml.dump({version: "3.1", nlu: nlu}), 'utf8');
     fs.writeFileSync(`${this._chatbotTemplateDir}/data/rules.yml`, yaml.dump({
@@ -178,6 +197,7 @@ export class RasaService {
    */
   private _generateDomainUtter(intent: Intent): { [key: string]: RasaUtterResponseModel[] } {
     const responses: { [key: string]: RasaUtterResponseModel[] } = {};
+    // On itère sur chaque réponse pour la mettre au bon format
     intent.responses.forEach((response: Response, index: number) => {
       switch (response.response_type) {
         case ResponseType.text:
@@ -188,6 +208,7 @@ export class RasaService {
           break;
         case ResponseType.button:
         case ResponseType.quick_reply:
+          // Pour le cas des réponses bouton ou réponse rapide, on les rattache à la réponse précédente.
           if (!responses[`utter_${intent.id}_${index - 1}`]) {
             break;
           }
@@ -204,7 +225,8 @@ export class RasaService {
   }
 
   /**
-   * Delete previous models
+   * Suppression des anciens modèles
+   * On en garde 5 par sécurité
    */
   private async _deleteOldModels() {
     try {
@@ -218,7 +240,7 @@ export class RasaService {
   }
 
   /**
-   * Clean string d'emojis et d'espaces en début et fin de string
+   * Nettoyage d'une chaîne de caractère d'emojis et d'espaces en début et fin
    * @param s
    * @private
    */

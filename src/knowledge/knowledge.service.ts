@@ -3,7 +3,6 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { Knowledge } from "@core/entities/knowledge.entity";
 import { KnowledgeModel } from "@core/models/knowledge.model";
-import { Intent } from "@core/entities/intent.entity";
 import { IntentModel } from "@core/models/intent.model";
 
 @Injectable()
@@ -13,18 +12,34 @@ export class KnowledgeService {
               private readonly _knowledgesRepository: Repository<Knowledge>) {
   }
 
+  /**
+   * Retourne les questions similaires d'une connaissance
+   * @param intent
+   */
   findByIntent(intent: IntentModel): Promise<Knowledge[]> {
     return this._knowledgesRepository.find({where: {'intent': intent}, order: {'id': 'ASC'}});
   }
 
-  findAll(): Promise<Knowledge[]> {
-    return this._knowledgesRepository.find();
-  }
+  // /**
+  //  * Retourne toutes les questions similaires
+  //  */
+  // findAll(): Promise<Knowledge[]> {
+  //   return this._knowledgesRepository.find();
+  // }
 
+  /**
+   * Création d'une question similaire
+   * @param knowledge
+   */
   create(knowledge: KnowledgeModel): Promise<Knowledge> {
     return this._knowledgesRepository.save(knowledge);
   }
 
+  /**
+   * Vérification avant création d'une question similaire
+   * Si celle-ci existe déjà, on ne la sauvegarde pas
+   * @param knowledge
+   */
   async createSafe(knowledge: Knowledge): Promise<Knowledge> {
     const kEntity = await this._knowledgesRepository.findOne({
       where: {
@@ -38,6 +53,10 @@ export class KnowledgeService {
     return knowledge;
   }
 
+  /**
+   * Sauvegarde sécurisée de plusieurs questions similaires
+   * @param knowledges
+   */
   async findOrSave(knowledges: Knowledge[]): Promise<Knowledge[]> {
     // On ne sait pas si le knowledge existe, pour éviter de faire péter la constraint unique
     const knowledgesEntity: Knowledge[] = [];
@@ -47,6 +66,10 @@ export class KnowledgeService {
     return knowledgesEntity;
   }
 
+  /**
+   * Suppression d'une question similaire
+   * @param id
+   */
   async remove(id: string): Promise<void> {
     await this._knowledgesRepository.delete(id);
   }

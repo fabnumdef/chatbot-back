@@ -15,17 +15,18 @@ import { KnowledgeModel } from "@core/models/knowledge.model";
 @UseGuards(JwtGuard)
 export class KnowledgeController {
 
-  constructor(private readonly _knowledgeService: KnowledgeService) {}
-
-  @Get('')
-  @ApiOperation({ summary: 'Return all knowledges' })
-  async getKnowledges(): Promise<KnowledgeDto[]> {
-    const knowledges: Knowledge[] = await this._knowledgeService.findAll();
-    return plainToInstance(KnowledgeDto, camelcaseKeys(knowledges, {deep: true}));
+  constructor(private readonly _knowledgeService: KnowledgeService) {
   }
 
+  // @Get('')
+  // @ApiOperation({ summary: 'Returne toute les questions similaires' })
+  // async getKnowledges(): Promise<KnowledgeDto[]> {
+  //   const knowledges: Knowledge[] = await this._knowledgeService.findAll();
+  //   return plainToInstance(KnowledgeDto, camelcaseKeys(knowledges, {deep: true}));
+  // }
+
   @Post('')
-  @ApiOperation({ summary: 'Create a knowledge' })
+  @ApiOperation({summary: 'Création d\'une question similaire'})
   async createKnowledge(@Body() knowledge: KnowledgeDto): Promise<KnowledgeDto> {
     const knowledgeEntity = await this._knowledgeService.create(plainToInstance(KnowledgeModel, snakecaseKeys(knowledge)));
     return plainToInstance(KnowledgeDto, camelcaseKeys(knowledgeEntity, {deep: true}));

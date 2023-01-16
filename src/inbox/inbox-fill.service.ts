@@ -23,17 +23,17 @@ export class InboxFillService {
   }
 
   /**
-   * Vérification des derniers événements de Rasa pour remplir la table des requêtes
+   * Vérification des derniers événements de RASA pour remplir la table des requêtes
    */
   @Cron(CronExpression.EVERY_10_SECONDS)
   async checkEvents() {
-    // Get max timestamp of inbox
+    // Récupération du timestamp max des requêtes
     const maxTimestamp = (await this._inboxesRepository
       .createQueryBuilder()
       .select('MAX(timestamp)', 'timestamp')
       .getRawOne())?.timestamp;
 
-    // Find all events which occurs after this timestamp
+    // Récupération de tout les événements qui ont eu lieu après ce timestamp
     const events: Events[] = await this._eventsRepository.find({
       where: {
         timestamp: MoreThan(maxTimestamp ? maxTimestamp : 0)
@@ -50,14 +50,20 @@ export class InboxFillService {
 
     const inboxes: Inbox[] = [];
     while (events.length > 0) {
+      // Une question de l'utilisateur se termine lorsque RASA recommence à écouter
       const conversationIdx = events.findIndex(e => e.action_name === EventActionTypeEnum.action_listen);
+      // On récupère donc tout les événements RASA jusqu'au premier 'action_listen'
       const eventsSlice = events.slice(0, conversationIdx + 1);
+      // On vérifie qu'il s'agit d'une question d'un utilisateur (ça peut être par exemple seulement la connection d'un utilisateur)
       if (this._canGenerateInbox(eventsSlice)) {
+        // On récupère la requête à sauvegarder en BDD
         const inbox = this._getNextInbox(eventsSlice);
+        // Si elle est bien associée à une connaissance on la sauvegarge
         if (await this._intentService.intentExists(inbox.intent?.id)) {
-          inboxes.push(this._getNextInbox(eventsSlice));
+          inboxes.push(inbox);
         }
       }
+      // On itère ainsi sur tout les blocs d'événements RASA
       conversationIdx >= 0 ? events.splice(0, conversationIdx + 1) : events.splice(0, events.length);
     }
     if (inboxes.length > 0) {
@@ -66,6 +72,11 @@ export class InboxFillService {
     }
   }
 
+  /**
+   * Construction de la requête avec les informations des événements RASA
+   * @param events
+   * @private
+   */
   private _getNextInbox(events: Events[]): Inbox {
     const inbox = new Inbox();
     let getMessageTimestamp: number;
@@ -83,12 +94,16 @@ export class InboxFillService {
 
       switch (data?.event) {
         case 'action':
+          // Pas d'utilité pour le Backoffice
           break;
         case 'bot':
+          // Récupération de la réponse du Chatbot
           inbox.response.push({text: data.text, data: data.data});
           sendMessageTimestamp = data.timestamp;
           break;
         case 'user':
+          // Récupération de la question de l'utilisateur
+          // Si le bot n'a pas réussi à détecter la question on filtre un peu les données pour le Backoffice
           if (data.parse_data?.intent?.name === 'nlu_fallback') {
             // @ts-ignore
             data.parse_data?.intent_ranking = data.parse_data?.intent_ranking?.filter(i => i.name !== 'nlu_fallback');
@@ -114,6 +129,11 @@ export class InboxFillService {
     return inbox;
   }
 
+  /**
+   * Une requête peut être générée s'il y a un événement user et un événement bot (question / réponse)
+   * @param events
+   * @private
+   */
   private _canGenerateInbox(events: Events[]): boolean {
     return events.findIndex(e => e.type_name === 'user') >= 0 && events.findIndex(e => e.type_name === 'bot') >= 0;
   }

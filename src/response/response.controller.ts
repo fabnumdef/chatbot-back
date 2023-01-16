@@ -20,21 +20,21 @@ export class ResponseController {
   constructor(private readonly _responseService: ResponseService) {}
 
   @Get('')
-  @ApiOperation({ summary: 'Return all responses' })
+  @ApiOperation({summary: 'Retourne toutes les réponses'})
   async getReponses(): Promise<ResponseDto[]> {
     const responses: Response[] = await this._responseService.findAll();
     return plainToInstance(ResponseDto, camelcaseKeys(responses, {deep: true}));
   }
 
   @Post('')
-  @ApiOperation({summary: 'Create a response'})
+  @ApiOperation({summary: 'Création d\'une réponse'})
   async createResponse(@Body() response: ResponseDto): Promise<ResponseDto> {
     const responseToReturn: Response = await this._responseService.create(plainToInstance(ResponseModel, snakecaseKeys(response)));
     return plainToInstance(ResponseDto, camelcaseKeys(responseToReturn, {deep: true}));
   }
 
   @Put(':id')
-  @ApiOperation({summary: 'Edit a response'})
+  @ApiOperation({summary: 'Edition d\'une réponse'})
   async editResponse(@Param('id') responseId: string, @Body() response: UpdateResponseDto): Promise<UpdateResult> {
     return this._responseService.update(plainToInstance(ResponseModel, snakecaseKeys(response)));
   }

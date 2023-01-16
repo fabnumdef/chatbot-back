@@ -24,7 +24,7 @@ export class PublicController {
   }
 
   @Get('')
-  @ApiOperation({summary: 'Return the chatbot chatbot-config'})
+  @ApiOperation({summary: 'Retourne les données publiques de la configuration du Chatbot'})
   async getChabotConfig(): Promise<PublicConfigDto> {
     const config: ChatbotConfig = await this._configService.getChatbotConfig(
       {
@@ -37,7 +37,7 @@ export class PublicController {
   }
 
   @Get('/intents')
-  @ApiOperation({summary: 'Return the firsts matching intents'})
+  @ApiOperation({summary: 'Retourne un nombre défini de connaissances qui matchent avec la query'})
   async getIntents(@Query('query') query: string,
                    @Query('intentsNumber') intentsNumber: number,
                    @Query('getResponses') getResponses: boolean): Promise<IntentDto[]> {
@@ -46,21 +46,21 @@ export class PublicController {
   }
 
   @Post('/intents')
-  @ApiOperation({summary: 'Return the intents main questions'})
+  @ApiOperation({summary: 'Retourne les questions principales des connaissances'})
   async getIntentsName(@Body() intentsId: string[]): Promise<IntentDto[]> {
     const intents: Intent[] = await this._intentService.findIntentsMainQuestions(intentsId);
     return plainToInstance(IntentDto, camelcaseKeys(intents, {deep: true}));
   }
 
   @Post('/faq')
-  @ApiOperation({summary: 'User connects to the FAQ'})
+  @ApiOperation({summary: 'L\'utilisateur se connecte à la FAQ'})
   async connectToFaq(@Body() body: { senderId: string }): Promise<void> {
     await this._faqService.connectToFaq(body.senderId);
     return;
   }
 
   @Post('/faq/:intentId')
-  @ApiOperation({summary: 'User click an intent on the FAQ'})
+  @ApiOperation({summary: 'L\'utilisateur clique sur un intent'})
   async clickIntent(@Body() body: { senderId: string },
                     @Param('intentId') intentId: string): Promise<void> {
     await this._faqService.clickIntent(body.senderId, intentId);
@@ -68,13 +68,13 @@ export class PublicController {
   }
 
   @Get('/categories')
-  @ApiOperation({summary: 'Return all actives categories'})
+  @ApiOperation({summary: 'Retourne toute les catégories actives'})
   async getCategories(): Promise<string[]> {
     return await this._intentService.findAllCategories(true);
   }
 
   @Get('/category/:category')
-  @ApiOperation({summary: 'Return intents of the category'})
+  @ApiOperation({summary: 'Retourne toutes les connaissances d\'une catégorie'})
   async getCategory(@Query() options: { senderId: string },
                     @Param('category') category: string): Promise<IntentDto[]> {
     await this._faqService.searchCategory(options.senderId, category);
@@ -83,7 +83,7 @@ export class PublicController {
   }
 
   @Post('/feedback')
-  @ApiOperation({summary: 'Set a feedback from a chatbot response'})
+  @ApiOperation({summary: 'Création d\'un feedback suite à une réponse du Chatbot'})
   async createFeedback(@Body() feedbackDto: FeedbackDto): Promise<FeedbackDto> {
     const feedback = await this._feedbackService.createSafe(plainToInstance(Feedback, snakecaseKeys(feedbackDto)));
     return plainToInstance(FeedbackDto, camelcaseKeys(feedback, {deep: true}));

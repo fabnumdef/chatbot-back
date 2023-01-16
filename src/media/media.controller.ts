@@ -36,7 +36,7 @@ export class MediaController {
   }
 
   @Get('')
-  @ApiOperation({summary: 'Returne tout les médias'})
+  @ApiOperation({summary: 'Retourne tout les médias'})
   async getMedias(): Promise<MediaDto[]> {
     const medias: Media[] = await this._mediaService.findAll();
     return plainToInstance(MediaDto, camelcaseKeys(medias, {deep: true}));

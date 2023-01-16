@@ -13,7 +13,7 @@ const bcrypt = require('bcrypt');
 
 @Injectable()
 export class AuthService {
-  private saltRounds = 10;
+  private _saltRounds = 10;
   private _failedLoginAttempts = 5;
 
   constructor(private readonly _userService: UserService,
@@ -21,6 +21,10 @@ export class AuthService {
               private readonly _mailService: MailService) {
   }
 
+  /**
+   * Récupération de l'utilisateur logué et renvoi du token JWT
+   * @param user
+   */
   async login(user: LoginUserDto): Promise<AuthResponseDto> {
     const userToReturn = await this._validateUser(user);
     if (userToReturn) {
@@ -32,6 +36,10 @@ export class AuthService {
     return null;
   }
 
+  /**
+   * Mise à jour d'un token pour reset son mot de passe valable 24h et envoi d'un email correspondant
+   * @param email
+   */
   async sendEmailPasswordToken(email: string) {
     const userWithoutPassword = await this._userService.findOne(email);
     if (!userWithoutPassword) {
@@ -50,6 +58,10 @@ export class AuthService {
       });
   }
 
+  /**
+   * Reset du mot de passe si l'utilisateur a un token valide de moins de 24h et envoi d'un email correspondant
+   * @param resetPassword
+   */
   async resetPassword(resetPassword: ResetPasswordDto) {
     const userWithoutPassword = await this._userService.findOneWithParam({
       reset_password_token: resetPassword.token,
@@ -58,7 +70,7 @@ export class AuthService {
     if (!userWithoutPassword) {
       throw new HttpException('Cet utilisateur n\'existe pas.', HttpStatus.INTERNAL_SERVER_ERROR);
     }
-    const hashPassword = bcrypt.hashSync(resetPassword.password, this.saltRounds);
+    const hashPassword = bcrypt.hashSync(resetPassword.password, this._saltRounds);
     const valuesToUpdate = {
       password: hashPassword,
       reset_password_token: undefined,
@@ -83,30 +95,45 @@ export class AuthService {
    * PRIVATE FUNCTIONS
    */
 
+  /**
+   * Vérification de l'utilisateur à loguer
+   * Renvoi d'erreur si pas d'utilisateur ou si l'utilisateur a été désactivé
+   * Si l'utilisateur était bloqué depuis plus de 24h on reset son blocage
+   * Si l'utilisateur a bien renseigné son mot de passe et qu'il n'est pas bloqué temporairement c'est ok
+   * Si l'utilisateur a mal renseigné son mot de passe où qu'il est bloqué temporairement on renvoie une erreur
+   * Si pas d'utilisateur où un autre cas non pris en compte on renvoie une erreur
+   * @param user
+   * @private
+   */
   private async _validateUser(user: LoginUserDto): Promise<any> {
     const userToReturn = await this._userService.findOne(user.email, true);
-    if (!!userToReturn && userToReturn.disabled) {
+    if (userToReturn && userToReturn.disabled) {
       throw new HttpException('Votre compte a été supprimé. Merci de prendre contact avec l\'administrateur si vous souhaitez réactiver votre compte.',
         HttpStatus.UNAUTHORIZED);
     }
-    // Si l'user était bloqué depuis plus de 24h on reset son blocage
-    if (!!userToReturn && userToReturn.lock_until && moment.duration(moment(userToReturn.lock_until).add(1, 'd').diff(moment())).asHours() < 0) {
+    if (userToReturn && userToReturn.lock_until && moment.duration(moment(userToReturn.lock_until).add(1, 'd').diff(moment())).asHours() < 0) {
       await this._userService.findAndUpdate(userToReturn.email, {failed_login_attempts: 0, lock_until: null});
       userToReturn.lock_until = null;
       userToReturn.failed_login_attempts = 0;
     }
-    if (!!userToReturn && !!userToReturn.password && bcrypt.compareSync(user.password, userToReturn.password) && userToReturn.failed_login_attempts < this._failedLoginAttempts) {
+    if (userToReturn && userToReturn.password && bcrypt.compareSync(user.password, userToReturn.password) && userToReturn.failed_login_attempts < this._failedLoginAttempts) {
       const {password, ...result} = userToReturn;
       await this._userService.findAndUpdate(userToReturn.email, {failed_login_attempts: 0, lock_until: null})
       return result;
     }
-    if (!!userToReturn && !!userToReturn.password && (!bcrypt.compareSync(user.password, userToReturn.password) || userToReturn.failed_login_attempts >= this._failedLoginAttempts)) {
+    if (userToReturn && userToReturn.password && (!bcrypt.compareSync(user.password, userToReturn.password) || userToReturn.failed_login_attempts >= this._failedLoginAttempts)) {
       return await this._wrongPassword(userToReturn);
     }
     throw new HttpException('Mauvais identifiant ou mot de passe.',
       HttpStatus.UNAUTHORIZED);
   }
 
+  /**
+   * Fonction appelée lorsque l'utilisateur se trompe de mot de passe
+   * Si on dépasse le nombre maximum de tentatives autorisées on bloque l'utilisateur temporairement 24h
+   * @param user
+   * @private
+   */
   private async _wrongPassword(user: User): Promise<any> {
     user = await this._userService.findOne(user.email);
     user.failed_login_attempts++;

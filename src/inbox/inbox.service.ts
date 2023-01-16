@@ -44,6 +44,10 @@ export class InboxService {
               private readonly _eventsRepository: Repository<Events>,) {
   }
 
+  /**
+   * Rétention des données pour 3ans maximum
+   * @private
+   */
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
   private _clearOldValues() {
     const threeYearsAgo = moment().subtract(3, 'years').unix();
@@ -51,6 +55,11 @@ export class InboxService {
     this._clearEvents(threeYearsAgo);
   }
 
+  /**
+   * Récupération de toutes les requêtes
+   * Par défaut celles au statut A traiter
+   * @param params
+   */
   findAll(params = {
     where: {
       status: InboxStatus.pending
@@ -59,6 +68,10 @@ export class InboxService {
     return this._inboxesRepository.find(params);
   }
 
+  /**
+   * Récupération d'une requête
+   * @param inboxId
+   */
   findOne(inboxId) {
     return this._inboxesRepository.findOne({
       where: {
@@ -70,10 +83,19 @@ export class InboxService {
     });
   }
 
+  /**
+   * Sauvegarde d'une requête
+   * @param inbox
+   */
   save(inbox: Inbox): Promise<Inbox> {
     return this._inboxesRepository.save(inbox);
   }
 
+  /**
+   * Récupération des requêtes paginées
+   * @param options
+   * @param filters
+   */
   async paginate(options: PaginationQueryDto, filters: InboxFilterDto): Promise<Pagination<Inbox>> {
     return paginate<Inbox>(
       this.getInboxQueryBuilder(PaginationUtils.setQuery(options, Inbox.getAttributesToSearch()), filters),
@@ -81,6 +103,11 @@ export class InboxService {
     );
   }
 
+  /**
+   * Création de la requête SQL de récupération des requêtes
+   * @param whereClause
+   * @param filters
+   */
   getInboxQueryBuilder(whereClause: string, filters?: InboxFilterDto) {
     const query = this._inboxesRepository
       .createQueryBuilder('inbox')
@@ -119,6 +146,11 @@ export class InboxService {
     return query;
   }
 
+  /**
+   * Validation d'une requête
+   * Cela se traduit par la création d'une question similaire
+   * @param inboxId
+   */
   async validate(inboxId): Promise<UpdateResult> {
     const inbox = await this.findOne(inboxId);
     const newKnowledge: Knowledge = {
@@ -133,6 +165,12 @@ export class InboxService {
     return this._inboxesRepository.update({id: inboxId}, {status: InboxStatus.confirmed});
   }
 
+  /**
+   * Assignation d'une requête à un utilisateur
+   * Envoi d'un email à celui-ci avec les informations de la requête à traiter
+   * @param inboxId
+   * @param userEmail
+   */
   async assign(inboxId: number, userEmail?: string): Promise<UpdateResult> {
     const user = userEmail ? await this._userService.findOne(userEmail) : null;
     const inbox = await this.findOne(inboxId);
@@ -156,10 +194,19 @@ export class InboxService {
     return toReturn;
   }
 
+  /**
+   * Archivation d'une requête
+   * @param inboxId
+   */
   delete(inboxId): Promise<UpdateResult> {
     return this._inboxesRepository.update({id: inboxId}, {status: InboxStatus.archived});
   }
 
+  /**
+   * Récupération du nombre de requêtes par jour
+   * Possibilité de filtrer par dates
+   * @param filters
+   */
   findNbInboxByTime(filters: StatsFilterDto): Promise<Array<string>> {
     const startDate = filters.startDate ? (moment(filters.startDate, 'DD/MM/YYYY').format('YYYY-MM-DD')) : (moment().subtract(1, 'month').format('YYYY-MM-DD'));
     const endDate = filters.endDate ? moment(filters.endDate, 'DD/MM/YYYY').format('YYYY-MM-DD') : moment().format('YYYY-MM-DD');
@@ -173,6 +220,11 @@ export class InboxService {
     return query.getRawMany();
   }
 
+  /**
+   * Récupération du nombre de visiteurs par jour
+   * Possibilité de filtrer par dates
+   * @param filters
+   */
   findNbVisitorsByTime(filters: StatsFilterDto): Promise<Array<string>> {
 
     const startDate = filters.startDate ? (moment(filters.startDate, 'DD/MM/YYYY').format('YYYY-MM-DD')) : (moment().subtract(1, 'month').format('YYYY-MM-DD'));
@@ -188,6 +240,11 @@ export class InboxService {
     return query.getRawMany();
   }
 
+  /**
+   * Récupération du nombre unique de visiteurs
+   * Possibilité de filtrer par dates
+   * @param filters
+   */
   findNbUniqueVisitors(filters: StatsFilterDto): Promise<string> {
     const startDate = filters.startDate ? (moment(filters.startDate, 'DD/MM/YYYY').format('YYYY-MM-DD')) : null;
     const endDate = filters.endDate ? moment(filters.endDate, 'DD/MM/YYYY').format('YYYY-MM-DD') : null;
@@ -204,6 +261,12 @@ export class InboxService {
     return query.getRawOne();
   }
 
+  /**
+   * Récupération des questions les plus posées
+   * Possibilité de filtrer par date
+   * @param filters
+   * @param feedbackStatus
+   */
   findMostAskedQuestions(filters: StatsFilterDto, feedbackStatus?: FeedbackStatus): Promise<StatsMostAskedQuestionsDto[]> {
     const startDate = filters.startDate ? (moment(filters.startDate, 'DD/MM/YYYY').format('YYYY-MM-DD')) : null;
     const endDate = filters.endDate ? moment(filters.endDate, 'DD/MM/YYYY').format('YYYY-MM-DD') : null;
@@ -231,6 +294,12 @@ export class InboxService {
     return query.getRawMany();
   }
 
+  /**
+   * Récupération des catégories les plus demandées
+   * Possibilité de filtrer par date
+   * @param filters
+   * @param feedbackStatus
+   */
   findMostAskedCategories(filters: StatsFilterDto, feedbackStatus?: FeedbackStatus): Promise<StatsMostAskedCategoriesDto[]> {
     const startDate = filters.startDate ? (moment(filters.startDate, 'DD/MM/YYYY').format('YYYY-MM-DD')) : null;
     const endDate = filters.endDate ? moment(filters.endDate, 'DD/MM/YYYY').format('YYYY-MM-DD') : null;
@@ -258,6 +327,11 @@ export class InboxService {
     return query.getRawMany();
   }
 
+  /**
+   * Récupération du nombre moyen de questions par visiteur
+   * Possibilité de filtrer par date
+   * @param filters
+   */
   findAvgQuestPerVisitor(filters: StatsFilterDto): Promise<string> {
     const startDate = filters.startDate ? (moment(filters.startDate, 'DD/MM/YYYY').format('YYYY-MM-DD')) : null;
     const endDate = filters.endDate ? moment(filters.endDate, 'DD/MM/YYYY').format('YYYY-MM-DD') : null;
@@ -275,6 +349,11 @@ export class InboxService {
     return query.getRawOne();
   }
 
+  /**
+   * Récupération du temps moyen de réponse de RASA
+   * Possibilité de filtrer par date
+   * @param filters
+   */
   findAvgResponseTime(filters: StatsFilterDto): Promise<string> {
     const startDate = filters.startDate ? moment(filters.startDate, 'DD/MM/YYYY').format('YYYY-MM-DD') : null;
     const endDate = filters.endDate ? moment(filters.endDate, 'DD/MM/YYYY').format('YYYY-MM-DD') : null;
@@ -291,6 +370,12 @@ export class InboxService {
     return query.getRawOne();
   }
 
+  /**
+   * Récupération du ratio de réponses renvoyées par RASA (pourcentage de questions auquel RASA a su renvoyer une réponse, pas forcément la bonne)
+   * Possibilité de filtrer par date
+   * @param filters
+   * @param confidence
+   */
   async findRatioResponseOk(filters: StatsFilterDto, confidence = 0.6): Promise<string> {
     const startDate = filters.startDate ? moment(filters.startDate, 'DD/MM/YYYY').format('YYYY-MM-DD') : null;
     const endDate = filters.endDate ? moment(filters.endDate, 'DD/MM/YYYY').format('YYYY-MM-DD') : null;
@@ -310,6 +395,12 @@ export class InboxService {
     return query.getRawOne();
   }
 
+  /**
+   * Récupération du nombre de feedbacks totaux
+   * Possibilité de filtrer par date
+   * @param filters
+   * @param feedbackStatus
+   */
   async findCountFeedback(filters: StatsFilterDto, feedbackStatus: FeedbackStatus) {
     const startDate = filters.startDate ? moment(filters.startDate, 'DD/MM/YYYY').format('YYYY-MM-DD') : null;
     const endDate = filters.endDate ? moment(filters.endDate, 'DD/MM/YYYY').format('YYYY-MM-DD') : null;
@@ -330,6 +421,12 @@ export class InboxService {
     return query.getRawOne();
   }
 
+  /**
+   * Récupération du ratio de feedbacks par rapport au nombre de questions posées
+   * Possibilité de filtrer par date
+   * @param filters
+   * @param feedbackStatus
+   */
   async findRatioFeedback(filters: StatsFilterDto, feedbackStatus: FeedbackStatus) {
     const startDate = filters.startDate ? moment(filters.startDate, 'DD/MM/YYYY').format('YYYY-MM-DD') : null;
     const endDate = filters.endDate ? moment(filters.endDate, 'DD/MM/YYYY').format('YYYY-MM-DD') : null;
@@ -350,9 +447,9 @@ export class InboxService {
   }
 
   /**
-   * Update inbox status with feedback
+   * Mise à jour d'une requête avec un feedback
+   * Retourne true si une requête a été trouvée, false sinon
    * @param feedback
-   * Return true if inbox has been found / updated or false if it has not been found
    */
   public async updateInboxWithFeedback(feedback: Feedback): Promise<boolean> {
     const tenMinutes = 10 * 60;
@@ -370,7 +467,7 @@ export class InboxService {
     }
 
     // @ts-ignore
-    this._inboxesRepository.update(inbox.id, {
+    await this._inboxesRepository.update(inbox.id, {
       // @ts-ignore
       status: feedback.status,
       feedback_status: feedback.status,
@@ -379,6 +476,11 @@ export class InboxService {
     return true;
   }
 
+  /**
+   * Export Excel des requêtes
+   * @param options
+   * @param filters
+   */
   exportXls(options: PaginationQueryDto, filters: InboxFilterDto): Promise<fs.ReadStream> {
     return new Promise<fs.ReadStream>(async (resolve, reject) => {
       const workbook = await this._generateWorkbook(options, filters);
@@ -399,6 +501,12 @@ export class InboxService {
     });
   }
 
+  /**
+   * Génération du fichier Excel
+   * @param options
+   * @param filters
+   * @private
+   */
   private async _generateWorkbook(options: PaginationQueryDto, filters: InboxFilterDto): Promise<WorkBook> {
     const workbook = XLSX.utils.book_new();
     const worksheet_data = await this._generateWorksheet(options, filters);
@@ -407,6 +515,12 @@ export class InboxService {
     return workbook;
   }
 
+  /**
+   * Génération de la feuille de données
+   * @param options
+   * @param filters
+   * @private
+   */
   private async _generateWorksheet(options: PaginationQueryDto, filters: InboxFilterDto) {
     const inboxes = await this.getInboxQueryBuilder(PaginationUtils.setQuery(options, Inbox.getAttributesToSearch()), filters).getMany();
     let idx = 1;
@@ -419,7 +533,7 @@ export class InboxService {
   }
 
   /**
-   * Generate row for a worksheet
+   * Génération des lignes pour la feuille de données
    * @param inbox
    * @param idx
    * @private
@@ -434,12 +548,22 @@ export class InboxService {
     ]
   }
 
+  /**
+   * Anonymisation de toutes les requêtes plus vieilles que le timestamp passé en argument
+   * @param timestamp
+   * @private
+   */
   private async _clearInboxes(timestamp: number) {
     await this._inboxesRepository.update({
       timestamp: LessThan(timestamp)
     }, {question: null, response: null});
   }
 
+  /**
+   * Anonymisation de tout les events RASA plus vieux que le timestamp passé en argument
+   * @param timestamp
+   * @private
+   */
   private async _clearEvents(timestamp: number) {
     await this._eventsRepository.update({
       timestamp: LessThan(timestamp),
