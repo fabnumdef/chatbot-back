@@ -14,7 +14,7 @@ import {
 import { InboxService } from "./inbox.service";
 import { ApiBearerAuth, ApiOperation, ApiTags } from "@nestjs/swagger";
 import { JwtGuard } from "@core/guards/jwt.guard";
-import { plainToClass } from "class-transformer";
+import { plainToInstance } from "class-transformer";
 import { Inbox } from "@core/entities/inbox.entity";
 import camelcaseKeys = require("camelcase-keys");
 import { InboxDto } from "@core/dto/inbox.dto";
@@ -37,7 +37,7 @@ export class InboxController {
   @ApiOperation({summary: 'Retourne toutes les requêtes'})
   async getInboxes(@Query() query: PaginationQueryDto): Promise<InboxDto[]> {
     const inboxes: Inbox[] = await this._inboxService.findAll();
-    return plainToClass(InboxDto, camelcaseKeys(inboxes, {deep: true}));
+    return plainToInstance(InboxDto, camelcaseKeys(inboxes, {deep: true}));
   }
 
   @Post('export')
@@ -65,7 +65,7 @@ export class InboxController {
     inboxes.items.map(i => {
       i.response = i.response ? JSON.parse(i.response) : i.response;
       i.intent_ranking = i.intent_ranking ? JSON.parse(i.intent_ranking) : i.intent_ranking;
-      plainToClass(InboxDto, camelcaseKeys(i, {deep: true}))
+      plainToInstance(InboxDto, camelcaseKeys(i, {deep: true}))
     });
     // @ts-ignore
     return camelcaseKeys(inboxes, {deep: true});
@@ -95,7 +95,7 @@ export class InboxController {
   async editInbox(@Param('inboxId') inboxId: string,
                   @Body() inboxEdit: InboxUpdateDto): Promise<InboxDto> {
     const inboxEntity = await this._inboxService.save(<Inbox> {...{id: parseInt(inboxId, 10)}, ...inboxEdit});
-    return plainToClass(InboxDto, camelcaseKeys(inboxEntity, {deep: true}));
+    return plainToInstance(InboxDto, camelcaseKeys(inboxEntity, {deep: true}));
   }
 
   @Delete(':inboxId')

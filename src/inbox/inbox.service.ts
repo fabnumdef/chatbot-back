@@ -60,7 +60,14 @@ export class InboxService {
   }
 
   findOne(inboxId) {
-    return this._inboxesRepository.findOne(inboxId, {relations: ['intent']});
+    return this._inboxesRepository.findOne({
+      where: {
+        id: inboxId
+      },
+      relations: {
+        intent: true
+      }
+    });
   }
 
   save(inbox: Inbox): Promise<Inbox> {
@@ -74,13 +81,13 @@ export class InboxService {
     );
   }
 
-  getInboxQueryBuilder(findManyOptions: FindManyOptions, filters?: InboxFilterDto) {
+  getInboxQueryBuilder(whereClause: string, filters?: InboxFilterDto) {
     const query = this._inboxesRepository
       .createQueryBuilder('inbox')
       .leftJoinAndSelect('inbox.intent', 'intent')
       .leftJoin('inbox.user', 'user')
       .addSelect(['user.email', 'user.first_name', 'user.last_name', 'user.role'])
-      .andWhere(!!findManyOptions.where ? findManyOptions.where.toString() : `'1'`)
+      .andWhere(whereClause ? whereClause.toString() : `'1'`)
       .orderBy({
         'inbox.timestamp': 'DESC'
       })

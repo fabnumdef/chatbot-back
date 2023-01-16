@@ -15,11 +15,6 @@ const config: TypeOrmModuleOptions = {
   // Run migrations automatically,
   // you can disable this if you prefer running migration manually.
   migrationsRun: true,
-  cli: {
-    // Location of migration should be inside src folder
-    // to be compiled into dist/ folder.
-    migrationsDir: "src/migrations"
-  },
 };
 
 if (!process.env.INTRADEF || process.env.INTRADEF == 'false') {

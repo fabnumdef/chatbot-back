@@ -89,7 +89,7 @@ export class IntentService {
     );
   }
 
-  getIntentQueryBuilder(findManyOptions: FindManyOptions, filters?: IntentFilterDto, getResponses?: boolean): SelectQueryBuilder<any> {
+  getIntentQueryBuilder(whereClause: string, filters?: IntentFilterDto, getResponses?: boolean): SelectQueryBuilder<any> {
     let query = this._intentsRepository.createQueryBuilder('intent')
       .where('intent.status IN (:...status)', {
         status: [
@@ -99,7 +99,7 @@ export class IntentService {
           IntentStatus.in_training
         ]
       })
-      .andWhere(!!findManyOptions.where ? findManyOptions.where.toString() : `'1'`)
+      .andWhere(whereClause ? whereClause.toString() : `'1'`)
 
     if (!getResponses) {
       query.addOrderBy(`case intent.status 
@@ -119,7 +119,7 @@ export class IntentService {
     return query;
   }
 
-  getFullIntentQueryBuilder(findManyOptions: FindManyOptions,
+  getFullIntentQueryBuilder(whereClause: string,
                             filters: IntentFilterDto,
                             id?: string,
                             getHidden?: boolean,
@@ -134,7 +134,7 @@ export class IntentService {
           IntentStatus.in_training
         ]
       })
-      .andWhere(findManyOptions && !!findManyOptions.where ? findManyOptions.where.toString() : `'1'`)
+      .andWhere(whereClause ? whereClause.toString() : `'1'`)
       .andWhere(id ? `intent.id = '${id}'` : `'1'`)
       .andWhere(getHidden ? `'1'` : `hidden = false`)
       .orderBy({
@@ -219,8 +219,8 @@ export class IntentService {
   }
 
   findIntentsMatching(query: string, intentsNumber = 1000, getResponses = false, excludeSt = false): Promise<Intent[]> {
-    const findManyOptions = PaginationUtils.setQuery(<PaginationQueryDto>{query: query}, Intent.getAttributesToSearch(), 'intent');
-    const queryBuilder = this.getIntentQueryBuilder({}, null, getResponses)
+    let intentWhereClause = PaginationUtils.setQuery(<PaginationQueryDto>{query: query}, Intent.getAttributesToSearch(), 'intent');
+    const queryBuilder = this.getIntentQueryBuilder(null, null, getResponses)
       .andWhere('hidden = False')
       .andWhere("intent.id NOT LIKE 'st\\_%' ESCAPE '\\'")
       .andWhere('intent.id NOT IN (:...excludedIds)', {excludedIds: AppConstants.General.excluded_Ids})
@@ -230,17 +230,17 @@ export class IntentService {
 
     if (getResponses) {
       const responseWhereClause = PaginationUtils.setQuery(<PaginationQueryDto>{query: query}, ['response'], 'responses');
-      findManyOptions.where = `${findManyOptions.where} or ${responseWhereClause.where}`;
+      intentWhereClause = intentWhereClause ? `${intentWhereClause} or ${responseWhereClause}` : responseWhereClause;
       return queryBuilder.leftJoinAndSelect('intent.responses', 'responses')
         .orderBy({
           'intent.main_question': 'ASC',
           'responses.id': 'ASC'
         })
-        .andWhere(!!findManyOptions.where ? findManyOptions.where.toString() : `'1'`)
+        .andWhere(intentWhereClause ? intentWhereClause.toString() : `'1'`)
         .getMany();
     }
     return queryBuilder
-      .andWhere(!!findManyOptions.where ? findManyOptions.where.toString() : `'1'`)
+      .andWhere(intentWhereClause ? intentWhereClause.toString() : `'1'`)
       .take(intentsNumber)
       .getMany();
   }
@@ -388,7 +388,7 @@ export class IntentService {
   }
 
   private async _updateNeedTraining() {
-    const needTraining = await this._intentsRepository.count({status: In([IntentStatus.to_deploy, IntentStatus.active_modified, IntentStatus.to_archive])});
+    const needTraining = await this._intentsRepository.count({where: {status: In([IntentStatus.to_deploy, IntentStatus.active_modified, IntentStatus.to_archive])}});
     await this._configService.update(<ChatbotConfig>{need_training: (needTraining > 0)});
   }
 

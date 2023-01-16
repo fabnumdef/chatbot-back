@@ -2,9 +2,9 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { User } from "@core/entities/user.entity";
+import { MailService } from "../shared/services/mail.service";
 import { UserModel } from "@core/models/user.model";
 import { UserRole } from "@core/enums/user-role.enum";
-import { MailService } from "../shared/services/mail.service";
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 

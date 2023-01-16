@@ -3,7 +3,7 @@ import { StatsService } from "./stats.service";
 import { StatsFilterDto } from "@core/dto/stats-filter.dto";
 import { ApiBearerAuth, ApiOperation, ApiTags } from "@nestjs/swagger";
 import { JwtGuard } from "@core/guards/jwt.guard";
-import { plainToClass } from "class-transformer";
+import { plainToInstance } from "class-transformer";
 import { StatsMostAskedQuestionsDto } from "@core/dto/stats-most-asked-questions.dto";
 import { StatsMostAskedCategoriesDto } from "@core/dto/stats-most-asked-categories.dto";
 import { forkJoin } from "rxjs";
@@ -31,7 +31,7 @@ export class StatsController {
   @ApiOperation({summary: 'Return the most relevant data'})
   async sendBestData(@Body() filters: StatsFilterDto) {
     const result = {};
-    result['mostAskedQuestions'] = plainToClass(StatsMostAskedQuestionsDto, await this._statsService.getMostAskedQuestions(filters));
+    result['mostAskedQuestions'] = plainToInstance(StatsMostAskedQuestionsDto, await this._statsService.getMostAskedQuestions(filters));
     return result;
   }
 
@@ -39,7 +39,7 @@ export class StatsController {
   @ApiOperation({ summary: 'Return the most relevant categories' })
   async sendBestCategories(@Body() filters: StatsFilterDto) {
     const result = {};
-    result['mostAskedCategories'] = plainToClass(StatsMostAskedCategoriesDto, await this._statsService.getMostAskedCategories(filters));
+    result['mostAskedCategories'] = plainToInstance(StatsMostAskedCategoriesDto, await this._statsService.getMostAskedCategories(filters));
     return result;
   }
 
@@ -67,7 +67,7 @@ export class StatsController {
   @ApiOperation({summary: 'Return the most relevant questions for FAQ'})
   async sendFaqMostQuestions(@Body() filters: StatsFilterDto) {
     const result = {};
-    result['mostAskedQuestions'] = plainToClass(StatsMostAskedQuestionsDto, await this._statsService.getFaqMostAskedQuestions(filters));
+    result['mostAskedQuestions'] = plainToInstance(StatsMostAskedQuestionsDto, await this._statsService.getFaqMostAskedQuestions(filters));
     return result;
   }
 
@@ -75,7 +75,7 @@ export class StatsController {
   @ApiOperation({summary: 'Return the most relevant categories for FAQ'})
   async sendFaqMostCategories(@Body() filters: StatsFilterDto) {
     const result = {};
-    result['mostAskedCategories'] = plainToClass(StatsMostAskedCategoriesDto, await this._statsService.getFaqMostAskedCategories(filters));
+    result['mostAskedCategories'] = plainToInstance(StatsMostAskedCategoriesDto, await this._statsService.getFaqMostAskedCategories(filters));
     return result;
   }
 
@@ -92,7 +92,7 @@ export class StatsController {
   @ApiOperation({summary: 'Return the most flaged relevant questions'})
   async sendFeedbackRelevantQuestions(@Body() filters: StatsFilterDto) {
     const result = {};
-    result['mostAskedQuestions'] = plainToClass(StatsMostAskedQuestionsDto, await this._statsService.getFeedbackQuestions(filters, FeedbackStatus.relevant));
+    result['mostAskedQuestions'] = plainToInstance(StatsMostAskedQuestionsDto, await this._statsService.getFeedbackQuestions(filters, FeedbackStatus.relevant));
     return result;
   }
 
@@ -100,7 +100,7 @@ export class StatsController {
   @ApiOperation({summary: 'Return the most flaged relevant categories'})
   async sendFeedbackRelevantCategories(@Body() filters: StatsFilterDto) {
     const result = {};
-    result['mostAskedCategories'] = plainToClass(StatsMostAskedQuestionsDto, await this._statsService.getFeedbackCategories(filters, FeedbackStatus.relevant));
+    result['mostAskedCategories'] = plainToInstance(StatsMostAskedQuestionsDto, await this._statsService.getFeedbackCategories(filters, FeedbackStatus.relevant));
     return result;
   }
 
@@ -108,7 +108,7 @@ export class StatsController {
   @ApiOperation({summary: 'Return the most flaged wrong questions'})
   async sendFeedbackWrongQuestions(@Body() filters: StatsFilterDto) {
     const result = {};
-    result['mostAskedQuestions'] = plainToClass(StatsMostAskedQuestionsDto, await this._statsService.getFeedbackQuestions(filters, FeedbackStatus.wrong));
+    result['mostAskedQuestions'] = plainToInstance(StatsMostAskedQuestionsDto, await this._statsService.getFeedbackQuestions(filters, FeedbackStatus.wrong));
     return result;
   }
 
@@ -116,7 +116,7 @@ export class StatsController {
   @ApiOperation({summary: 'Return the most flaged wrong categories'})
   async sendFeedbackWrongCategories(@Body() filters: StatsFilterDto) {
     const result = {};
-    result['mostAskedCategories'] = plainToClass(StatsMostAskedQuestionsDto, await this._statsService.getFeedbackCategories(filters, FeedbackStatus.wrong));
+    result['mostAskedCategories'] = plainToInstance(StatsMostAskedQuestionsDto, await this._statsService.getFeedbackCategories(filters, FeedbackStatus.wrong));
     return result;
   }
 
@@ -124,7 +124,7 @@ export class StatsController {
   @ApiOperation({summary: 'Return the most flaged off_topic questions'})
   async sendFeedbackOfftopicQuestions(@Body() filters: StatsFilterDto) {
     const result = {};
-    result['mostAskedQuestions'] = plainToClass(StatsMostAskedQuestionsDto, await this._statsService.getFeedbackQuestions(filters, FeedbackStatus.off_topic));
+    result['mostAskedQuestions'] = plainToInstance(StatsMostAskedQuestionsDto, await this._statsService.getFeedbackQuestions(filters, FeedbackStatus.off_topic));
     return result;
   }
 
@@ -132,7 +132,7 @@ export class StatsController {
   @ApiOperation({summary: 'Return the most flaged off_topic categories'})
   async sendFeedbackOfftopicCategories(@Body() filters: StatsFilterDto) {
     const result = {};
-    result['mostAskedCategories'] = plainToClass(StatsMostAskedQuestionsDto, await this._statsService.getFeedbackCategories(filters, FeedbackStatus.off_topic));
+    result['mostAskedCategories'] = plainToInstance(StatsMostAskedQuestionsDto, await this._statsService.getFeedbackCategories(filters, FeedbackStatus.off_topic));
     return result;
   }
 

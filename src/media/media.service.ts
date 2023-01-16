@@ -1,17 +1,17 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from "@nestjs/typeorm";
-import { DeleteResult, FindManyOptions, Repository } from "typeorm";
+import { Brackets, DeleteResult, Repository } from "typeorm";
 import { Media } from "@core/entities/media.entity";
 import * as path from "path";
 import * as fs from "fs";
-import * as mkdirp from "mkdirp";
+import { mkdirp } from 'mkdirp';
 import { PaginationQueryDto } from "@core/dto/pagination-query.dto";
 import { paginate, Pagination } from "nestjs-typeorm-paginate/index";
 import { PaginationUtils } from "@core/pagination-utils";
 import { ResponseService } from "../response/response.service";
 import { User } from "@core/entities/user.entity";
 import { MediaModel } from "@core/models/media.model";
-import { plainToClass } from "class-transformer";
+import { plainToInstance } from "class-transformer";
 import { IntentModel } from "@core/models/intent.model";
 import { ChatbotConfig } from "@core/entities/chatbot-config.entity";
 import { Response } from "express";
@@ -36,7 +36,7 @@ export class MediaService {
               @InjectRepository(Intent)
               private readonly _intentsRepository: Repository<Intent>,) {
     // Create folder if it does not exists
-    mkdirp(this._filesDirectory);
+    mkdirp(this._filesDirectory).then();
   }
 
   findAll(params = {}): Promise<Media[]> {
@@ -53,7 +53,7 @@ export class MediaService {
     return new Pagination(
       await Promise.all(results.items.map(async (item: MediaModel) => {
         const intents = await this._findIntentsByMedia(item);
-        item.intents = plainToClass(IntentModel, intents);
+        item.intents = plainToInstance(IntentModel, intents);
 
         return item;
       })),
@@ -62,9 +62,9 @@ export class MediaService {
     );
   }
 
-  getMediaQueryBuilder(findManyOptions: FindManyOptions) {
+  getMediaQueryBuilder(whereClause: string) {
     const query = this._mediasRepository.createQueryBuilder('media')
-      .where(!!findManyOptions.where ? findManyOptions.where.toString() : `'1'`)
+      .where(whereClause ? whereClause.toString() : `'1'`)
       .addOrderBy('media.created_at', 'DESC');
 
     return query;
@@ -220,13 +220,10 @@ export class MediaService {
   }
 
   private _findIntentsByMedia(media: MediaModel): Promise<Intent[]> {
-    return this._intentsRepository.find({
-      select: ['id', 'main_question', 'category'],
-      join: {
-        alias: 'intents',
-        innerJoin: {responses: 'intents.responses'}
-      },
-      where: qb => {
+    return this._intentsRepository.createQueryBuilder('intent')
+      .select(['id', 'main_question', 'category'])
+      .innerJoin("intent.responses", "responses")
+      .where(new Brackets((qb) => {
         qb.where(`responses.response like '%/${encodeURI(media.file)}%'`)
         qb.andWhere('intents.status IN (:...status)', {
           status: [
@@ -235,9 +232,8 @@ export class MediaService {
             IntentStatus.active_modified,
             IntentStatus.in_training
           ]
-        })
-      },
-    });
+        });
+      })).getRawMany();
   }
 
 }

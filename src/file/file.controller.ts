@@ -16,7 +16,7 @@ import { FileUploadDto } from "@core/dto/file-upload.dto";
 import { ImportFileDto } from "@core/dto/import-file.dto";
 import { ImportResponseDto } from "@core/dto/import-response.dto";
 import { TemplateFileCheckResumeDto } from "@core/dto/template-file-check-resume.dto";
-import { plainToClass } from "class-transformer";
+import { plainToInstance } from "class-transformer";
 import { FileHistoric } from "@core/entities/file.entity";
 import { FileHistoricDto } from "@core/dto/file-historic.dto";
 import camelcaseKeys = require("camelcase-keys");
@@ -106,6 +106,6 @@ export class FileController {
   @ApiOperation({summary: "Retourne l'historique de la base de connaissances"})
   async getHistory(): Promise<FileHistoricDto[]> {
     const files: FileHistoric[] = await this._fileService.findAll();
-    return plainToClass(FileHistoricDto, camelcaseKeys(files, {deep: true}));
+    return plainToInstance(FileHistoricDto, camelcaseKeys(files, {deep: true}));
   }
 }

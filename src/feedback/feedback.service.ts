@@ -20,8 +20,10 @@ export class FeedbackService {
 
   async createSafe(feedback: Feedback): Promise<Feedback> {
     const fEntity = await this._feedbacksRepository.findOne({
-      user_question: feedback.user_question,
-      timestamp: feedback.timestamp
+      where: {
+        user_question: feedback.user_question,
+        timestamp: feedback.timestamp
+      }
     });
     if (!fEntity) {
       return this._feedbacksRepository.save(feedback);
@@ -48,14 +50,14 @@ export class FeedbackService {
     }
 
     const toDelete = [];
-    for(let i = 0; i < feedbacks.length; i++) {
+    for (let i = 0; i < feedbacks.length; i++) {
       const feedback = feedbacks[i];
       const updated = await this._inboxService.updateInboxWithFeedback(feedback);
-      if(updated) {
+      if (updated) {
         toDelete.push(feedback.id);
       }
     }
-    if(toDelete && toDelete.length > 0) {
+    if (toDelete && toDelete.length > 0) {
       await this._feedbacksRepository.delete({
         id: In(toDelete)
       });

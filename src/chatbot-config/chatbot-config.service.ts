@@ -6,9 +6,9 @@ import { MediaService } from "../media/media.service";
 import { UpdateResult } from "typeorm/query-builder/result/UpdateResult";
 import * as path from "path";
 import * as fs from "fs";
-import * as mkdirp from "mkdirp";
+import { mkdirp } from 'mkdirp';
 import { Cron, CronExpression } from "@nestjs/schedule";
-import { plainToClass } from "class-transformer";
+import { plainToInstance } from "class-transformer";
 import snakecaseKeys = require("snakecase-keys");
 import { BotLogger } from "../logger/bot.logger";
 
@@ -25,7 +25,8 @@ export class ChatbotConfigService {
   }
 
   getChatbotConfig(options?: FindOneOptions): Promise<ChatbotConfig> {
-    return this._configRepository.findOne(1, options);
+    const fullOptions: FindOneOptions = {...{where: {id: 1}}, ...options};
+    return this._configRepository.findOne(fullOptions);
   }
 
   update(config: ChatbotConfig): Promise<UpdateResult> {
@@ -68,8 +69,8 @@ export class ChatbotConfigService {
     const webchatDir = path.resolve(__dirname, '../../../webchat');
 
     // Création du dossier si il n'existe pas
-    mkdirp(`${frontDir}/assets/icons`);
-    mkdirp(`${webchatDir}/assets/icons`);
+    await mkdirp(`${frontDir}/assets/icons`);
+    await mkdirp(`${webchatDir}/assets/icons`);
 
     const botConfig = await this.getChatbotConfig();
     if (!botConfig) {
@@ -117,6 +118,6 @@ export class ChatbotConfigService {
 
   updateApiKey(): Promise<UpdateResult> {
     const newApiKey = crypto.randomBytes(12).toString('hex');
-    return this.update(plainToClass(ChatbotConfig, snakecaseKeys({api_key: newApiKey})));
+    return this.update(plainToInstance(ChatbotConfig, snakecaseKeys({api_key: newApiKey})));
   }
 }

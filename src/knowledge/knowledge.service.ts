@@ -26,8 +26,13 @@ export class KnowledgeService {
   }
 
   async createSafe(knowledge: Knowledge): Promise<Knowledge> {
-    const kEntity = await this._knowledgesRepository.findOne({intent: knowledge.intent, question: knowledge.question});
-    if(!kEntity) {
+    const kEntity = await this._knowledgesRepository.findOne({
+      where: {
+        intent: knowledge.intent,
+        question: knowledge.question
+      }
+    });
+    if (!kEntity) {
       return this._knowledgesRepository.save(knowledge);
     }
     return knowledge;

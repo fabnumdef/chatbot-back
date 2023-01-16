@@ -11,7 +11,7 @@ import { ChatbotConfigService } from "../chatbot-config/chatbot-config.service";
 import { ChatbotConfig } from "@core/entities/chatbot-config.entity";
 import { In } from "typeorm";
 import { IntentStatus } from "@core/enums/intent-status.enum";
-import * as mkdirp from "mkdirp";
+import { mkdirp } from 'mkdirp';
 import { Cron, CronExpression } from "@nestjs/schedule";
 import { FileService } from "../file/file.service";
 import { RasaRuleModel } from "@core/models/rasa-rule.model";
@@ -30,7 +30,7 @@ export class RasaService {
               private readonly _configService: ChatbotConfigService,
               private _fileService: FileService) {
     // Create folder if it does not exists
-    mkdirp(`${this._chatbotTemplateDir}/data`);
+    mkdirp(`${this._chatbotTemplateDir}/data`).then();
   }
 
   @Cron(CronExpression.EVERY_10_SECONDS)

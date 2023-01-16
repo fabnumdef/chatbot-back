@@ -15,7 +15,7 @@ import { ApiBearerAuth, ApiOperation, ApiTags } from "@nestjs/swagger";
 import { JwtGuard } from "@core/guards/jwt.guard";
 import { IntentService } from "./intent.service";
 import { IntentDto } from "@core/dto/intent.dto";
-import { plainToClass } from "class-transformer";
+import { plainToInstance } from "class-transformer";
 import { Intent } from "@core/entities/intent.entity";
 import { UpdateResult } from "typeorm/query-builder/result/UpdateResult";
 import { PaginationQueryDto } from "@core/dto/pagination-query.dto";
@@ -38,14 +38,14 @@ export class IntentController {
   @ApiOperation({summary: 'Return all intents'})
   async getIntents(): Promise<IntentDto[]> {
     const intents: Intent[] = await this._intentService.findFullIntents();
-    return plainToClass(IntentDto, camelcaseKeys(intents, {deep: true}));
+    return plainToInstance(IntentDto, camelcaseKeys(intents, {deep: true}));
   }
 
   @Get(':intentId')
   @ApiOperation({summary: 'Return specific intent'})
   async getIntent(@Param('intentId') intentId: string): Promise<IntentDto> {
     const intent: Intent = await this._intentService.findOne(intentId);
-    return plainToClass(IntentDto, camelcaseKeys(intent, {deep: true}));
+    return plainToInstance(IntentDto, camelcaseKeys(intent, {deep: true}));
   }
 
   @Get('check/:intentId')
@@ -59,7 +59,7 @@ export class IntentController {
   async getIntentsPagination(@Query() options: PaginationQueryDto,
                              @Body() filters: IntentFilterDto): Promise<IntentDto[]> {
     const intents: Pagination<IntentModel> = await this._intentService.paginate(options, filters);
-    intents.items.filter(i => !!i).map(i => plainToClass(IntentDto, camelcaseKeys(i, {deep: true})));
+    intents.items.filter(i => !!i).map(i => plainToInstance(IntentDto, camelcaseKeys(i, {deep: true})));
     // @ts-ignore
     return camelcaseKeys(intents, {deep: true});
   }
@@ -75,7 +75,7 @@ export class IntentController {
       throw new HttpException(`Impossible de créer cette connaissance, l'identifiant existe déjà.`, HttpStatus.INTERNAL_SERVER_ERROR);
     }
     intent = await this._intentService.createEdit(intent, null);
-    return plainToClass(IntentDto, camelcaseKeys(intent, {deep: true}));
+    return plainToInstance(IntentDto, camelcaseKeys(intent, {deep: true}));
   }
 
   @Put(':id')
@@ -84,7 +84,7 @@ export class IntentController {
                    @Body() intentDto: IntentDto): Promise<IntentDto> {
     let intent = this._formatIntent(intentDto);
     intent = await this._intentService.createEdit(intent, intent.id != intentId ? intentId : null);
-    return plainToClass(IntentDto, camelcaseKeys(intent, {deep: true}));
+    return plainToInstance(IntentDto, camelcaseKeys(intent, {deep: true}));
   }
 
   @Delete(':intentId')
@@ -98,11 +98,11 @@ export class IntentController {
   async getIntentsTree(@Query() options: PaginationQueryDto,
                        @Body() filters: IntentFilterDto): Promise<IntentDto[]> {
     const intents: Intent[] = await this._intentService.getFullTree(options, filters);
-    return plainToClass(IntentDto, camelcaseKeys(intents, {deep: true}));
+    return plainToInstance(IntentDto, camelcaseKeys(intents, {deep: true}));
   }
 
   private _formatIntent(intentDto: IntentDto): Intent {
-    let intent: Intent = plainToClass(Intent, snakecaseKeys(intentDto));
+    let intent: Intent = plainToInstance(Intent, snakecaseKeys(intentDto));
     if (intent.responses.findIndex(r => !r.id) >= 0) {
       intent.responses.map(r => {
         delete r.id;

@@ -16,7 +16,7 @@ import { JwtGuard } from "@core/guards/jwt.guard";
 import { MediaService } from "./media.service";
 import { Media } from "@core/entities/media.entity";
 import { MediaDto } from "@core/dto/media.dto";
-import { plainToClass } from "class-transformer";
+import { plainToInstance } from "class-transformer";
 import camelcaseKeys = require("camelcase-keys");
 import { FileInterceptor, FilesInterceptor } from "@nestjs/platform-express";
 import { FileUploadDto } from "@core/dto/file-upload.dto";
@@ -39,7 +39,7 @@ export class MediaController {
   @ApiOperation({summary: 'Returne tout les médias'})
   async getMedias(): Promise<MediaDto[]> {
     const medias: Media[] = await this._mediaService.findAll();
-    return plainToClass(MediaDto, camelcaseKeys(medias, {deep: true}));
+    return plainToInstance(MediaDto, camelcaseKeys(medias, {deep: true}));
   }
 
   @Get('export')
@@ -52,7 +52,7 @@ export class MediaController {
   @ApiOperation({summary: 'Retourne les médias paginés'})
   async getMediasPagination(@Query() options: PaginationQueryDto): Promise<Pagination<MediaDto>> {
     const medias: Pagination<MediaModel> = await this._mediaService.paginate(options);
-    medias.items.map(i => plainToClass(MediaDto, camelcaseKeys(i, {deep: true})));
+    medias.items.map(i => plainToInstance(MediaDto, camelcaseKeys(i, {deep: true})));
     // @ts-ignore
     return camelcaseKeys(medias, {deep: true});
   }
@@ -81,7 +81,7 @@ export class MediaController {
                 @Req() req): Promise<MediaDto[]> {
     const userRequest: User = req.user;
     const medias = await Promise.all(files.map(file => this._mediaService.create(file, userRequest)));
-    return plainToClass(MediaDto, camelcaseKeys(medias, {deep: true}));
+    return plainToInstance(MediaDto, camelcaseKeys(medias, {deep: true}));
   }
 
   @Put(':id')
@@ -108,7 +108,7 @@ export class MediaController {
                      @Req() req): Promise<MediaDto> {
     const userRequest: User = req.user;
     const media = await this._mediaService.update(parseInt(mediaId), file, userRequest);
-    return plainToClass(MediaDto, camelcaseKeys(media, {deep: true}));
+    return plainToInstance(MediaDto, camelcaseKeys(media, {deep: true}));
   }
 
   @Put(':id/edit')
@@ -121,7 +121,7 @@ export class MediaController {
                   @Body() file: { file: string }): Promise<MediaDto> {
     const fileName = encodeURI(file.file.trim());
     const media = await this._mediaService.edit(parseInt(mediaId), fileName);
-    return plainToClass(MediaDto, camelcaseKeys(media, {deep: true}));
+    return plainToInstance(MediaDto, camelcaseKeys(media, {deep: true}));
   }
 
   @Delete(':id')

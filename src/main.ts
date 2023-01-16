@@ -1,11 +1,11 @@
 import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 import { ValidationPipe } from "@nestjs/common";
 import * as compression from 'compression';
-import * as rateLimit from 'express-rate-limit';
+import rateLimit from 'express-rate-limit';
 import { urlencoded, json } from 'express';
-import { BotLogger } from "./logger/bot.logger";
+import { AppModule } from "./app.module.js";
+import { BotLogger } from "./logger/bot.logger.js";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);

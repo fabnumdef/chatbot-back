@@ -9,7 +9,7 @@ import { IntentStatus } from "@core/enums/intent-status.enum";
 import { Intent } from "@core/entities/intent.entity";
 import { Knowledge } from "@core/entities/knowledge.entity";
 import { KnowledgeService } from "../knowledge/knowledge.service";
-import { plainToClass } from "class-transformer";
+import { plainToInstance } from "class-transformer";
 import { Response } from "@core/entities/response.entity";
 import { ResponseService } from "../response/response.service";
 import { ResponseType, ResponseType_Fr, ResponseType_ReverseFr } from "@core/enums/response-type.enum";
@@ -19,7 +19,7 @@ import { In, Not, Repository } from "typeorm";
 import * as path from "path";
 import { InjectRepository } from "@nestjs/typeorm";
 import { FileHistoric } from "@core/entities/file.entity";
-import * as mkdirp from "mkdirp";
+import { mkdirp } from 'mkdirp';
 import snakecaseKeys = require("snakecase-keys");
 import { Cron, CronExpression } from "@nestjs/schedule";
 import * as moment from 'moment';
@@ -43,7 +43,7 @@ export class FileService {
               @InjectRepository(FileHistoric)
               private readonly _fileHistoricRepository: Repository<FileHistoric>) {
     // Création du dossier si il n'existe pas
-    mkdirp(this._historicDir);
+    mkdirp(this._historicDir).then();
   }
 
   checkFile(file): TemplateFileCheckResumeDto {
@@ -241,7 +241,7 @@ export class FileService {
         });
       }
     });
-    const intentsSaved: Intent[] = await this._intentService.saveMany(plainToClass(IntentModel, snakecaseKeys(intents)));
+    const intentsSaved: Intent[] = await this._intentService.saveMany(plainToInstance(IntentModel, snakecaseKeys(intents)));
 
     if (importFileDto.deleteIntents) {
       this._intentService.updateManyByCondition({id: Not(In([...intentsSaved.map(i => i.id), ...AppConstants.General.excluded_Ids]))},

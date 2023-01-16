@@ -5,25 +5,25 @@ import * as escape from "pg-escape";
 export class PaginationUtils {
   static setQuery(pagination: PaginationQueryDto,
                   attributes: string[],
-                  entity?: string): any {
-    const options: FindManyOptions = {};
+                  entity?: string): string {
+    let whereClause = null;
 
     let queries = pagination && pagination.query ? pagination.query.trim().split(' ') : null;
     if (!!queries && queries.length > 0) {
       queries = queries.map(q => {
         return `%${q}%`;
       });
-      options.where = '((';
+      whereClause = '((';
       attributes.forEach((a, idx) => {
-        options.where += idx > 0 ? ') or (' : '';
+        whereClause += idx > 0 ? ') or (' : '';
         queries.forEach((q, idxQuery) => {
-          options.where += idxQuery > 0 ? ' and ' : '';
-          options.where += escape(`upper(${entity ? entity + '.' : ''}%I) like %L`, a, q.toUpperCase());
+          whereClause += idxQuery > 0 ? ' and ' : '';
+          whereClause += escape(`upper(${entity ? entity + '.' : ''}%I) like %L`, a, q.toUpperCase());
         });
       });
-      options.where += '))';
+      whereClause += '))';
     }
 
-    return options;
+    return whereClause;
   }
 }

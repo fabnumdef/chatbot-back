@@ -2,7 +2,7 @@ import { Controller, Post, Body, Param } from '@nestjs/common';
 import { ApiOperation, ApiTags } from "@nestjs/swagger";
 import { AuthService } from "./auth.service";
 import { LoginUserDto } from "@core/dto/login-user.dto";
-import { plainToClass } from "class-transformer";
+import { plainToInstance } from "class-transformer";
 import camelcaseKeys = require("camelcase-keys");
 import { AuthResponseDto } from "@core/dto/auth-response.dto";
 import { ResetPasswordDto } from "@core/dto/reset-password.dto";
@@ -28,6 +28,6 @@ export class AuthController {
   @ApiOperation({summary: 'Retourne le token jwt'})
   async login(@Body() user: LoginUserDto): Promise<AuthResponseDto> {
     const login = await this._authService.login(user);
-    return plainToClass(AuthResponseDto, camelcaseKeys(login, {deep: true}));
+    return plainToInstance(AuthResponseDto, camelcaseKeys(login, {deep: true}));
   }
 }

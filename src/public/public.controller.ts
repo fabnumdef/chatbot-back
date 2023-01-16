@@ -2,7 +2,7 @@ import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { ChatbotConfigService } from "../chatbot-config/chatbot-config.service";
 import { ApiOperation, ApiTags } from "@nestjs/swagger";
 import { ChatbotConfig } from "@core/entities/chatbot-config.entity";
-import { plainToClass } from "class-transformer";
+import { plainToInstance } from "class-transformer";
 import camelcaseKeys = require("camelcase-keys");
 import { PublicConfigDto } from "@core/dto/public-config.dto";
 import { IntentDto } from "@core/dto/intent.dto";
@@ -33,7 +33,7 @@ export class PublicController {
           'show_feedback', 'block_type_text', 'show_reboot_btn', 'delay_between_messages', 'is_tree', 'show_faq', 'chat_btn', 'faq_btn']
       }
       );
-    return config ? plainToClass(PublicConfigDto, camelcaseKeys(config, {deep: true})) : null;
+    return config ? plainToInstance(PublicConfigDto, camelcaseKeys(config, {deep: true})) : null;
   }
 
   @Get('/intents')
@@ -42,14 +42,14 @@ export class PublicController {
                    @Query('intentsNumber') intentsNumber: number,
                    @Query('getResponses') getResponses: boolean): Promise<IntentDto[]> {
     const intents: Intent[] = await this._intentService.findIntentsMatching(decodeURIComponent(query), intentsNumber, getResponses);
-    return plainToClass(IntentDto, camelcaseKeys(intents, {deep: true}));
+    return plainToInstance(IntentDto, camelcaseKeys(intents, {deep: true}));
   }
 
   @Post('/intents')
   @ApiOperation({summary: 'Return the intents main questions'})
   async getIntentsName(@Body() intentsId: string[]): Promise<IntentDto[]> {
     const intents: Intent[] = await this._intentService.findIntentsMainQuestions(intentsId);
-    return plainToClass(IntentDto, camelcaseKeys(intents, {deep: true}));
+    return plainToInstance(IntentDto, camelcaseKeys(intents, {deep: true}));
   }
 
   @Post('/faq')
@@ -79,13 +79,13 @@ export class PublicController {
                     @Param('category') category: string): Promise<IntentDto[]> {
     await this._faqService.searchCategory(options.senderId, category);
     const intents: Intent[] = await this._intentService.findByCategory(decodeURIComponent(category));
-    return plainToClass(IntentDto, camelcaseKeys(intents, {deep: true}));
+    return plainToInstance(IntentDto, camelcaseKeys(intents, {deep: true}));
   }
 
   @Post('/feedback')
   @ApiOperation({summary: 'Set a feedback from a chatbot response'})
   async createFeedback(@Body() feedbackDto: FeedbackDto): Promise<FeedbackDto> {
-    const feedback = await this._feedbackService.createSafe(plainToClass(Feedback, snakecaseKeys(feedbackDto)));
-    return plainToClass(FeedbackDto, camelcaseKeys(feedback, {deep: true}));
+    const feedback = await this._feedbackService.createSafe(plainToInstance(Feedback, snakecaseKeys(feedbackDto)));
+    return plainToInstance(FeedbackDto, camelcaseKeys(feedback, {deep: true}));
   }
 }
