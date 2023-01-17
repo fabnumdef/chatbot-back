@@ -1,6 +1,6 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from "@nestjs/typeorm";
-import { Brackets, DeleteResult, Repository } from "typeorm";
+import { Brackets, DeleteResult, FindOneOptions, Repository } from "typeorm";
 import { Media } from "@core/entities/media.entity";
 import * as path from "path";
 import * as fs from "fs";
@@ -94,7 +94,7 @@ export class MediaService {
    * Récupération d'un média selon une clause
    * @param param
    */
-  findOneWithParam(param: any): Promise<Media> {
+  findOneWithParam(param: FindOneOptions): Promise<Media> {
     return this._mediasRepository.findOne(param);
   }
 
@@ -105,7 +105,9 @@ export class MediaService {
    */
   async create(file: any, user: User): Promise<Media> {
     const fileName = await this.storeFile(file, true);
-    const existFile = await this.findOneWithParam({file: fileName});
+    const existFile = await this.findOneWithParam({
+      where: {file: fileName}
+    });
     const stats = fs.statSync(path.resolve(this._filesDirectory, fileName));
     const fileToSave: Media = {
       id: existFile ? existFile.id : null,
@@ -128,7 +130,9 @@ export class MediaService {
     if (fileName.length > 255) {
       throw new HttpException('Le nom du fichier ne doit pas dépasser 255 caractères.', HttpStatus.INTERNAL_SERVER_ERROR);
     }
-    const fileExists = await this.findOneWithParam({file: fileName});
+    const fileExists = await this.findOneWithParam({
+      where: {file: fileName}
+    });
     if (fileExists && fileExists.id !== mediaId) {
       throw new HttpException('Un média avec le même nom existe déjà.', HttpStatus.INTERNAL_SERVER_ERROR);
     }
@@ -169,7 +173,9 @@ export class MediaService {
     if (fileName.length > 255) {
       throw new HttpException('Le nom du fichier ne doit pas dépasser 255 caractères.', HttpStatus.INTERNAL_SERVER_ERROR);
     }
-    const fileExists = await this.findOneWithParam({file: fileName});
+    const fileExists = await this.findOneWithParam({
+      where: {file: fileName}
+    });
     if (fileExists && fileExists.id !== mediaId) {
       throw new HttpException('Un média avec le même nom existe déjà.', HttpStatus.INTERNAL_SERVER_ERROR);
     }
@@ -222,7 +228,9 @@ export class MediaService {
     if (fileName.length > 255) {
       throw new HttpException('Le nom du fichier ne doit pas dépasser 255 caractères.', HttpStatus.INTERNAL_SERVER_ERROR);
     }
-    const fileExists = await this.findOneWithParam({file: fileName});
+    const fileExists = await this.findOneWithParam({
+      where: {file: fileName}
+    });
     if (fileExists && !replaceIfExists) {
       throw new HttpException('Un média avec le même nom existe déjà.', HttpStatus.INTERNAL_SERVER_ERROR);
     }

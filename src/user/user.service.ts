@@ -1,6 +1,6 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
+import { FindOneOptions, Repository } from "typeorm";
 import { User } from "@core/entities/user.entity";
 import { MailService } from "../shared/services/mail.service";
 import { UserModel } from "@core/models/user.model";
@@ -47,7 +47,7 @@ export class UserService {
    * Récupération d'un seul utilisateur avec une clause
    * @param param
    */
-  findOneWithParam(param: any): Promise<User> {
+  findOneWithParam(param: FindOneOptions): Promise<User> {
     return this._usersRepository.findOne(param);
   }
 
@@ -106,7 +106,9 @@ export class UserService {
    */
   async generateAdminUser(user: UserModel): Promise<UserModel> {
     const adminExists = await this.findOneWithParam({
-      role: UserRole.admin
+      where: {
+        role: UserRole.admin
+      }
     });
     if (adminExists) {
       throw new HttpException('Un administrateur existe déjà.', HttpStatus.FORBIDDEN);
