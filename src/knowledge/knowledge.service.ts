@@ -16,8 +16,8 @@ export class KnowledgeService {
    * Retourne les questions similaires d'une connaissance
    * @param intent
    */
-  findByIntent(intent: IntentModel): Promise<Knowledge[]> {
-    return this._knowledgesRepository.find({where: {'intent': intent}, order: {'id': 'ASC'}});
+  async findByIntent(intent: IntentModel): Promise<Knowledge[]> {
+    return this._knowledgesRepository.find({where: {intent: {id: intent.id}}, order: {id: 'ASC'}});
   }
 
   // /**

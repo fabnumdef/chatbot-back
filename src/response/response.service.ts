@@ -22,7 +22,7 @@ export class ResponseService {
    * @param intent
    */
   findByIntent(intent: IntentModel): Promise<Response[]> {
-    return this._responsesRepository.find({where: {'intent': intent}, order: {'id': 'ASC'}});
+    return this._responsesRepository.find({where: {intent: {id: intent.id}}, order: {id: 'ASC'}});
   }
 
   /**

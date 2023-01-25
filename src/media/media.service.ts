@@ -305,11 +305,11 @@ export class MediaService {
    */
   private _findIntentsByMedia(media: MediaModel): Promise<Intent[]> {
     return this._intentsRepository.createQueryBuilder('intent')
-      .select(['id', 'main_question', 'category'])
+      .select(['intent.id', 'main_question', 'category'])
       .innerJoin("intent.responses", "responses")
       .where(new Brackets((qb) => {
-        qb.where(`responses.response like '%/${encodeURI(media.file)}%'`)
-        qb.andWhere('intents.status IN (:...status)', {
+        qb.where(`responses.response like '%/${media.file.replace(`'`, `''`)}%'`)
+        qb.andWhere('intent.status IN (:...status)', {
           status: [
             IntentStatus.to_deploy,
             IntentStatus.active,
@@ -317,7 +317,7 @@ export class MediaService {
             IntentStatus.in_training
           ]
         });
-      })).getRawMany();
+      })).getMany();
   }
 
 }

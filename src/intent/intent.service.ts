@@ -92,7 +92,7 @@ export class IntentService {
           this._responseService.findByIntent(item),
           this._findPreviousIntents(item),
           this._findNextIntents(item)
-        ])
+        ]);
         // @ts-ignore
         item.knowledges = knowledges;
         // @ts-ignore
