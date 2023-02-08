@@ -201,7 +201,7 @@ export class RasaService {
     intent.responses.forEach((response: Response, index: number) => {
       switch (response.response_type) {
         case ResponseType.text:
-          responses[`utter_${intent.id}_${index}`] = [{text: response.response}];
+          responses[`utter_${intent.id}_${index}`] = [{text: this._cleanStringForYaml(response.response, false)}];
           break;
         case ResponseType.image:
           responses[`utter_${intent.id}_${index - 1}`] ? responses[`utter_${intent.id}_${index - 1}`][0].image = response.response : null;
@@ -244,14 +244,19 @@ export class RasaService {
    * @param s
    * @private
    */
-  private _cleanStringForYaml(s: string): string {
-    const stringToReturn = s?.replace(/([\uE000-\uF8FF]|\uD83C[\uDF00-\uDFFF]|\uD83D[\uDC00-\uDDFF])/g, '')
-      .replace(/\r?\n|\r|\s/g, ' ')
-      .replace(/[\/\\"'`]/g, '')
-      .trim();
+  private _cleanStringForYaml(s: string, forKnowledge = true): string {
+    let stringToReturn = s?.trim()
+    if (forKnowledge) {
+      stringToReturn = stringToReturn
+        .replace(/([\uE000-\uF8FF]|\uD83C[\uDF00-\uDFFF]|\uD83D[\uDC00-\uDDFF])/g, '')
+        .replace(/\r?\n|\r|\s/g, ' ')
+        .replace(/[\/\\"'`]/g, '')
+    } else {
+      stringToReturn = stringToReturn.replace(/(\r\n|\r|\n){2,}/g, '\n');
+    }
     if (!stringToReturn) {
       return '';
     }
-    return `- ${stringToReturn}\n`
+    return forKnowledge ? `- ${stringToReturn}\n` : `${stringToReturn}`;
   }
 }
