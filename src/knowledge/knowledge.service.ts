@@ -59,10 +59,12 @@ export class KnowledgeService {
    */
   async findOrSave(knowledges: Knowledge[]): Promise<Knowledge[]> {
     // On ne sait pas si le knowledge existe, pour éviter de faire péter la constraint unique
-    const knowledgesEntity: Knowledge[] = [];
-    await knowledges.forEach(async k => {
-      knowledgesEntity.push(await this.createSafe(k));
+    let knowledgesEntity: Knowledge[] = [];
+    const promises = [];
+    await knowledges.forEach(k => {
+      promises.push(this.createSafe(k));
     });
+    knowledgesEntity = await Promise.all(promises);
     return knowledgesEntity;
   }
 

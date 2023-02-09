@@ -61,6 +61,7 @@ export class FileService {
       worksheet = workbook.Sheets[workbook.SheetNames[0]];
       templateFile = this._convertExcelToJson(worksheet);
     } catch (error) {
+      this._logger.error('Erreur lors de la lecture du fichier', error);
       throw new HttpException('Le fichier fournit ne peut pas être lu.', HttpStatus.INTERNAL_SERVER_ERROR);
     }
     const templateFileCheckResume = new TemplateFileCheckResumeDto();
@@ -172,7 +173,7 @@ export class FileService {
       t.response_type = ResponseType[ResponseType_ReverseFr[t.response_type]];
       t.expires_at = t.expires_at ? moment(t.expires_at, 'DD/MM/YYYY') : null;
       // Formatage des sauts de lignes Windows pour éviter de les doubler sous linux
-      t.response = t.response.replace(new RegExp('\r\r\n', 'g'), '\r\n');
+      t.response = t.response.replace(/(\r\n|\r|\n){2,}/g, '\n');
       return t;
     });
   }
@@ -267,7 +268,7 @@ export class FileService {
           id: t.id,
           category: t.category,
           main_question: t.main_question,
-          status: IntentStatus.to_deploy,
+          status: IntentStatus.active,
           expires_at: t.expires_at ? t.expires_at.toDate() : null,
           hidden: false
         });
@@ -275,12 +276,6 @@ export class FileService {
     });
     // Sauvegarde des connaissances
     const intentsSaved: Intent[] = await this._intentService.saveMany(plainToInstance(IntentModel, snakecaseKeys(intents)));
-
-    // Option pour supprimer les anciennes connaissances lors de l'import d'un fichier
-    if (importFileDto.deleteIntents) {
-      this._intentService.updateManyByCondition({id: Not(In([...intentsSaved.map(i => i.id), ...AppConstants.General.excluded_Ids]))},
-        {status: IntentStatus.to_archive});
-    }
 
     // Mise en forme des réponses et des questions similaires
     const knowledges: Knowledge[] = [];
@@ -312,6 +307,14 @@ export class FileService {
     // Suppressions des anciennes réponses puis sauvegarde des nouvelles réponses
     await Promise.all(intentsSaved.map(i => this._responseService.deleteByIntent(i)));
     const responsesSaved = await this._responseService.saveMany(responses);
+
+    // Option pour supprimer les anciennes connaissances lors de l'import d'un fichier
+    if (importFileDto.deleteIntents) {
+      await this._intentService.updateManyByCondition({id: Not(In([...intentsSaved.map(i => i.id), ...AppConstants.General.excluded_Ids]))},
+        {status: IntentStatus.to_archive});
+    }
+    await this._intentService.updateManyByCondition({id: In([...intents.map(i => i.id)])},
+      {status: IntentStatus.to_deploy});
 
     // Objet de retour avec le récapitualtif de ce qui a été sauvegardé
     const response = new ImportResponseDto();
