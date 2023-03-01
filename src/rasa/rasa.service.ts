@@ -81,17 +81,17 @@ export class RasaService {
     await this._intentService.updateManyByCondition({status: In([IntentStatus.to_deploy, IntentStatus.active_modified])}, {status: IntentStatus.in_training});
     try {
       this._logger.log(`TRAINING RASA`);
-      await execShellCommand(`${!!process.env.INTRADEF ? `python${process.env.PYTHON_VERSION} -m` : ''} rasa train --finetune --epoch-fraction 0.2 --num-threads 8`, this._chatbotTemplateDir).then(async (res: string) => {
+      await execShellCommand(`${!process.env.INTRADEF || process.env.INTRADEF === 'false' ? '' : `python${process.env.PYTHON_VERSION} -m`} rasa train --finetune --epoch-fraction 0.2 --num-threads 8`, this._chatbotTemplateDir).then(async (res: string) => {
         this._logger.log(res);
         // Si le modèle ne peut pas être finetuné on le ré-entraine complétement
         if (res.includes('can not be finetuned') || res.includes('No model for finetuning') || res.includes('Cannot finetune')) {
-          await execShellCommand(`${!!process.env.INTRADEF ? `python${process.env.PYTHON_VERSION} -m` : ''} rasa train --num-threads 8`, this._chatbotTemplateDir).then(res => {
+          await execShellCommand(`${!process.env.INTRADEF || process.env.INTRADEF === 'false' ? '' : `python${process.env.PYTHON_VERSION} -m`} rasa train --num-threads 8`, this._chatbotTemplateDir).then(res => {
             this._logger.log(res);
           });
         }
       });
       this._logger.log('DISABLE TELEMETRY');
-      await execShellCommand(`${!!process.env.INTRADEF ? `python${process.env.PYTHON_VERSION} -m` : ''} rasa telemetry disable`, this._chatbotTemplateDir).then(res => {
+      await execShellCommand(`${!process.env.INTRADEF || process.env.INTRADEF === 'false' ? '' : `python${process.env.PYTHON_VERSION} -m`} rasa telemetry disable`, this._chatbotTemplateDir).then(res => {
         this._logger.log(res);
       });
       if (!process.env.INTRADEF || process.env.INTRADEF === 'false') {
