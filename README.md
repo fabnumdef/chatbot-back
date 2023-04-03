@@ -16,15 +16,15 @@ C’est également une aide pratique pour la constitution d’une base documenta
 
 ### Architecture
 
-Backend sous [NestJS 6](https://docs.nestjs.com/), framework [NodeJS](http://nodejs.org).
+Backend sous [NestJS 9](https://docs.nestjs.com/), framework [NodeJS](http://nodejs.org).
 
-| Repo Git           | URL                                                   | Technologies | Description                        |
-| ------------------ | ----------------------------------------------------- |--------------|------------------------------------|
-| Fabrique - Front   | https://github.com/fabnumdef/fabrique-chatbot-front   | Angular 10   | Front du site de l'Usine           |
-| Fabrique - Back    | https://github.com/fabnumdef/fabrique-chatbot-back    | NestJS 6     | Back du site de l'Usine            |
-| Chatbot - Front    | https://github.com/fabnumdef/chatbot-front            | Angular 13   | Front des Backoffices des chatbots |
-| Chatbot - Back     | https://github.com/fabnumdef/chatbot-back             | NestJS 8     | Back des Backoffices des chatbots  |
-| Chatbot - Template | https://github.com/fabnumdef/chatbot-template         | RASA 1.10    | Template RASA des chatbots         |
+| Repo Git           | URL                                                 | Technologies | Description                        |
+|--------------------|-----------------------------------------------------|--------------|------------------------------------|
+| Fabrique - Front   | https://github.com/fabnumdef/fabrique-chatbot-front | Angular 15   | Front du site de l'Usine           |
+| Fabrique - Back    | https://github.com/fabnumdef/fabrique-chatbot-back  | NestJS 9     | Back du site de l'Usine            |
+| Chatbot - Front    | https://github.com/fabnumdef/chatbot-front          | Angular 15   | Front des Backoffices des chatbots |
+| Chatbot - Back     | https://github.com/fabnumdef/chatbot-back           | NestJS 9     | Back des Backoffices des chatbots  |
+| Chatbot - Template | https://github.com/fabnumdef/chatbot-template       | RASA 3.4     | Template RASA des chatbots         |
 
 ### Utilisation
 
