@@ -41,13 +41,13 @@ export class KnowledgeService {
    * @param knowledge
    */
   async createSafe(knowledge: Knowledge): Promise<Knowledge> {
-    const kEntity = await this._knowledgesRepository.findOne({
-      where: {
+    const query = this._knowledgesRepository.createQueryBuilder('knowledge')
+      .select()
+      .where({
         intent: knowledge.intent,
         question: knowledge.question
-      }
-    });
-    if (!kEntity) {
+      });
+    if (!(await query.getOne())) {
       return this._knowledgesRepository.save(knowledge);
     }
     return knowledge;
