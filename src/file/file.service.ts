@@ -82,7 +82,12 @@ export class FileService {
     const worksheet: WorkSheet = workbook.Sheets[workbook.SheetNames[0]];
     const templateFile: TemplateFileDto[] = this._convertExcelToJson(worksheet);
     try {
-      return await this._templateFileToDb(templateFile, importFileDto);
+      this._logger.log('Importing File');
+      await this._configService.update(<ChatbotConfig>{is_blocked: true});
+      const toReturn = await this._templateFileToDb(templateFile, importFileDto);
+      await this._configService.update(<ChatbotConfig>{is_blocked: false});
+      this._logger.log('Finishing importing File');
+      return toReturn;
     } catch (e) {
       await this._configService.update(<ChatbotConfig>{is_blocked: false});
     }
@@ -263,7 +268,6 @@ export class FileService {
    * @private
    */
   private async _templateFileToDb(templateFile: TemplateFileDto[], importFileDto: ImportFileDto): Promise<ImportResponseDto> {
-    await this._configService.update(<ChatbotConfig>{is_blocked: true});
     const intents: IntentModel[] = [];
     templateFile.forEach(t => {
       // Si la connaissance a un id, une question principale et qu'elle n'est pas déjà présente dans la liste à sauvegarder alors on l'ajoute
