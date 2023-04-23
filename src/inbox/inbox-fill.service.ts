@@ -59,13 +59,14 @@ export class InboxFillService {
         // On récupère la requête à sauvegarder en BDD
         const inbox = this._getNextInbox(eventsSlice);
         // Si elle est bien associée à une connaissance on la sauvegarge
-        if (await this._intentService.intentExists(inbox.intent?.id)) {
+        if (inbox.intent?.id && await this._intentService.intentExists(inbox.intent.id)) {
           inboxes.push(inbox);
         }
       }
       // On itère ainsi sur tout les blocs d'événements RASA
       conversationIdx >= 0 ? events.splice(0, conversationIdx + 1) : events.splice(0, events.length);
     }
+
     if (inboxes.length > 0) {
       await this._inboxesRepository.save(inboxes);
       this._logger.log(`Finishing updating ${inboxes.length} inbox`);

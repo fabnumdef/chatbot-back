@@ -17,7 +17,7 @@ const config: TypeOrmModuleOptions = {
   migrationsRun: true,
 };
 
-if (!process.env.INTRADEF || process.env.INTRADEF == 'false') {
+if (process.env.DATABASE_SSL_CERT) {
   // @ts-ignore
   config.ssl = {
     rejectUnauthorized: false,

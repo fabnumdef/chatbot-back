@@ -6,7 +6,7 @@ import { BotLogger } from "../../logger/bot.logger";
 @Injectable()
 export class MailService {
   private readonly _logger = new BotLogger('MailService');
-  private _appDir = '/var/www/chatbot-back';
+  private _appDir = path.resolve(__dirname, '../../../../chatbot-back');
 
   constructor(private readonly _mailerService: MailerService) {
   }

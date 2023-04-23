@@ -6,13 +6,14 @@ import * as fs from "fs";
 import { BotLogger } from "../logger/bot.logger";
 import { ChatbotConfig } from "@core/entities/chatbot-config.entity";
 import { dotenvToJson, jsonToDotenv } from "@core/utils";
+import * as path from "path";
 
 @Injectable()
 export class UpdateService {
   private readonly _logger = new BotLogger('UpdateService');
 
-  private _appDir = '/var/www/chatbot-back';
-  private _gitDir = '/var/www/git/chatbot-back';
+  private _appDir = path.resolve(__dirname, '../../../chatbot-back');
+  private _gitDir = path.resolve(__dirname, '../../../git/chatbot-back');
 
   constructor(private _configService: ChatbotConfigService) {
   }
