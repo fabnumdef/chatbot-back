@@ -1,6 +1,8 @@
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
 
-const config: TypeOrmModuleOptions = {
+type Writeable<T> = { -readonly [P in keyof T]: Writeable<T[P]> };
+
+const config: Writeable<TypeOrmModuleOptions> = {
   type: 'postgres',
   url: `postgres://${process.env.DATABASE_USER}:${
     process.env.DATABASE_PASSWORD
@@ -19,14 +21,22 @@ const config: TypeOrmModuleOptions = {
   // Run migrations automatically,
   // you can disable this if you prefer running migration manually.
   migrationsRun: true,
-  // ssl: {
-  //   rejectUnauthorized: false
-  // }
+
+  ssl: process.env.DATABASE_SECURE
+    ? process.env.DATABASE_SECURE === 'true'
+    : undefined,
 };
 
+if (!process.env.INTRADEF || process.env.INTRADEF !== 'true') {
+  config.ssl = {
+    rejectUnauthorized: false,
+  };
+}
+
 if (process.env.DATABASE_SSL_CERT) {
-  // @ts-ignore
-  config.ssl.ca = process.env.DATABASE_SSL_CERT;
+  config.ssl = {
+    ca: process.env.DATABASE_SSL_CERT,
+  };
 }
 
 export = config;
