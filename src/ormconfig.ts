@@ -14,11 +14,15 @@ const config: TypeOrmModuleOptions = {
 
   // Run migrations automatically,
   // you can disable this if you prefer running migration manually.
-  migrationsRun: true,
-  ssl: {
+  migrationsRun: true
+};
+
+if (!process.env.INTRADEF || process.env.INTRADEF !== 'true') {
+  // @ts-ignore
+  config.ssl = {
     rejectUnauthorized: false
   }
-};
+}
 
 if (process.env.DATABASE_SSL_CERT) {
   // @ts-ignore
