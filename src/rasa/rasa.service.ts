@@ -77,44 +77,107 @@ export class RasaService {
    */
   async trainRasa() {
     // Mise à jour du statut d'entraînement du Chatbot et des connaissances.
-    await this._configService.update(<ChatbotConfig>{training_rasa: true});
-    await this._intentService.updateManyByCondition({status: In([IntentStatus.to_deploy, IntentStatus.active_modified])}, {status: IntentStatus.in_training});
+    await this._configService.update(<ChatbotConfig>{ training_rasa: true });
+    await this._intentService.updateManyByCondition(
+      { status: In([IntentStatus.to_deploy, IntentStatus.active_modified]) },
+      { status: IntentStatus.in_training },
+    );
+
+    const isIntradef = !(
+      !process.env.INTRADEF || process.env.INTRADEF === 'false'
+    );
+    const rasaPath = process.env.RASA_PATH
+      ? process.env.RASA_PATH
+      : `${isIntradef
+        ? `/opt/chatbot/rasa/bin/python${process.env.PYTHON_VERSION} -m`
+        : ''
+      } rasa`;
     try {
       this._logger.log(`TRAINING RASA`);
-      await execShellCommand(`${!process.env.INTRADEF || process.env.INTRADEF === 'false' ? '' : `/opt/chatbot/rasa/bin/python${process.env.PYTHON_VERSION} -m`} rasa train --finetune --epoch-fraction 0.2 --num-threads 8`, this._chatbotTemplateDir).then(async (res: string) => {
+      await execShellCommand(
+        process.env.RASA_CMD_FINETUNE
+          ? process.env.RASA_CMD_FINETUNE
+          : `${rasaPath} train --finetune --epoch-fraction 0.2 --num-threads 8`,
+        this._chatbotTemplateDir,
+      ).then(async (res: string) => {
         this._logger.log(res);
         // Si le modèle ne peut pas être finetuné on le ré-entraine complétement
-        if (res.includes('can not be finetuned') || res.includes('No model for finetuning') || res.includes('Cannot finetune')) {
-          await execShellCommand(`${!process.env.INTRADEF || process.env.INTRADEF === 'false' ? '' : `/opt/chatbot/rasa/bin/python${process.env.PYTHON_VERSION} -m`} rasa train --num-threads 8`, this._chatbotTemplateDir).then(res => {
+        if (
+          res.includes('can not be finetuned') ||
+          res.includes('No model for finetuning') ||
+          res.includes('Cannot finetune')
+        ) {
+          await execShellCommand(
+            process.env.RASA_CMD_TRAIN
+              ? process.env.RASA_CMD_TRAIN
+              : `${rasaPath} train --num-threads 8`,
+            this._chatbotTemplateDir,
+          ).then((res) => {
             this._logger.log(res);
           });
         }
       });
       this._logger.log('DISABLE TELEMETRY');
-      await execShellCommand(`${!process.env.INTRADEF || process.env.INTRADEF === 'false' ? '' : `/opt/chatbot/rasa/bin/python${process.env.PYTHON_VERSION} -m`} rasa telemetry disable`, this._chatbotTemplateDir).then(res => {
+      await execShellCommand(
+        process.env.RASA_CMD_DISABLE_TELEMETRY
+          ? process.env.RASA_CMD_DISABLE_TELEMETRY
+          : `${rasaPath} telemetry disable`,
+        this._chatbotTemplateDir,
+      ).then((res) => {
         this._logger.log(res);
       });
-      if (!process.env.INTRADEF || process.env.INTRADEF === 'false') {
-        this._logger.log('KILLING SCREEN');
-        await execShellCommand(`pkill screen`, this._chatbotTemplateDir).then(res => {
-          this._logger.log(res);
-        });
-        this._logger.log('LAUNCHING SCREEN');
-        await execShellCommand(`screen -S rasa -dmS rasa run -m models --log-file out.log --cors "*" --debug`, this._chatbotTemplateDir).then(res => {
-          this._logger.log(res);
-        });
-        await execShellCommand(`screen -S rasa-action -dmS rasa run actions`, this._chatbotTemplateDir).then(res => {
+
+      if (process.env.RASA_CMD_RESTART) {
+        this._logger.log('RESTART RASA SERVICE');
+        await execShellCommand(
+          process.env.RASA_CMD_RESTART,
+          this._chatbotTemplateDir,
+        ).then((res) => {
           this._logger.log(res);
         });
       } else {
-        this._logger.log('RESTART RASA SERVICE');
-        await execShellCommand(`systemctl --user restart rasa-core`, this._chatbotTemplateDir).then(res => {
-          this._logger.log(res);
-        });
+        if (!isIntradef) {
+          this._logger.log('RESTART RASA SERVICE');
+          await execShellCommand(
+            `systemctl --user restart rasa-core`,
+            this._chatbotTemplateDir,
+          ).then((res) => {
+            this._logger.log(res);
+          });
+        } else {
+          this._logger.log('KILLING SCREEN');
+          await execShellCommand(`pkill screen`, this._chatbotTemplateDir).then(
+            (res) => {
+              this._logger.log(res);
+            },
+          );
+          this._logger.log('LAUNCHING SCREEN');
+          await execShellCommand(
+            `screen -S rasa -dmS rasa run -m models --log-file out.log --cors "*" --debug`,
+            this._chatbotTemplateDir,
+          ).then((res) => {
+            this._logger.log(res);
+          });
+          await execShellCommand(
+            `screen -S rasa-action -dmS rasa run actions`,
+            this._chatbotTemplateDir,
+          ).then((res) => {
+            this._logger.log(res);
+          });
+        }
       }
-      await this._intentService.updateManyByCondition({status: IntentStatus.in_training}, {status: IntentStatus.active});
-      await this._intentService.updateManyByCondition({status: IntentStatus.to_archive}, {status: IntentStatus.archived});
-      await this._configService.update(<ChatbotConfig>{last_training_at: new Date()});
+
+      await this._intentService.updateManyByCondition(
+        { status: IntentStatus.in_training },
+        { status: IntentStatus.active },
+      );
+      await this._intentService.updateManyByCondition(
+        { status: IntentStatus.to_archive },
+        { status: IntentStatus.archived },
+      );
+      await this._configService.update(<ChatbotConfig>{
+        last_training_at: new Date(),
+      });
     } catch (e) {
       this._logger.error('RASA TRAIN', e);
     }
