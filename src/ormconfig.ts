@@ -1,8 +1,23 @@
-import { TypeOrmModuleOptions } from '@nestjs/typeorm';
+import { type TypeOrmModuleOptions } from '@nestjs/typeorm';
+import { type TlsOptions } from 'tls';
 
-type Writeable<T> = { -readonly [P in keyof T]: Writeable<T[P]> };
+let sslConfig: boolean | TlsOptions = process.env.DATABASE_SECURE
+  ? process.env.DATABASE_SECURE === 'true'
+  : undefined;
 
-const config: Writeable<TypeOrmModuleOptions> = {
+if (!process.env.INTRADEF || process.env.INTRADEF !== 'true') {
+  sslConfig = {
+    rejectUnauthorized: false,
+  };
+}
+
+if (process.env.DATABASE_SSL_CERT) {
+  sslConfig = {
+    ca: process.env.DATABASE_SSL_CERT,
+  };
+}
+
+const config: TypeOrmModuleOptions = {
   type: 'postgres',
   url: `postgres://${process.env.DATABASE_USER}:${
     process.env.DATABASE_PASSWORD
@@ -22,21 +37,7 @@ const config: Writeable<TypeOrmModuleOptions> = {
   // you can disable this if you prefer running migration manually.
   migrationsRun: true,
 
-  ssl: process.env.DATABASE_SECURE
-    ? process.env.DATABASE_SECURE === 'true'
-    : undefined,
+  ssl: sslConfig,
 };
-
-if (!process.env.INTRADEF || process.env.INTRADEF !== 'true') {
-  config.ssl = {
-    rejectUnauthorized: false,
-  };
-}
-
-if (process.env.DATABASE_SSL_CERT) {
-  config.ssl = {
-    ca: process.env.DATABASE_SSL_CERT,
-  };
-}
 
 export = config;
