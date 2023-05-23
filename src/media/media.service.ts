@@ -308,7 +308,7 @@ export class MediaService {
       .select(['intent.id', 'main_question', 'category'])
       .innerJoin("intent.responses", "responses")
       .where(new Brackets((qb) => {
-        qb.where(`responses.response like '%/${media.file.replace(`'`, `''`)}%'`)
+        qb.where(`responses.response like '%/${media.file.replaceAll(`'`, `''`)}%'`)
         qb.andWhere('intent.status IN (:...status)', {
           status: [
             IntentStatus.to_deploy,

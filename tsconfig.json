@@ -14,7 +14,10 @@
       "@core/*": [
         "src/core/*"
       ]
-    }
+    },
+    "lib": [
+      "ES2021.String"
+    ]
   },
   "exclude": [
     "node_modules",
