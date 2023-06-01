@@ -281,7 +281,7 @@ export class MediaService {
    * @param callback
    */
   static mediaFilter = (req, file, callback) => {
-    if (!file.originalname.match(/\.(gif|jpg|jpeg|png|ppt|pptx|odp|xls|xlsx|ods|csv|pdf|doc|odt|txt)$/)) {
+    if (!file.originalname.toLowerCase().match(/\.(gif|jpg|jpeg|png|ppt|pptx|odp|xls|xlsx|ods|csv|pdf|doc|odt|txt)$/)) {
       return callback(new HttpException('Seules les extensions suivantes sont autorisées: gif, jpg, jpeg, png, ppt, pptx, odp, xls, xlsx, ods, csv, pdf, doc, odt, txt.', HttpStatus.BAD_REQUEST), false);
     }
     return callback(null, true);
