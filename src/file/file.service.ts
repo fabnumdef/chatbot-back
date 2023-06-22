@@ -184,7 +184,7 @@ export class FileService {
       t.response_type = ResponseType[ResponseType_ReverseFr[t.response_type.trim()]];
       t.expires_at = t.expires_at ? moment(t.expires_at, 'DD/MM/YYYY') : null;
       // Formatage des sauts de lignes Windows pour éviter de les doubler sous linux
-      t.response = t.response.replace(/(\r\n|\r|\n){2,}/g, '\n');
+      t.response = t.response?.replace(/(\r\n|\r|\n){2,}/g, '\n');
       return t;
     });
   }
