@@ -167,7 +167,7 @@ export class ChatbotConfigController {
   @UseGuards(ApiKeyGuard)
   async updateDomainName(@Body() updateDomainName: UpdateDomainNameDto) {
     await this._updateService.updateDomainName(updateDomainName);
-    const configEntity = await this._configService.update(plainToInstance(ChatbotConfig, snakecaseKeys(updateDomainName)));
+    const configEntity = await this._configService.update(plainToInstance(ChatbotConfig, {domainName: updateDomainName.domainName}));
     return plainToInstance(ConfigDto, camelcaseKeys(configEntity, {deep: true}));
   }
 }

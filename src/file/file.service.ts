@@ -181,7 +181,7 @@ export class FileService {
       t.main_question = t.main_question?.trim();
       // Base de questions similaires servant à entraîner l'IA, elles sont séparées par des points virgule
       t.questions = t.questions ? (<any>t.questions).split(';').map(q => q.trim()).filter(q => !!q) : [];
-      t.response_type = ResponseType[ResponseType_ReverseFr[t.response_type.trim()]];
+      t.response_type = ResponseType[ResponseType_ReverseFr[t.response_type?.trim()]];
       t.expires_at = t.expires_at ? moment(t.expires_at, 'DD/MM/YYYY') : null;
       // Formatage des sauts de lignes Windows pour éviter de les doubler sous linux
       t.response = t.response?.replace(/(\r\n|\r|\n){2,}/g, '\n');
