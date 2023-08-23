@@ -305,7 +305,7 @@ export class MediaService {
    */
   private _findIntentsByMedia(media: MediaModel): Promise<Intent[]> {
     return this._intentsRepository.createQueryBuilder('intent')
-      .select(['intent.id', 'main_question', 'category'])
+      .select(['intent.id', 'intent.main_question', 'intent.category'])
       .innerJoin("intent.responses", "responses")
       .where(new Brackets((qb) => {
         qb.where(`responses.response like '%/${media.file.replaceAll(`'`, `''`)}%'`)
