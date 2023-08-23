@@ -245,8 +245,8 @@ export class IntentService {
    * Récupération d'une connaissance avec ses possibles connaissances liées
    * @param id
    */
-  async findOne(id: string): Promise<Intent> {
-    const intent = await this.getFullIntentQueryBuilder(null, null, id, true).getOne();
+  async findOne(id: string, getHidden = true): Promise<Intent> {
+    const intent = await this.getFullIntentQueryBuilder(null, null, id, getHidden).getOne();
     if (!intent) {
       return;
     }
@@ -324,7 +324,7 @@ export class IntentService {
    * @param id
    */
   async intentExists(id: string): Promise<boolean> {
-    return !!(await this.findOne(id));
+    return !!(await this.findOne(id, false));
   }
 
   /**
