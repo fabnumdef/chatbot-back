@@ -410,14 +410,13 @@ export class IntentService {
   }
 
   /**
-   * Récupération des connaissances qui n'ont jamais été utilisée dans le Chatbot
+   * Récupération des connaissances qui n'ont jamais été utilisée (moins de une fois) dans le Chatbot
    * Possibilité de filtrer par dates
    * @param filters
    */
   findNeverUsedIntent(filters: StatsFilterDto): Promise<Array<string>> {
     const startDate = filters.startDate ? (moment(filters.startDate, 'DD/MM/YYYY').format('YYYY-MM-DD')) : null;
     const endDate = filters.endDate ? moment(filters.endDate, 'DD/MM/YYYY').format('YYYY-MM-DD') : null;
-
 
     const query = this._intentsRepository
       .createQueryBuilder('intent')
@@ -436,7 +435,7 @@ export class IntentService {
       }, 't1', 't1.intentid = intent.id')
       .where("intent.id NOT LIKE 'st\\_%' ESCAPE '\\'")
       .groupBy("intent.main_question")
-      .having("COUNT(t1.intentid) = 0")
+      .having("COUNT(t1.intentid) < 2")
       .orderBy("intent.main_question", 'ASC');
 
     return query.getRawMany();
