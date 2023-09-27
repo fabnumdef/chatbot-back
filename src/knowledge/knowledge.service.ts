@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
+import { In, Repository } from "typeorm";
 import { Knowledge } from "@core/entities/knowledge.entity";
 import { KnowledgeModel } from "@core/models/knowledge.model";
 import { IntentModel } from "@core/models/intent.model";
@@ -58,11 +58,24 @@ export class KnowledgeService {
    * @param knowledges
    */
   async findOrSave(knowledges: Knowledge[]): Promise<Knowledge[]> {
+    // On récupère tout les knowledges possibles
+    const knowledgesExisting = await this._knowledgesRepository.createQueryBuilder('knowledge')
+      .select()
+      .leftJoinAndSelect('knowledge.intent', 'intent')
+      .where({
+        intent: In(knowledges.map(k => k.intent).map(i => i.id))
+      }).getMany();
+    const knowledgesToSave = [];
+    knowledges.forEach(k => {
+      if (knowledgesExisting.findIndex(ke => ke.intent.id === k.intent.id && ke.question === k.question) < 0) {
+        knowledgesToSave.push(k);
+      }
+    });
     // On ne sait pas si le knowledge existe, pour éviter de faire péter la constraint unique
     let knowledgesEntity: Knowledge[] = [];
     const promises = [];
-    await knowledges.forEach(k => {
-      promises.push(this.createSafe(k));
+    await knowledgesToSave.forEach(k => {
+      promises.push(this.create(k));
     });
     knowledgesEntity = await Promise.all(promises);
     return knowledgesEntity;

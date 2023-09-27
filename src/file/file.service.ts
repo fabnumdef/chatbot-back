@@ -316,7 +316,7 @@ export class FileService {
     const knowledgesSaved = await this._knowledgeService.findOrSave(knowledges);
 
     // Suppressions des anciennes réponses puis sauvegarde des nouvelles réponses
-    await Promise.all(intentsSaved.map(i => this._responseService.deleteByIntent(i)));
+    await this._responseService.deleteByIntents(intentsSaved);
     const responsesSaved = await this._responseService.saveMany(responses);
 
     // Option pour supprimer les anciennes connaissances lors de l'import d'un fichier

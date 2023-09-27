@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
+import { DeleteResult, In, Repository } from "typeorm";
 import { Response } from "@core/entities/response.entity";
 import { ResponseModel } from "@core/models/response.model";
 import { Intent } from "@core/entities/intent.entity";
@@ -89,11 +89,11 @@ export class ResponseService {
 
   /**
    * Suppression des réponses d'une connaissance passée en argument
-   * @param intent
+   * @param intents
    */
-  async deleteByIntent(intent: Intent): Promise<void> {
-    await this._responsesRepository.delete({
-      intent: intent
+  deleteByIntents(intents: Intent[]): Promise<DeleteResult> {
+    return this._responsesRepository.delete({
+      intent: In(intents.map(i => i.id))
     });
   }
 
