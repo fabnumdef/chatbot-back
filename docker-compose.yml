@@ -1,24 +1,24 @@
 version: '3.7'
 
 services:
-  main:
-    container_name: main
-    build:
-      context: .
-      target: development
-    volumes:
-      - .:/var/www/chatbot-back
-      - /var/www/chatbot-back/node_modules
-    ports:
-      - 3000:3000
-      - 9229:9229
-    command: npm run start:dev
-    env_file:
-      - .env
-    networks:
-      - webnet
-    depends_on:
-      - postgres
+  # main:
+  #   container_name: main
+  #   build:
+  #     context: .
+  #     target: development
+  #   volumes:
+  #     - .:/var/www/chatbot-back
+  #     - /var/www/chatbot-back/node_modules
+  #   ports:
+  #     - 3000:3000
+  #     - 9229:9229
+  #   command: npm run start:dev
+  #   env_file:
+  #     - .env
+  #   networks:
+  #     - webnet
+  #   depends_on:
+  #     - postgres
   postgres:
     container_name: postgres
     image: postgres:13

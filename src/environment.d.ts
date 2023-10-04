@@ -9,12 +9,8 @@ declare global {
       DATABASE_NAME?: string;
       DATABASE_USER?: string;
       DATABASE_PASSWORD?: string;
-      DATABASE_SECURE: 'true' | 'false';
+      DATABASE_SECURE?: 'true' | 'false';
       DATABASE_SSL_CERT?: string;
-
-      RASA_DATABASE_NAME?: string;
-      RASA_DATABASE_USER?: string;
-      RASA_DATABASE_PASSWORD?: string;
 
       /**
        * Path to the rasa executable.

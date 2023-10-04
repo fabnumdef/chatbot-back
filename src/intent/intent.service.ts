@@ -171,7 +171,7 @@ export default class IntentService {
           `case when intent.expires_at::date >= now() - interval '1 month' then intent.expires_at end`,
         )
         .addOrderBy('intent.updated_at', 'DESC')
-        .addOrderBy('intent.main_question', 'ASC', 'NULLS LAST');
+        .addOrderBy('intent.main_question', 'ASC');
     }
 
     query = this.addFilters(query, filters);

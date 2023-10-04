@@ -1,11 +1,9 @@
 import { type TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { type TlsOptions } from 'tls';
 
-let sslConfig: boolean | TlsOptions = process.env.DATABASE_SECURE
-  ? process.env.DATABASE_SECURE === 'true'
-  : undefined;
+let sslConfig: boolean | TlsOptions = undefined;
 
-if (!process.env.INTRADEF || process.env.INTRADEF !== 'true') {
+if (process.env.INTRADEF !== 'true') {
   sslConfig = {
     rejectUnauthorized: false,
   };
@@ -16,6 +14,13 @@ if (process.env.DATABASE_SSL_CERT) {
     ca: process.env.DATABASE_SSL_CERT,
   };
 }
+
+// If the DATABASE_SECURE is set to false, force disable SSL
+if (process.env.DATABASE_SECURE === 'false') {
+  sslConfig = false;
+} else if (!sslConfig)
+  // Else keep the config that could have been set prior to this. And only if the sslConfig is not yes configured, enable it.
+  sslConfig = true;
 
 const config: TypeOrmModuleOptions = {
   type: 'postgres',
@@ -38,6 +43,8 @@ const config: TypeOrmModuleOptions = {
   migrationsRun: true,
 
   ssl: sslConfig,
+
+  logging: process.env.DEBUG ? true : undefined,
 };
 
 export = config;
