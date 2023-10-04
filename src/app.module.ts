@@ -2,33 +2,33 @@ import { Module } from '@nestjs/common';
 import { UserModule } from './user/user.module';
 import { IntentModule } from './intent/intent.module';
 import { AuthModule } from './auth/auth.module';
-import { TypeOrmModule } from "@nestjs/typeorm";
-import { ConfigModule } from "@nestjs/config";
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { ConfigModule } from '@nestjs/config';
 import { KnowledgeModule } from './knowledge/knowledge.module';
 import { ResponseModule } from './response/response.module';
-import { APP_INTERCEPTOR } from "@nestjs/core";
-import { LoggerInterceptor } from "@core/interceptors/logger.interceptor";
+import { APP_INTERCEPTOR } from '@nestjs/core';
+import { LoggerInterceptor } from '@core/interceptors/logger.interceptor';
 import { FileModule } from './file/file.module';
 import { MediaModule } from './media/media.module';
 import { InboxModule } from './inbox/inbox.module';
 import { StatsModule } from './stats/stats.module';
-import { ScheduleModule } from "@nestjs/schedule";
+import { ScheduleModule } from '@nestjs/schedule';
 import { RasaModule } from './rasa/rasa.module';
 import { RefDataController } from './ref-data/ref-data.controller';
 import { ChatbotConfigModule } from './chatbot-config/chatbot-config.module';
 import { TerminusModule } from '@nestjs/terminus';
 import { HealthController } from './health/health.controller';
 import * as ormconfig from './ormconfig';
-import { TimeoutInterceptor } from "@core/interceptors/timeout.interceptor";
+import { TimeoutInterceptor } from '@core/interceptors/timeout.interceptor';
 import { PublicController } from './public/public.controller';
 import { PublicModule } from './public/public.module';
 import { SharedModule } from './shared/shared.module';
-import * as path from "path";
-import { MailerModule } from "@nestjs-modules/mailer";
+import * as path from 'path';
+import { MailerModule } from '@nestjs-modules/mailer';
 import { FeedbackModule } from './feedback/feedback.module';
 import { UpdateModule } from './update/update.module';
-import { HandlebarsAdapter } from "@nestjs-modules/mailer/dist/adapters/handlebars.adapter";
-import { LoggerModule } from "./logger/logger.module";
+import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
+import { LoggerModule } from './logger/logger.module';
 import { FaqModule } from './faq/faq.module';
 
 @Module({
@@ -47,12 +47,12 @@ import { FaqModule } from './faq/faq.module';
           : !process.env.INTRADEF || process.env.INTRADEF === 'false', // Else use default value
         auth: {
           user: `${process.env.MAIL_USER}`,
-          pass: `${process.env.MAIL_PASSWORD}`
+          pass: `${process.env.MAIL_PASSWORD}`,
         },
         tls: {
           // do not fail on invalid certs
-          rejectUnauthorized: false
-        }
+          rejectUnauthorized: false,
+        },
       },
       template: {
         dir: path.resolve(__dirname, '..', 'templates'),
@@ -82,11 +82,7 @@ import { FaqModule } from './faq/faq.module';
     LoggerModule,
     FaqModule,
   ],
-  controllers: [
-    RefDataController,
-    HealthController,
-    PublicController
-  ],
+  controllers: [RefDataController, HealthController, PublicController],
   providers: [
     {
       provide: APP_INTERCEPTOR,
@@ -95,8 +91,7 @@ import { FaqModule } from './faq/faq.module';
     {
       provide: APP_INTERCEPTOR,
       useClass: TimeoutInterceptor,
-    }
+    },
   ],
 })
-export class AppModule {
-}
+export class AppModule {}
