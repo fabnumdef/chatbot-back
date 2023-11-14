@@ -1,4 +1,4 @@
-import { IsBoolean, IsEnum, IsNotEmpty, IsOptional, IsString } from "class-validator";
+import { IsBoolean, IsDateString, IsEnum, IsNotEmpty, IsOptional, IsString } from "class-validator";
 import { UserRole } from "@core/enums/user-role.enum";
 
 export class UpdateUserDto {
@@ -21,4 +21,8 @@ export class UpdateUserDto {
   @IsEnum(UserRole)
   @IsOptional()
   role: UserRole;
+
+  @IsDateString()
+  @IsNotEmpty()
+  endDate: string;
 }
