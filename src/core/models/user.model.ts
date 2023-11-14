@@ -1,4 +1,4 @@
-import { IsBoolean, IsEmail, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsBoolean, IsDateString, IsEmail, IsNotEmpty, IsOptional, IsString, isDate } from 'class-validator';
 import { UserRole } from "@core/enums/user-role.enum";
 
 export class UserModel {
@@ -29,4 +29,7 @@ export class UserModel {
   @IsString()
   @IsOptional()
   password: string;
+
+  @IsDateString()
+  endDate: string;
 }

@@ -5,14 +5,15 @@ import { User } from "@core/entities/user.entity";
 import { MailService } from "../shared/services/mail.service";
 import { UserModel } from "@core/models/user.model";
 import { UserRole } from "@core/enums/user-role.enum";
+import { getCols } from '@core/repository-utils';
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 
 @Injectable()
 export class UserService {
   constructor(@InjectRepository(User)
-              private readonly _usersRepository: Repository<User>,
-              private readonly _mailService: MailService) {
+  private readonly _usersRepository: Repository<User>,
+    private readonly _mailService: MailService) {
   }
 
   /**
@@ -33,13 +34,13 @@ export class UserService {
    * @param email
    * @param password
    */
-  findOne(email: string, password: boolean = false): Promise<User> {
+  findOne(email: string, password = false): Promise<User> {
     if (!password) {
-      return this._usersRepository.findOne({where: {email: email}});
+      return this._usersRepository.findOne({ where: { email: email } });
     }
     return this._usersRepository.findOne({
-      select: ['email', 'password', 'first_name', 'last_name', 'function', 'role', 'failed_login_attempts', 'lock_until'],
-      where: {email: email}
+      select: getCols(this._usersRepository),
+      where: { email: email }
     });
   }
 
@@ -73,7 +74,7 @@ export class UserService {
    * @param data
    */
   async update(email: string, data: any): Promise<User> {
-    await this._usersRepository.update({email: email}, data);
+    await this._usersRepository.update({ email: email }, data);
     return this.findOne(email);
   }
 
@@ -97,7 +98,7 @@ export class UserService {
    * @param email
    */
   async delete(email: string): Promise<void> {
-    await this._usersRepository.update({email: email}, {disabled: true});
+    await this._usersRepository.update({ email: email }, { disabled: true });
   }
 
   /**

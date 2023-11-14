@@ -17,8 +17,8 @@ export class AuthService {
   private _failedLoginAttempts = 5;
 
   constructor(private readonly _userService: UserService,
-              private readonly _jwtService: JwtService,
-              private readonly _mailService: MailService) {
+    private readonly _jwtService: JwtService,
+    private readonly _mailService: MailService) {
   }
 
   /**
@@ -109,18 +109,23 @@ export class AuthService {
    */
   private async _validateUser(user: LoginUserDto): Promise<any> {
     const userToReturn = await this._userService.findOne(user.email, true);
+    const now = Date.now();
+    if (userToReturn && userToReturn.end_date < now) {
+      throw new HttpException('Votre compte n\'est plus actif. Merci de prendre contact avec l\'administrateur si vous souhaitez réactiver votre compte.',
+        HttpStatus.UNAUTHORIZED);
+    }
     if (userToReturn && userToReturn.disabled) {
       throw new HttpException('Votre compte a été supprimé. Merci de prendre contact avec l\'administrateur si vous souhaitez réactiver votre compte.',
         HttpStatus.UNAUTHORIZED);
     }
     if (userToReturn && userToReturn.lock_until && moment.duration(moment(userToReturn.lock_until).add(1, 'd').diff(moment())).asHours() < 0) {
-      await this._userService.findAndUpdate(userToReturn.email, {failed_login_attempts: 0, lock_until: null});
+      await this._userService.findAndUpdate(userToReturn.email, { failed_login_attempts: 0, lock_until: null });
       userToReturn.lock_until = null;
       userToReturn.failed_login_attempts = 0;
     }
     if (userToReturn && userToReturn.password && bcrypt.compareSync(user.password, userToReturn.password) && userToReturn.failed_login_attempts < this._failedLoginAttempts) {
-      const {password, ...result} = userToReturn;
-      await this._userService.findAndUpdate(userToReturn.email, {failed_login_attempts: 0, lock_until: null})
+      const { password, ...result } = userToReturn;
+      await this._userService.findAndUpdate(userToReturn.email, { failed_login_attempts: 0, lock_until: null })
       return result;
     }
     if (userToReturn && userToReturn.password && (!bcrypt.compareSync(user.password, userToReturn.password) || userToReturn.failed_login_attempts >= this._failedLoginAttempts)) {
