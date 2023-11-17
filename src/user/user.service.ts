@@ -70,12 +70,13 @@ export class UserService {
 
   /**
    * Mise à jour d'un utilisateur
-   * @param email
-   * @param data
    */
-  async update(email: string, data: any): Promise<User> {
-    await this._usersRepository.update({ email: email }, data);
-    return this.findOne(email);
+  async update(email: string, data: UserModel): Promise<User> {
+    if (await this._isOneActiveAdminLeft({ ...data, email })) {
+      await this._usersRepository.update({ email }, data);
+      return this.findOne(email);
+    }
+    throw new HttpException('Vous devez toujours conserver au moins un administrateur actif et sans date de fin d\'activité.', HttpStatus.FORBIDDEN);
   }
 
   /**
@@ -159,4 +160,25 @@ export class UserService {
     };
     return this.findAndUpdate(user.email, valuesToUpdate);
   }
+
+  /**
+   * Il doit toujours y avoir au moins un administrateur actif que ce soit lui-même ou un autre.
+   * 
+   * 1/ Si l'utilisateur est un administrateur et qu'il est le seul actif, on vérifie qu'on ne modifie pas son rôle ou sa date de fin d'activité.  
+   * 2/ Si l'utilisateur est un administrateur et qu'il n'est pas le seul actif, on vérifie qu'au moins un des autres administrateurs n'a pas de date de fin d'activité.  
+   * 3/ Si l'utilisateur n'est pas un administrateur, on ne fait rien.
+   */
+  private async _isOneActiveAdminLeft(editing: UserModel): Promise<boolean> {
+    const users = await this.findAll();
+    for (const user of users) {
+      if (user.email === editing.email && editing.role === UserRole.admin && !user.disabled && !editing.end_date) {
+        return true;
+      } else if (user.email !== editing.email && user.role === UserRole.admin && !user.disabled && !user.end_date) {
+        return true;
+      }
+    }
+
+    return false;
+  }
 }
+

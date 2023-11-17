@@ -23,6 +23,6 @@ export class UpdateUserDto {
   role: UserRole;
 
   @IsDateString()
-  @IsNotEmpty()
+  @IsOptional()
   endDate: string;
 }
