@@ -109,8 +109,8 @@ export class AuthService {
    */
   private async _validateUser(user: LoginUserDto): Promise<any> {
     const userToReturn = await this._userService.findOne(user.email, true);
-    const now = Date.now();
-    if (userToReturn && userToReturn.end_date < now) {
+    const now = new Date();
+    if (userToReturn?.end_date && userToReturn.end_date < now) {
       throw new HttpException('Votre compte n\'est plus actif. Merci de prendre contact avec l\'administrateur si vous souhaitez réactiver votre compte.',
         HttpStatus.UNAUTHORIZED);
     }

@@ -31,5 +31,6 @@ export class UserModel {
   password: string;
 
   @IsDateString()
-  endDate: string;
+  @IsOptional()
+  end_date?: string;
 }

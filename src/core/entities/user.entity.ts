@@ -47,6 +47,6 @@ export class User {
   @Column({ default: false })
   disabled: boolean;
 
-  @Column({ type: "timestamptz" })
-  end_date: number;
+  @Column({ type: "timestamptz", nullable: true })
+  end_date: Date | null;
 }
