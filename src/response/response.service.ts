@@ -1,28 +1,31 @@
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from "@nestjs/typeorm";
-import { DeleteResult, In, Repository } from "typeorm";
-import { Response } from "@core/entities/response.entity";
-import { ResponseModel } from "@core/models/response.model";
-import { Intent } from "@core/entities/intent.entity";
-import { IntentModel } from "@core/models/intent.model";
-import { UpdateResult } from "typeorm/query-builder/result/UpdateResult";
-import { ChatbotConfig } from "@core/entities/chatbot-config.entity";
+import { InjectRepository } from '@nestjs/typeorm';
+import { DeleteResult, In, Repository } from 'typeorm';
+import { Response } from '@core/entities/response.entity';
+import { ResponseModel } from '@core/models/response.model';
+import { Intent } from '@core/entities/intent.entity';
+import { IntentModel } from '@core/models/intent.model';
+import { UpdateResult } from 'typeorm/query-builder/result/UpdateResult';
+import { ChatbotConfig } from '@core/entities/chatbot-config.entity';
 
 @Injectable()
 export class ResponseService {
-
-  constructor(@InjectRepository(Response)
-              private readonly _responsesRepository: Repository<Response>,
-              @InjectRepository(ChatbotConfig)
-              private readonly _configRepository: Repository<ChatbotConfig>) {
-  }
+  constructor(
+    @InjectRepository(Response)
+    private readonly _responsesRepository: Repository<Response>,
+    @InjectRepository(ChatbotConfig)
+    private readonly _configRepository: Repository<ChatbotConfig>,
+  ) {}
 
   /**
    * Récupération des réponses par rapport à une connaissance passée en argument
    * @param intent
    */
   findByIntent(intent: IntentModel): Promise<Response[]> {
-    return this._responsesRepository.find({where: {intent: {id: intent.id}}, order: {id: 'ASC'}});
+    return this._responsesRepository.find({
+      where: { intent: { id: intent.id } },
+      order: { id: 'ASC' },
+    });
   }
 
   /**
@@ -45,7 +48,7 @@ export class ResponseService {
    * @param response
    */
   update(response: ResponseModel): Promise<UpdateResult> {
-    return this._responsesRepository.update({id: response.id}, response);
+    return this._responsesRepository.update({ id: response.id }, response);
   }
 
   /**
@@ -62,14 +65,16 @@ export class ResponseService {
    * @param newFile
    */
   async updateFileResponses(oldFile: string, newFile: string) {
-    const result = await this._responsesRepository.createQueryBuilder('response')
+    const result = await this._responsesRepository
+      .createQueryBuilder('response')
       .update()
       .set({
-        response: () => `REPLACE(response, '${oldFile}', '${newFile}')`
+        response: () => `REPLACE(response, '${oldFile}', '${newFile}')`,
       })
-      .where(`response LIKE '%${oldFile}%'`).execute();
+      .where(`response LIKE '%${oldFile}%'`)
+      .execute();
     if (result.affected && result.affected > 0) {
-      await this._configRepository.update({id: 1}, {need_training: true});
+      await this._configRepository.update({ id: 1 }, { need_training: true });
     }
   }
 
@@ -79,12 +84,14 @@ export class ResponseService {
    * @param newIntentId
    */
   async updateIntentResponses(oldIntentId: string, newIntentId: string) {
-    await this._responsesRepository.createQueryBuilder('response')
+    await this._responsesRepository
+      .createQueryBuilder('response')
       .update()
       .set({
-        response: () => `REPLACE(response, '${oldIntentId}', '${newIntentId}')`
+        response: () => `REPLACE(response, '${oldIntentId}', '${newIntentId}')`,
       })
-      .where(`response LIKE '%<${oldIntentId}>%'`).execute();
+      .where(`response LIKE '%<${oldIntentId}>%'`)
+      .execute();
   }
 
   /**
@@ -93,7 +100,7 @@ export class ResponseService {
    */
   deleteByIntents(intents: Intent[]): Promise<DeleteResult> {
     return this._responsesRepository.delete({
-      intent: In(intents.map(i => i.id))
+      intent: In(intents.map((i) => i.id)),
     });
   }
 

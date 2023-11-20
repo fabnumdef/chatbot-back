@@ -1,5 +1,5 @@
-import { ExecOptions } from "child_process";
-import { parse } from "dotenv";
+import { ExecOptions } from 'child_process';
+import { parse } from 'dotenv';
 
 /**
  * Execution d'une commande shell et retour de celle-ci comme une Promise
@@ -15,12 +15,12 @@ export function execShellCommand(cmd, curDir?: string) {
       HOME: process.env.HOME,
       PATH: process.env.PATH,
     },
-    maxBuffer: 1024*1024*1024
+    maxBuffer: 1024 * 1024 * 1024,
   };
-  const exec = require('child_process').exec;
+  const { exec } = require('child_process');
   return new Promise((resolve, reject) => {
     exec(cmd, execOptions, (error, stdout, stderr) => {
-      resolve(stdout? stdout : stderr);
+      resolve(stdout || stderr);
     });
   });
 }
@@ -41,5 +41,5 @@ export function truncateString(str, num) {
   if (str.length <= num) {
     return str;
   }
-  return str.slice(0, num) + '...';
+  return `${str.slice(0, num)}...`;
 }

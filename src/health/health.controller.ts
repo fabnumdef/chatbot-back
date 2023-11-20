@@ -1,6 +1,10 @@
 import { Controller, Get } from '@nestjs/common';
-import { HttpHealthIndicator, HealthCheck, HealthCheckService } from "@nestjs/terminus";
-import { ApiOperation, ApiTags } from "@nestjs/swagger";
+import {
+  HttpHealthIndicator,
+  HealthCheck,
+  HealthCheckService,
+} from '@nestjs/terminus';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
 @ApiTags('health')
 @Controller('health')
@@ -12,7 +16,7 @@ export class HealthController {
 
   @Get()
   @HealthCheck()
-  @ApiOperation({summary: 'Etat de santé du serveur'})
+  @ApiOperation({ summary: 'Etat de santé du serveur' })
   check() {
     return this.health.check([
       () => this.dns.pingCheck('backoffice', 'http://127.0.0.1'),

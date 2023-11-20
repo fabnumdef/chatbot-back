@@ -1,16 +1,10 @@
 import { Module } from '@nestjs/common';
-import { MailService } from "./services/mail.service";
-import { HttpModule } from "@nestjs/axios";
+import { HttpModule } from '@nestjs/axios';
+import { MailService } from './services/mail.service';
 
 @Module({
-  imports: [
-    HttpModule
-  ],
-  providers: [
-    MailService
-  ],
-  exports: [
-    MailService
-  ]
+  imports: [HttpModule],
+  providers: [MailService],
+  exports: [MailService],
 })
 export class SharedModule {}

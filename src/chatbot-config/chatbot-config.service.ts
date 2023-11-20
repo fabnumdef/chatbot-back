@@ -1,16 +1,16 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { InjectRepository } from "@nestjs/typeorm";
-import { FindOneOptions, Repository } from "typeorm";
-import { ChatbotConfig } from "@core/entities/chatbot-config.entity";
-import { MediaService } from "../media/media.service";
-import { UpdateResult } from "typeorm/query-builder/result/UpdateResult";
-import * as path from "path";
-import * as fs from "fs";
+import { InjectRepository } from '@nestjs/typeorm';
+import { FindOneOptions, Repository } from 'typeorm';
+import { ChatbotConfig } from '@core/entities/chatbot-config.entity';
+import { UpdateResult } from 'typeorm/query-builder/result/UpdateResult';
+import * as path from 'path';
+import * as fs from 'fs';
 import { mkdirp } from 'mkdirp';
-import { Cron, CronExpression } from "@nestjs/schedule";
-import { plainToInstance } from "class-transformer";
-import snakecaseKeys = require("snakecase-keys");
-import { BotLogger } from "../logger/bot.logger";
+import { Cron, CronExpression } from '@nestjs/schedule';
+import { plainToInstance } from 'class-transformer';
+import snakecaseKeys = require('snakecase-keys');
+import { MediaService } from '../media/media.service';
+import { BotLogger } from '../logger/bot.logger';
 
 const crypto = require('crypto');
 
@@ -18,9 +18,11 @@ const crypto = require('crypto');
 export class ChatbotConfigService {
   private readonly _logger = new BotLogger('ChatbotConfigService');
 
-  constructor(@InjectRepository(ChatbotConfig)
-              private readonly _configRepository: Repository<ChatbotConfig>,
-              private readonly _mediaService: MediaService) {
+  constructor(
+    @InjectRepository(ChatbotConfig)
+    private readonly _configRepository: Repository<ChatbotConfig>,
+    private readonly _mediaService: MediaService,
+  ) {
     this._initConfig();
   }
 
@@ -29,7 +31,7 @@ export class ChatbotConfigService {
    * @param options
    */
   getChatbotConfig(options?: FindOneOptions): Promise<ChatbotConfig> {
-    const fullOptions: FindOneOptions = {...{where: {id: 1}}, ...options};
+    const fullOptions: FindOneOptions = { ...{ where: { id: 1 } }, ...options };
     return this._configRepository.findOne(fullOptions);
   }
 
@@ -38,7 +40,7 @@ export class ChatbotConfigService {
    * @param config
    */
   update(config: ChatbotConfig): Promise<UpdateResult> {
-    return this._configRepository.update({id: 1}, config);
+    return this._configRepository.update({ id: 1 }, config);
   }
 
   /**
@@ -68,8 +70,7 @@ export class ChatbotConfigService {
       if (fromDb) {
         await this._configRepository.delete(1);
       }
-    } catch (e) {
-    }
+    } catch (e) {}
   }
 
   /**
@@ -80,7 +81,13 @@ export class ChatbotConfigService {
    */
   static imageFileFilter = (req, file, callback) => {
     if (!file.originalname.match(/\.(jpg|png|svg)$/)) {
-      return callback(new HttpException('Seul les fichiers en .jpg, .png et .svg sont acceptés.', HttpStatus.BAD_REQUEST), false);
+      return callback(
+        new HttpException(
+          'Seul les fichiers en .jpg, .png et .svg sont acceptés.',
+          HttpStatus.BAD_REQUEST,
+        ),
+        false,
+      );
     }
     return callback(null, true);
   };
@@ -102,18 +109,34 @@ export class ChatbotConfigService {
     }
     try {
       // @ts-ignore
-      const manifest = JSON.parse(fs.readFileSync(path.resolve(frontDir, 'manifest.webmanifest')));
+      const manifest = JSON.parse(
+        fs.readFileSync(path.resolve(frontDir, 'manifest.webmanifest')),
+      );
       // @ts-ignore
-      const manifestWebchat = JSON.parse(fs.readFileSync(path.resolve(webchatDir, 'manifest.webmanifest')));
+      const manifestWebchat = JSON.parse(
+        fs.readFileSync(path.resolve(webchatDir, 'manifest.webmanifest')),
+      );
       manifest.name = `BACKOFFICE - ${botConfig.name}`;
       manifest.short_name = `BACKOFFICE - ${botConfig.name}`;
       manifestWebchat.name = botConfig.name;
       manifestWebchat.short_name = botConfig.name;
-      fs.writeFileSync(path.resolve(frontDir, 'manifest.webmanifest'), JSON.stringify(manifest));
-      fs.writeFileSync(path.resolve(webchatDir, 'manifest.webmanifest'), JSON.stringify(manifestWebchat));
+      fs.writeFileSync(
+        path.resolve(frontDir, 'manifest.webmanifest'),
+        JSON.stringify(manifest),
+      );
+      fs.writeFileSync(
+        path.resolve(webchatDir, 'manifest.webmanifest'),
+        JSON.stringify(manifestWebchat),
+      );
       if (botConfig.icon) {
-        fs.copyFileSync(path.resolve(__dirname, '../../mediatheque', botConfig.icon), path.resolve(frontDir, 'assets/icons/icon.png'));
-        fs.copyFileSync(path.resolve(__dirname, '../../mediatheque', botConfig.icon), path.resolve(webchatDir, 'assets/icons/icon.png'));
+        fs.copyFileSync(
+          path.resolve(__dirname, '../../mediatheque', botConfig.icon),
+          path.resolve(frontDir, 'assets/icons/icon.png'),
+        );
+        fs.copyFileSync(
+          path.resolve(__dirname, '../../mediatheque', botConfig.icon),
+          path.resolve(webchatDir, 'assets/icons/icon.png'),
+        );
       }
     } catch (e) {
       this._logger.error('ERROR UPDATING MANIFESTS', e);
@@ -156,6 +179,8 @@ export class ChatbotConfigService {
    */
   updateApiKey(): Promise<UpdateResult> {
     const newApiKey = crypto.randomBytes(12).toString('hex');
-    return this.update(plainToInstance(ChatbotConfig, snakecaseKeys({api_key: newApiKey})));
+    return this.update(
+      plainToInstance(ChatbotConfig, snakecaseKeys({ api_key: newApiKey })),
+    );
   }
 }

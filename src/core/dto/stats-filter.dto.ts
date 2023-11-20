@@ -1,7 +1,6 @@
-import { IsOptional, IsString } from "class-validator";
+import { IsOptional, IsString } from 'class-validator';
 
 export class StatsFilterDto {
-  
   @IsOptional()
   @IsString()
   startDate: string;
@@ -9,5 +8,4 @@ export class StatsFilterDto {
   @IsOptional()
   @IsString()
   endDate: string;
-  
 }

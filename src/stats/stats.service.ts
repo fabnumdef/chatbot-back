@@ -1,24 +1,23 @@
-import { StatsFilterDto } from './../core/dto/stats-filter.dto';
 import { Injectable } from '@nestjs/common';
-import { IntentService } from "../intent/intent.service";
-import { KnowledgeService } from "../knowledge/knowledge.service";
-import { InboxService } from "../inbox/inbox.service";
-import { StatsMostAskedQuestionsDto } from "@core/dto/stats-most-asked-questions.dto";
-import { FeedbackService } from "../feedback/feedback.service";
-import { StatsMostAskedCategoriesDto } from "@core/dto/stats-most-asked-categories.dto";
-import { FaqService } from "../faq/faq.service";
-import { FeedbackStatus } from "@core/enums/feedback-status.enum";
+import { StatsMostAskedQuestionsDto } from '@core/dto/stats-most-asked-questions.dto';
+import { StatsMostAskedCategoriesDto } from '@core/dto/stats-most-asked-categories.dto';
+import { FeedbackStatus } from '@core/enums/feedback-status.enum';
+import { StatsFilterDto } from '../core/dto/stats-filter.dto';
+import { IntentService } from '../intent/intent.service';
+import { KnowledgeService } from '../knowledge/knowledge.service';
+import { InboxService } from '../inbox/inbox.service';
+import { FeedbackService } from '../feedback/feedback.service';
+import { FaqService } from '../faq/faq.service';
 
 @Injectable()
 export class StatsService {
-
-  constructor(private readonly _intentService: IntentService,
-              private readonly _knowledgeService: KnowledgeService,
-              private readonly _inboxService: InboxService,
-              private readonly _feedbackService: FeedbackService,
-              private readonly _faqService: FaqService) {
-
-  }
+  constructor(
+    private readonly _intentService: IntentService,
+    private readonly _knowledgeService: KnowledgeService,
+    private readonly _inboxService: InboxService,
+    private readonly _feedbackService: FeedbackService,
+    private readonly _faqService: FaqService,
+  ) {}
 
   /**
    * Récupération du nombre de requêtes par jour
@@ -72,7 +71,9 @@ export class StatsService {
    * Récupération des connaissances les plus demandées
    * @param filters
    */
-  getMostAskedQuestions(filters: StatsFilterDto): Promise<StatsMostAskedQuestionsDto[]> {
+  getMostAskedQuestions(
+    filters: StatsFilterDto,
+  ): Promise<StatsMostAskedQuestionsDto[]> {
     return this._inboxService.findMostAskedQuestions(filters);
   }
 
@@ -80,7 +81,9 @@ export class StatsService {
    * Récupération des connaissances les plus demandées via la FAQ
    * @param filters
    */
-  getFaqMostAskedQuestions(filters: StatsFilterDto): Promise<StatsMostAskedQuestionsDto[]> {
+  getFaqMostAskedQuestions(
+    filters: StatsFilterDto,
+  ): Promise<StatsMostAskedQuestionsDto[]> {
     return this._faqService.findMostAskedQuestions(filters);
   }
 
@@ -88,7 +91,9 @@ export class StatsService {
    * Récupération des catégories liées aux connaissances les plus demandées
    * @param filters
    */
-  getMostAskedCategories(filters: StatsFilterDto): Promise<StatsMostAskedCategoriesDto[]> {
+  getMostAskedCategories(
+    filters: StatsFilterDto,
+  ): Promise<StatsMostAskedCategoriesDto[]> {
     return this._inboxService.findMostAskedCategories(filters);
   }
 
@@ -96,7 +101,9 @@ export class StatsService {
    * Récupération des catégories liées aux connaissances les plus demandées via la FAQ
    * @param filters
    */
-  getFaqMostAskedCategories(filters: StatsFilterDto): Promise<StatsMostAskedCategoriesDto[]> {
+  getFaqMostAskedCategories(
+    filters: StatsFilterDto,
+  ): Promise<StatsMostAskedCategoriesDto[]> {
     return this._faqService.findMostAskedCategories(filters);
   }
 
@@ -153,7 +160,10 @@ export class StatsService {
    * @param filters
    * @param feedbackStatus
    */
-  getFeedbackQuestions(filters: StatsFilterDto, feedbackStatus: FeedbackStatus): Promise<StatsMostAskedQuestionsDto[]> {
+  getFeedbackQuestions(
+    filters: StatsFilterDto,
+    feedbackStatus: FeedbackStatus,
+  ): Promise<StatsMostAskedQuestionsDto[]> {
     return this._inboxService.findMostAskedQuestions(filters, feedbackStatus);
   }
 
@@ -162,7 +172,10 @@ export class StatsService {
    * @param filters
    * @param feedbackStatus
    */
-  getFeedbackCategories(filters: StatsFilterDto, feedbackStatus: FeedbackStatus): Promise<StatsMostAskedCategoriesDto[]> {
+  getFeedbackCategories(
+    filters: StatsFilterDto,
+    feedbackStatus: FeedbackStatus,
+  ): Promise<StatsMostAskedCategoriesDto[]> {
     return this._inboxService.findMostAskedCategories(filters, feedbackStatus);
   }
 
@@ -171,7 +184,10 @@ export class StatsService {
    * @param filters
    * @param feedbackStatus
    */
-  getFeedbackKpi(filters: StatsFilterDto, feedbackStatus: FeedbackStatus): Promise<StatsMostAskedCategoriesDto[]> {
+  getFeedbackKpi(
+    filters: StatsFilterDto,
+    feedbackStatus: FeedbackStatus,
+  ): Promise<StatsMostAskedCategoriesDto[]> {
     return this._inboxService.findCountFeedback(filters, feedbackStatus);
   }
 
@@ -180,8 +196,10 @@ export class StatsService {
    * @param filters
    * @param feedbackStatus
    */
-  getFeedbackPctKpi(filters: StatsFilterDto, feedbackStatus: FeedbackStatus): Promise<StatsMostAskedCategoriesDto[]> {
+  getFeedbackPctKpi(
+    filters: StatsFilterDto,
+    feedbackStatus: FeedbackStatus,
+  ): Promise<StatsMostAskedCategoriesDto[]> {
     return this._inboxService.findRatioFeedback(filters, feedbackStatus);
   }
-
 }

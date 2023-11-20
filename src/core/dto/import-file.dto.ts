@@ -1,13 +1,13 @@
-import { ApiProperty } from "@nestjs/swagger";
-import { IsNotEmpty, IsOptional, IsString } from "class-validator";
+import { ApiProperty } from '@nestjs/swagger';
+import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class ImportFileDto {
-  @ApiProperty({type: 'string', format: 'binary'})
+  @ApiProperty({ type: 'string', format: 'binary' })
   file: any;
 
   @IsString()
   @IsNotEmpty()
-  deleteIntents: boolean = false;
+  deleteIntents = false;
 
   @IsString()
   @IsOptional()

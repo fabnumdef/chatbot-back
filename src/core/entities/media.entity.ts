@@ -1,4 +1,10 @@
-import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, Unique } from "typeorm";
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  PrimaryGeneratedColumn,
+  Unique,
+} from 'typeorm';
 
 @Entity('media')
 @Unique(['file'])
@@ -15,7 +21,7 @@ export class Media {
   @Column({ nullable: false, length: 100, default: 'auto' })
   added_by: string;
 
-  @CreateDateColumn({type: "timestamp"})
+  @CreateDateColumn({ type: 'timestamp' })
   created_at?: number;
 
   static getAttributesToSearch() {

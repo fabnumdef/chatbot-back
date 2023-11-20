@@ -1,19 +1,19 @@
 import { Module } from '@nestjs/common';
-import { MediaController } from './media.controller';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { Media } from '@core/entities/media.entity';
+import { ChatbotConfig } from '@core/entities/chatbot-config.entity';
+import { Intent } from '@core/entities/intent.entity';
+import { ResponseModule } from '../response/response.module';
 import { MediaService } from './media.service';
-import { TypeOrmModule } from "@nestjs/typeorm";
-import { Media } from "@core/entities/media.entity";
-import { ResponseModule } from "../response/response.module";
-import { ChatbotConfig } from "@core/entities/chatbot-config.entity";
-import { Intent } from "@core/entities/intent.entity";
+import { MediaController } from './media.controller';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Media, ChatbotConfig, Intent]),
-    ResponseModule
+    ResponseModule,
   ],
   controllers: [MediaController],
   providers: [MediaService],
-  exports: [MediaService]
+  exports: [MediaService],
 })
 export class MediaModule {}
