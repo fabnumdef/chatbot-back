@@ -16,7 +16,7 @@ import {
   ApiOperation,
   ApiTags,
 } from '@nestjs/swagger';
-import { JwtGuard } from '@core/guards/jwt.guard';
+import JwtGuard from '@core/guards/jwt.guard';
 import { plainToInstance } from 'class-transformer';
 import { ChatbotConfig } from '@core/entities/chatbot-config.entity';
 import { ConfigDto } from '@core/dto/config.dto';
@@ -24,26 +24,26 @@ import camelcaseKeys = require('camelcase-keys');
 import snakecaseKeys = require('snakecase-keys');
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { ConfigUpdateDto } from '@core/dto/config-update.dto';
-import { RolesGuard } from '@core/guards/roles.guard';
+import RolesGuard from '@core/guards/roles.guard';
 import { Roles } from '@core/decorators/roles.decorator';
 import { UserRole } from '@core/enums/user-role.enum';
-import { ApiKeyGuard } from '@core/guards/api-key.guard';
+import ApiKeyGuard from '@core/guards/api-key.guard';
 import { UpdateDomainNameDto } from '@core/dto/update-chatbot.dto';
-import { MediaService } from '../media/media.service';
-import { ChatbotConfigService } from './chatbot-config.service';
-import { UpdateService } from '../update/update.service';
+import MediaService from '../media/media.service';
+import ChatbotConfigService from './chatbot-config.service';
+import UpdateService from '../update/update.service';
 
 @ApiTags('config')
 @Controller('config')
-export class ChatbotConfigController {
+export default class ChatbotConfigController {
   constructor(
-    private readonly _configService: ChatbotConfigService,
-    private readonly _updateService: UpdateService,
-    private readonly _mediaService: MediaService,
+    private readonly configService: ChatbotConfigService,
+    private readonly updateService: UpdateService,
+    private readonly mediaService: MediaService,
   ) {
-    this._configService.updateFrontManifest();
+    this.configService.updateFrontManifest();
     // Lors du démarrage de l'application, si celle-ci a été KO de force on reboot certains paramètres pour éviter le blocage de certaines mises à jour
-    this._configService.update(<ChatbotConfig>{
+    this.configService.update(<ChatbotConfig>{
       is_blocked: false,
       training_rasa: false,
       need_update: false,
@@ -55,9 +55,9 @@ export class ChatbotConfigController {
   @ApiBearerAuth()
   @UseGuards(JwtGuard)
   async getChabotConfig(): Promise<ConfigDto> {
-    const config: ChatbotConfig = await this._configService.getChatbotConfig();
+    const config: ChatbotConfig = await this.configService.getChatbotConfig();
     return config
-      ? plainToInstance(ConfigDto, camelcaseKeys(config, { deep: true }))
+      ? plainToInstance(ConfigDto, camelcaseKeys(<any>config, { deep: true }))
       : null;
   }
 
@@ -87,18 +87,18 @@ export class ChatbotConfigController {
     @Body() chatbotConfig: ConfigUpdateDto,
   ): Promise<ConfigDto> {
     const icon = files.icon ? files.icon[0] : null;
-    await this._configService.delete();
-    const iconName = icon ? await this._mediaService.storeFile(icon) : '';
-    const configEntity = await this._configService.save(
+    await this.configService.delete();
+    const iconName = icon ? await this.mediaService.storeFile(icon) : '';
+    const configEntity = await this.configService.save(
       plainToInstance(
         ChatbotConfig,
         snakecaseKeys({ ...chatbotConfig, ...{ icon: iconName } }),
       ),
     );
-    await this._configService.updateFrontManifest();
+    await this.configService.updateFrontManifest();
     return plainToInstance(
       ConfigDto,
-      camelcaseKeys(configEntity, { deep: true }),
+      camelcaseKeys(<any>configEntity, { deep: true }),
     );
   }
 
@@ -145,25 +145,25 @@ export class ChatbotConfigController {
     const icon = files.icon ? files.icon[0] : null;
     const embeddedIcon = files.embeddedIcon ? files.embeddedIcon[0] : null;
     if (icon) {
-      await this._configService.delete(false);
-      const iconName = await this._mediaService.storeFile(icon);
+      await this.configService.delete(false);
+      const iconName = await this.mediaService.storeFile(icon);
       botConfig = { ...chatbotConfig, ...{ icon: iconName } };
     }
     if (embeddedIcon) {
-      await this._configService.delete(false, true);
-      const embeddedIconName = await this._mediaService.storeFile(embeddedIcon);
+      await this.configService.delete(false, true);
+      const embeddedIconName = await this.mediaService.storeFile(embeddedIcon);
       botConfig = { ...chatbotConfig, ...{ embeddedIcon: embeddedIconName } };
     }
 
-    const configEntity = await this._configService.update(
+    const configEntity = await this.configService.update(
       plainToInstance(ChatbotConfig, snakecaseKeys(botConfig)),
     );
     if (icon || botConfig.name) {
-      await this._configService.updateFrontManifest();
+      await this.configService.updateFrontManifest();
     }
     return plainToInstance(
       ConfigDto,
-      camelcaseKeys(configEntity, { deep: true }),
+      camelcaseKeys(<any>configEntity, { deep: true }),
     );
   }
 
@@ -172,16 +172,19 @@ export class ChatbotConfigController {
   @ApiBearerAuth()
   @UseGuards(JwtGuard)
   async updateApiKey(): Promise<ConfigDto> {
-    await this._configService.updateApiKey();
-    const config = await this._configService.getChatbotConfig();
-    return plainToInstance(ConfigDto, camelcaseKeys(config, { deep: true }));
+    await this.configService.updateApiKey();
+    const config = await this.configService.getChatbotConfig();
+    return plainToInstance(
+      ConfigDto,
+      camelcaseKeys(<any>config, { deep: true }),
+    );
   }
 
   @Get('training')
   @ApiOperation({ summary: "Retourne si l'IA est en entraînement" })
   @UseGuards(ApiKeyGuard)
   async isChatbotTraining(): Promise<boolean> {
-    const config: ChatbotConfig = await this._configService.getChatbotConfig();
+    const config: ChatbotConfig = await this.configService.getChatbotConfig();
     return config.training_rasa;
   }
 
@@ -197,12 +200,12 @@ export class ChatbotConfigController {
         HttpStatus.NOT_ACCEPTABLE,
       );
     }
-    const configEntity = await this._configService.update(
+    const configEntity = await this.configService.update(
       plainToInstance(ChatbotConfig, snakecaseKeys(isBlocked)),
     );
     return plainToInstance(
       ConfigDto,
-      camelcaseKeys(configEntity, { deep: true }),
+      camelcaseKeys(<any>configEntity, { deep: true }),
     );
   }
 
@@ -212,12 +215,12 @@ export class ChatbotConfigController {
   async updateMaintenanceMode(
     @Body() maintenanceMode: { maintenanceMode: boolean },
   ): Promise<ConfigDto> {
-    const configEntity = await this._configService.update(
+    const configEntity = await this.configService.update(
       plainToInstance(ChatbotConfig, snakecaseKeys(maintenanceMode)),
     );
     return plainToInstance(
       ConfigDto,
-      camelcaseKeys(configEntity, { deep: true }),
+      camelcaseKeys(<any>configEntity, { deep: true }),
     );
   }
 
@@ -225,15 +228,15 @@ export class ChatbotConfigController {
   @ApiOperation({ summary: 'Met à jour le nom de domaine' })
   @UseGuards(ApiKeyGuard)
   async updateDomainName(@Body() updateDomainName: UpdateDomainNameDto) {
-    await this._updateService.updateDomainName(updateDomainName);
-    const configEntity = await this._configService.update(
+    await this.updateService.updateDomainName(updateDomainName);
+    const configEntity = await this.configService.update(
       plainToInstance(ChatbotConfig, {
         domainName: updateDomainName.domainName,
       }),
     );
     return plainToInstance(
       ConfigDto,
-      camelcaseKeys(configEntity, { deep: true }),
+      camelcaseKeys(<any>configEntity, { deep: true }),
     );
   }
 }

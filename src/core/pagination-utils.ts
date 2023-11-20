@@ -1,8 +1,7 @@
 import { PaginationQueryDto } from '@core/dto/pagination-query.dto';
-import { FindManyOptions } from 'typeorm/find-options/FindManyOptions';
 import * as escape from 'pg-escape';
 
-export class PaginationUtils {
+export default class PaginationUtils {
   /**
    * Formatage de la clause Where lors du filtrage par pagination
    * Récupération de la query et formatage de la clause avec les attributs possible à filtrer (OR)

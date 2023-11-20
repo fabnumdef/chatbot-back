@@ -7,15 +7,15 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { ApiBody, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { ApiKeyGuard } from '@core/guards/api-key.guard';
+import ApiKeyGuard from '@core/guards/api-key.guard';
 import { UpdateChatbotDto } from '@core/dto/update-chatbot.dto';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
-import { UpdateService } from './update.service';
+import UpdateService from './update.service';
 
 @ApiTags('update')
 @Controller('update')
 @UseGuards(ApiKeyGuard)
-export class UpdateController {
+export default class UpdateController {
   constructor(private readonly _updateService: UpdateService) {}
 
   @Post('')

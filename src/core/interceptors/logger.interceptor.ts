@@ -6,13 +6,13 @@ import {
 } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
-import { BotLogger } from '../../logger/bot.logger';
+import BotLogger from '../../logger/bot.logger';
 
 const crypto = require('crypto');
 
 @Injectable()
-export class LoggerInterceptor implements NestInterceptor {
-  private readonly _logger = new BotLogger('LoggerInterceptor');
+export default class LoggerInterceptor implements NestInterceptor {
+  private readonly logger = new BotLogger('LoggerInterceptor');
 
   /**
    * Log de toutes les requêtes de l'application ainsi que la réponse correspondante
@@ -26,7 +26,7 @@ export class LoggerInterceptor implements NestInterceptor {
     if (body?.password) {
       body.password = 'PASSWORD';
     }
-    this._logger.log(
+    this.logger.log(
       `REQUEST - ${id} - ${req.ip} - ${req.user?.email} - ${req.method} - ${
         req.originalUrl
       } - ${!body ? '' : JSON.stringify(body)}`,
@@ -34,7 +34,7 @@ export class LoggerInterceptor implements NestInterceptor {
 
     return next.handle().pipe(
       tap(() => {
-        this._logger.log(`RESPONSE - ${id}`);
+        this.logger.log(`RESPONSE - ${id}`);
       }),
     );
   }

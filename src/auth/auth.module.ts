@@ -2,13 +2,13 @@ import { Module } from '@nestjs/common';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule } from '@nestjs/config';
-import { AuthService } from './auth.service';
-import { UserModule } from '../user/user.module';
-import { AuthController } from './auth.controller';
-import { JwtStrategy } from './jwt.strategy';
-import { SharedModule } from '../shared/shared.module';
-import { ApiKeyStrategy } from './api-key.strategy';
-import { ChatbotConfigModule } from '../chatbot-config/chatbot-config.module';
+import AuthService from './auth.service';
+import UserModule from '../user/user.module';
+import AuthController from './auth.controller';
+import JwtStrategy from './jwt.strategy';
+import SharedModule from '../shared/shared.module';
+import ApiKeyStrategy from './api-key.strategy';
+import ChatbotConfigModule from '../chatbot-config/chatbot-config.module';
 
 @Module({
   imports: [
@@ -26,4 +26,4 @@ import { ChatbotConfigModule } from '../chatbot-config/chatbot-config.module';
   controllers: [AuthController],
   exports: [JwtModule],
 })
-export class AuthModule {}
+export default class AuthModule {}

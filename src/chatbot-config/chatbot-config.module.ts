@@ -1,10 +1,10 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ChatbotConfig } from '@core/entities/chatbot-config.entity';
-import { ChatbotConfigController } from './chatbot-config.controller';
-import { ChatbotConfigService } from './chatbot-config.service';
-import { MediaModule } from '../media/media.module';
-import { UpdateModule } from '../update/update.module';
+import ChatbotConfigController from './chatbot-config.controller';
+import ChatbotConfigService from './chatbot-config.service';
+import MediaModule from '../media/media.module';
+import UpdateModule from '../update/update.module';
 
 @Module({
   imports: [
@@ -16,4 +16,4 @@ import { UpdateModule } from '../update/update.module';
   providers: [ChatbotConfigService],
   exports: [ChatbotConfigService],
 })
-export class ChatbotConfigModule {}
+export default class ChatbotConfigModule {}

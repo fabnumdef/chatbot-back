@@ -3,9 +3,10 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
 import * as compression from 'compression';
 import rateLimit from 'express-rate-limit';
+// eslint-disable-next-line import/no-extraneous-dependencies
 import { urlencoded, json } from 'express';
 import { AppModule } from './app.module.js';
-import { BotLogger } from './logger/bot.logger.js';
+import BotLogger from './logger/bot.logger.js';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);

@@ -7,38 +7,39 @@ import * as fs from 'fs';
 import { mkdirp } from 'mkdirp';
 import { PaginationQueryDto } from '@core/dto/pagination-query.dto';
 import { paginate, Pagination } from 'nestjs-typeorm-paginate';
-import { PaginationUtils } from '@core/pagination-utils';
+import PaginationUtils from '@core/pagination-utils';
 import { User } from '@core/entities/user.entity';
 import { MediaModel } from '@core/models/media.model';
 import { plainToInstance } from 'class-transformer';
 import { IntentModel } from '@core/models/intent.model';
 import { ChatbotConfig } from '@core/entities/chatbot-config.entity';
+// eslint-disable-next-line import/no-extraneous-dependencies
 import { Response } from 'express';
 import { Intent } from '@core/entities/intent.entity';
 import { IntentStatus } from '@core/enums/intent-status.enum';
-import { BotLogger } from '../logger/bot.logger';
-import { ResponseService } from '../response/response.service';
+import BotLogger from '../logger/bot.logger';
+import ResponseService from '../response/response.service';
 
 const getSize = require('get-folder-size');
 const archiver = require('archiver');
 
 @Injectable()
-export class MediaService {
-  private _filesDirectory = path.resolve(__dirname, '../../mediatheque');
+export default class MediaService {
+  private filesDirectory = path.resolve(__dirname, '../../mediatheque');
 
-  private readonly _logger = new BotLogger('MediaService');
+  private readonly logger = new BotLogger('MediaService');
 
   constructor(
     @InjectRepository(Media)
-    private readonly _mediasRepository: Repository<Media>,
-    private readonly _responseService: ResponseService,
+    private readonly mediasRepository: Repository<Media>,
+    private readonly responseService: ResponseService,
     @InjectRepository(ChatbotConfig)
-    private readonly _configRepository: Repository<ChatbotConfig>,
+    private readonly configRepository: Repository<ChatbotConfig>,
     @InjectRepository(Intent)
-    private readonly _intentsRepository: Repository<Intent>,
+    private readonly intentsRepository: Repository<Intent>,
   ) {
     // Création du répertoire si il n'existe pas
-    mkdirp(this._filesDirectory).then();
+    mkdirp(this.filesDirectory).then();
   }
 
   /**
@@ -46,7 +47,7 @@ export class MediaService {
    * @param params
    */
   findAll(params = {}): Promise<Media[]> {
-    return this._mediasRepository.find(params);
+    return this.mediasRepository.find(params);
   }
 
   /**
@@ -65,7 +66,7 @@ export class MediaService {
     return new Pagination(
       await Promise.all(
         results.items.map(async (item: MediaModel) => {
-          const intents = await this._findIntentsByMedia(item);
+          const intents = await this.findIntentsByMedia(item);
           item.intents = plainToInstance(IntentModel, intents);
 
           return item;
@@ -81,7 +82,7 @@ export class MediaService {
    * @param whereClause
    */
   getMediaQueryBuilder(whereClause: string) {
-    const query = this._mediasRepository
+    const query = this.mediasRepository
       .createQueryBuilder('media')
       .where(whereClause ? whereClause.toString() : `'1'`)
       .addOrderBy('media.created_at', 'DESC');
@@ -94,7 +95,7 @@ export class MediaService {
    * @param id
    */
   findOne(id: number): Promise<Media> {
-    return this._mediasRepository.findOne({ where: { id } });
+    return this.mediasRepository.findOne({ where: { id } });
   }
 
   /**
@@ -102,7 +103,7 @@ export class MediaService {
    * @param param
    */
   findOneWithParam(param: FindOneOptions): Promise<Media> {
-    return this._mediasRepository.findOne(param);
+    return this.mediasRepository.findOne(param);
   }
 
   /**
@@ -115,7 +116,7 @@ export class MediaService {
     const existFile = await this.findOneWithParam({
       where: { file: fileName },
     });
-    const stats = fs.statSync(path.resolve(this._filesDirectory, fileName));
+    const stats = fs.statSync(path.resolve(this.filesDirectory, fileName));
     const fileToSave: Media = {
       id: existFile ? existFile.id : null,
       file: fileName,
@@ -123,7 +124,7 @@ export class MediaService {
       size: Math.round(stats.size / 1000),
       added_by: `${user.first_name} ${user.last_name}`,
     };
-    return this._mediasRepository.save(fileToSave);
+    return this.mediasRepository.save(fileToSave);
   }
 
   /**
@@ -152,14 +153,14 @@ export class MediaService {
     const oldFile = await this.findOne(mediaId);
     try {
       // Suppression sur le serveur de l'ancien média
-      fs.unlinkSync(path.resolve(this._filesDirectory, oldFile.file));
+      fs.unlinkSync(path.resolve(this.filesDirectory, oldFile.file));
     } catch (e) {
-      this._logger.error(`Error unlinking old file`, e);
+      this.logger.error(`Error unlinking old file`, e);
     }
     // Ecriture sur le serveur du nouveau média
-    fs.writeFileSync(path.resolve(this._filesDirectory, fileName), file.buffer);
-    this._updateMediaSize();
-    const stats = fs.statSync(path.resolve(this._filesDirectory, fileName));
+    fs.writeFileSync(path.resolve(this.filesDirectory, fileName), file.buffer);
+    this.updateMediaSize();
+    const stats = fs.statSync(path.resolve(this.filesDirectory, fileName));
     const fileToSave: Media = {
       id: mediaId,
       file: fileName,
@@ -169,10 +170,10 @@ export class MediaService {
       // @ts-ignore
       created_at: new Date(),
     };
-    const mediaUpdated = await this._mediasRepository.save(fileToSave);
+    const mediaUpdated = await this.mediasRepository.save(fileToSave);
 
     // Mise à jour des réponses qui contenaient l'ancien média
-    await this._responseService.updateFileResponses(
+    await this.responseService.updateFileResponses(
       oldFile.file,
       mediaUpdated.file,
     );
@@ -203,14 +204,14 @@ export class MediaService {
     }
     const oldFile = await this.findOne(mediaId);
     fs.renameSync(
-      path.resolve(this._filesDirectory, oldFile.file),
-      path.resolve(this._filesDirectory, fileName),
+      path.resolve(this.filesDirectory, oldFile.file),
+      path.resolve(this.filesDirectory, fileName),
     );
-    await this._mediasRepository.update({ id: mediaId }, { file: fileName });
+    await this.mediasRepository.update({ id: mediaId }, { file: fileName });
     const mediaUpdated = await this.findOne(mediaId);
 
     // Mise à jour des réponses qui contenaient l'ancien média
-    await this._responseService.updateFileResponses(
+    await this.responseService.updateFileResponses(
       oldFile.file,
       mediaUpdated.file,
     );
@@ -232,8 +233,10 @@ export class MediaService {
     }
     try {
       this.deleteFile(fileExists.file);
-    } catch (e) {}
-    return this._mediasRepository.delete(id);
+    } catch (e) {
+      /* empty */
+    }
+    return this.mediasRepository.delete(id);
   }
 
   /**
@@ -270,8 +273,8 @@ export class MediaService {
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
-    fs.writeFileSync(path.resolve(this._filesDirectory, fileName), file.buffer);
-    this._updateMediaSize();
+    fs.writeFileSync(path.resolve(this.filesDirectory, fileName), file.buffer);
+    this.updateMediaSize();
     return fileName;
   }
 
@@ -280,7 +283,7 @@ export class MediaService {
    * @param filePath
    */
   async deleteFile(filePath: string) {
-    fs.unlinkSync(path.resolve(this._filesDirectory, filePath));
+    fs.unlinkSync(path.resolve(this.filesDirectory, filePath));
   }
 
   /**
@@ -299,7 +302,7 @@ export class MediaService {
     archive.pipe(res);
     const medias = await this.findAll();
     medias.forEach((m: Media) => {
-      const filePath = path.resolve(this._filesDirectory, m.file);
+      const filePath = path.resolve(this.filesDirectory, m.file);
       if (fs.existsSync(filePath)) {
         archive.file(filePath, { name: encodeURI(m.file) });
       }
@@ -338,10 +341,10 @@ export class MediaService {
    * Mise à jour de la taille totale occupée par la médiathèque sur le serveur
    * @private
    */
-  private _updateMediaSize() {
-    getSize(this._filesDirectory, (err, sizeInB) => {
+  private updateMediaSize() {
+    getSize(this.filesDirectory, (err, sizeInB) => {
       const sizeInGb = Math.round((sizeInB / 1024 / 1024 / 1024) * 100) / 100;
-      this._configRepository.save({ id: 1, media_size: sizeInGb });
+      this.configRepository.save({ id: 1, media_size: sizeInGb });
     });
   }
 
@@ -350,8 +353,8 @@ export class MediaService {
    * @param media
    * @private
    */
-  private _findIntentsByMedia(media: MediaModel): Promise<Intent[]> {
-    return this._intentsRepository
+  private findIntentsByMedia(media: MediaModel): Promise<Intent[]> {
+    return this.intentsRepository
       .createQueryBuilder('intent')
       .select(['intent.id', 'intent.main_question', 'intent.category'])
       .innerJoin('intent.responses', 'responses')

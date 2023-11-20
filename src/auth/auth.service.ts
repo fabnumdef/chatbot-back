@@ -6,21 +6,21 @@ import { ResetPasswordDto } from '@core/dto/reset-password.dto';
 import { MoreThan } from 'typeorm';
 import * as moment from 'moment';
 import { User } from '@core/entities/user.entity';
-import { MailService } from '../shared/services/mail.service';
-import { UserService } from '../user/user.service';
+import MailService from '../shared/services/mail.service';
+import UserService from '../user/user.service';
 
 const bcrypt = require('bcrypt');
 
 @Injectable()
-export class AuthService {
-  private _saltRounds = 10;
+export default class AuthService {
+  private saltRounds = 10;
 
-  private _failedLoginAttempts = 5;
+  private failedLoginAttempts = 5;
 
   constructor(
-    private readonly _userService: UserService,
-    private readonly _jwtService: JwtService,
-    private readonly _mailService: MailService,
+    private readonly userService: UserService,
+    private readonly jwtService: JwtService,
+    private readonly mailService: MailService,
   ) {}
 
   /**
@@ -28,10 +28,10 @@ export class AuthService {
    * @param user
    */
   async login(user: LoginUserDto): Promise<AuthResponseDto> {
-    const userToReturn = await this._validateUser(user);
+    const userToReturn = await this.validateUser(user);
     if (userToReturn) {
       return {
-        chatbotToken: this._jwtService.sign(
+        chatbotToken: this.jwtService.sign(
           JSON.parse(JSON.stringify(userToReturn)),
         ),
         user: userToReturn,
@@ -45,15 +45,14 @@ export class AuthService {
    * @param email
    */
   async sendEmailPasswordToken(email: string) {
-    const userWithoutPassword = await this._userService.findOne(email);
+    const userWithoutPassword = await this.userService.findOne(email);
     if (!userWithoutPassword) {
       return;
     }
-    const userUpdated = await this._userService.setPasswordResetToken(
-      userWithoutPassword,
-    );
+    const userUpdated =
+      await this.userService.setPasswordResetToken(userWithoutPassword);
 
-    await this._mailService
+    await this.mailService
       .sendEmail(
         userUpdated.email,
         'Usine à Chatbots - Réinitialisation de mot de passe',
@@ -72,7 +71,7 @@ export class AuthService {
    * @param resetPassword
    */
   async resetPassword(resetPassword: ResetPasswordDto) {
-    const userWithoutPassword = await this._userService.findOneWithParam({
+    const userWithoutPassword = await this.userService.findOneWithParam({
       where: {
         reset_password_token: resetPassword.token,
         reset_password_expires: MoreThan(new Date()),
@@ -86,7 +85,7 @@ export class AuthService {
     }
     const hashPassword = bcrypt.hashSync(
       resetPassword.password,
-      this._saltRounds,
+      this.saltRounds,
     );
     const valuesToUpdate = {
       password: hashPassword,
@@ -95,12 +94,12 @@ export class AuthService {
       lock_until: undefined,
       failed_login_attempts: 0,
     };
-    const userUpdated = await this._userService.findAndUpdate(
+    const userUpdated = await this.userService.findAndUpdate(
       userWithoutPassword.email,
       valuesToUpdate,
     );
 
-    await this._mailService
+    await this.mailService
       .sendEmail(
         userUpdated.email,
         'Usine à Chatbots - Mot de passe modifié',
@@ -165,21 +164,21 @@ export class AuthService {
    * @param user
    * @private
    */
-  private async _wrongPassword(user: User): Promise<any> {
-    user = await this._userService.findOne(user.email);
+  private async wrongPassword(user: User): Promise<any> {
+    user = await this.userService.findOne(user.email);
     user.failed_login_attempts++;
     if (
-      user.failed_login_attempts >= this._failedLoginAttempts &&
+      user.failed_login_attempts >= this.failedLoginAttempts &&
       !user.lock_until
     ) {
       // @ts-ignore
       user.lock_until = new Date(Date.now());
     }
-    await this._userService.findAndUpdate(user.email, {
+    await this.userService.findAndUpdate(user.email, {
       failed_login_attempts: user.failed_login_attempts,
       lock_until: user.lock_until,
     });
-    if (user.failed_login_attempts >= this._failedLoginAttempts) {
+    if (user.failed_login_attempts >= this.failedLoginAttempts) {
       let unlockTime = moment.duration(
         moment(user.lock_until).add(1, 'd').diff(moment()),
       );
@@ -190,7 +189,7 @@ export class AuthService {
         HttpStatus.UNAUTHORIZED,
       );
     }
-    if (user.failed_login_attempts === this._failedLoginAttempts - 1) {
+    if (user.failed_login_attempts === this.failedLoginAttempts - 1) {
       throw new HttpException(
         'Mauvais identifiant ou mot de passe. Une seule tentative restante avant de bloquer votre compte pour 24h.',
         HttpStatus.UNAUTHORIZED,

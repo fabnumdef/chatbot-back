@@ -8,19 +8,19 @@ import { EventActionTypeEnum } from '@core/enums/event-action-type.enum';
 import { Intent } from '@core/entities/intent.entity';
 import { InboxStatus } from '@core/enums/inbox-status.enum';
 import { truncateString } from '@core/utils';
-import { IntentService } from '../intent/intent.service';
-import { BotLogger } from '../logger/bot.logger';
+import IntentService from '../intent/intent.service';
+import BotLogger from '../logger/bot.logger';
 
 @Injectable()
-export class InboxFillService {
-  private readonly _logger = new BotLogger('InboxFillService');
+export default class InboxFillService {
+  private readonly logger = new BotLogger('InboxFillService');
 
   constructor(
     @InjectRepository(Events)
-    private readonly _eventsRepository: Repository<Events>,
+    private readonly eventsRepository: Repository<Events>,
     @InjectRepository(Inbox)
-    private readonly _inboxesRepository: Repository<Inbox>,
-    private readonly _intentService: IntentService,
+    private readonly inboxesRepository: Repository<Inbox>,
+    private readonly intentService: IntentService,
   ) {}
 
   /**
@@ -30,14 +30,14 @@ export class InboxFillService {
   async checkEvents() {
     // Récupération du timestamp max des requêtes
     const maxTimestamp = (
-      await this._inboxesRepository
+      await this.inboxesRepository
         .createQueryBuilder()
         .select('MAX(timestamp)', 'timestamp')
         .getRawOne()
     )?.timestamp;
 
     // Récupération de tout les événements qui ont eu lieu après ce timestamp
-    const events: Events[] = await this._eventsRepository.find({
+    const events: Events[] = await this.eventsRepository.find({
       where: {
         timestamp: MoreThan(maxTimestamp || 0),
       },
@@ -60,13 +60,13 @@ export class InboxFillService {
       // On récupère donc tout les événements RASA jusqu'au premier 'action_listen'
       const eventsSlice = events.slice(0, conversationIdx + 1);
       // On vérifie qu'il s'agit d'une question d'un utilisateur (ça peut être par exemple seulement la connection d'un utilisateur)
-      if (this._canGenerateInbox(eventsSlice)) {
+      if (this.canGenerateInbox(eventsSlice)) {
         // On récupère la requête à sauvegarder en BDD
-        const inbox = this._getNextInbox(eventsSlice);
+        const inbox = this.getNextInbox(eventsSlice);
         // Si elle est bien associée à une connaissance on la sauvegarge
         if (
           inbox.intent?.id &&
-          (await this._intentService.intentExists(inbox.intent.id))
+          (await this.intentService.intentExists(inbox.intent.id))
         ) {
           inboxes.push(inbox);
         }
@@ -78,8 +78,8 @@ export class InboxFillService {
     }
 
     if (inboxes.length > 0) {
-      await this._inboxesRepository.save(inboxes);
-      this._logger.log(`Finishing updating ${inboxes.length} inbox`);
+      await this.inboxesRepository.save(inboxes);
+      this.logger.log(`Finishing updating ${inboxes.length} inbox`);
     }
   }
 
@@ -88,7 +88,7 @@ export class InboxFillService {
    * @param events
    * @private
    */
-  private _getNextInbox(events: Events[]): Inbox {
+  private getNextInbox(events: Events[]): Inbox {
     const inbox = new Inbox();
     let getMessageTimestamp: number;
     let sendMessageTimestamp: number;
@@ -160,7 +160,7 @@ export class InboxFillService {
    * @param events
    * @private
    */
-  private _canGenerateInbox(events: Events[]): boolean {
+  private canGenerateInbox(events: Events[]): boolean {
     return (
       events.findIndex((e) => e.type_name === 'user') >= 0 &&
       events.findIndex((e) => e.type_name === 'bot') >= 0

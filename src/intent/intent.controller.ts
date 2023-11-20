@@ -13,7 +13,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { JwtGuard } from '@core/guards/jwt.guard';
+import JwtGuard from '@core/guards/jwt.guard';
 import { IntentDto } from '@core/dto/intent.dto';
 import { plainToInstance } from 'class-transformer';
 import { Intent } from '@core/entities/intent.entity';
@@ -25,33 +25,36 @@ import { IntentModel } from '@core/models/intent.model';
 import { IntentStatus } from '@core/enums/intent-status.enum';
 import camelcaseKeys = require('camelcase-keys');
 import snakecaseKeys = require('snakecase-keys');
-import { IntentService } from './intent.service';
+import IntentService from './intent.service';
 
 @ApiTags('intent')
 @Controller('intent')
 @ApiBearerAuth()
 @UseGuards(JwtGuard)
-export class IntentController {
-  constructor(private readonly _intentService: IntentService) {}
+export default class IntentController {
+  constructor(private readonly intentService: IntentService) {}
 
   @Get('')
   @ApiOperation({ summary: 'Retourne toutes les connaissances' })
   async getIntents(): Promise<IntentDto[]> {
-    const intents: Intent[] = await this._intentService.findFullIntents();
+    const intents: Intent[] = await this.intentService.findFullIntents();
     return plainToInstance(IntentDto, camelcaseKeys(intents, { deep: true }));
   }
 
   @Get(':intentId')
   @ApiOperation({ summary: 'Retourne une connaissance' })
   async getIntent(@Param('intentId') intentId: string): Promise<IntentDto> {
-    const intent: Intent = await this._intentService.findOne(intentId);
-    return plainToInstance(IntentDto, camelcaseKeys(intent, { deep: true }));
+    const intent: Intent = await this.intentService.findOne(intentId);
+    return plainToInstance(
+      IntentDto,
+      camelcaseKeys(<any>intent, { deep: true }),
+    );
   }
 
   @Get('check/:intentId')
   @ApiOperation({ summary: 'Vérifie si la connaissance existe' })
   async checkIntentId(@Param('intentId') intentId: string): Promise<boolean> {
-    return this._intentService.intentExists(intentId);
+    return this.intentService.intentExists(intentId);
   }
 
   @Post('search')
@@ -60,15 +63,16 @@ export class IntentController {
     @Query() options: PaginationQueryDto,
     @Body() filters: IntentFilterDto,
   ): Promise<IntentDto[]> {
-    const intents: Pagination<IntentModel> = await this._intentService.paginate(
+    const intents: Pagination<IntentModel> = await this.intentService.paginate(
       options,
       filters,
     );
     intents.items
       .filter((i) => !!i)
-      .map((i) => plainToInstance(IntentDto, camelcaseKeys(i, { deep: true })));
-    // @ts-ignore
-    return camelcaseKeys(intents, { deep: true });
+      .map((i) =>
+        plainToInstance(IntentDto, camelcaseKeys(<any>i, { deep: true })),
+      );
+    return camelcaseKeys(<any>intents, { deep: true });
   }
 
   @Post('')
@@ -77,17 +81,20 @@ export class IntentController {
     @Body() intentDto: IntentDto,
     @Req() req,
   ): Promise<IntentDto> {
-    let intent = this._formatIntent(intentDto);
+    let intent = this.formatIntent(intentDto);
     intent.user = req.user;
     intent.status = IntentStatus.to_deploy;
-    if (await this._intentService.intentExists(intent.id)) {
+    if (await this.intentService.intentExists(intent.id)) {
       throw new HttpException(
         `Impossible de créer cette connaissance, l'identifiant existe déjà.`,
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
-    intent = await this._intentService.createEdit(intent, null);
-    return plainToInstance(IntentDto, camelcaseKeys(intent, { deep: true }));
+    intent = await this.intentService.createEdit(intent, null);
+    return plainToInstance(
+      IntentDto,
+      camelcaseKeys(<any>intent, { deep: true }),
+    );
   }
 
   @Put(':id')
@@ -96,12 +103,15 @@ export class IntentController {
     @Param('id') intentId: string,
     @Body() intentDto: IntentDto,
   ): Promise<IntentDto> {
-    let intent = this._formatIntent(intentDto);
-    intent = await this._intentService.createEdit(
+    let intent = this.formatIntent(intentDto);
+    intent = await this.intentService.createEdit(
       intent,
-      intent.id != intentId ? intentId : null,
+      intent.id !== intentId ? intentId : null,
     );
-    return plainToInstance(IntentDto, camelcaseKeys(intent, { deep: true }));
+    return plainToInstance(
+      IntentDto,
+      camelcaseKeys(<any>intent, { deep: true }),
+    );
   }
 
   @Delete(':intentId')
@@ -109,7 +119,7 @@ export class IntentController {
   async deleteIntent(
     @Param('intentId') intentId: string,
   ): Promise<UpdateResult> {
-    return this._intentService.delete(intentId);
+    return this.intentService.delete(intentId);
   }
 
   @Post('tree')
@@ -118,7 +128,7 @@ export class IntentController {
     @Query() options: PaginationQueryDto,
     @Body() filters: IntentFilterDto,
   ): Promise<IntentDto[]> {
-    const intents: Intent[] = await this._intentService.getFullTree(
+    const intents: Intent[] = await this.intentService.getFullTree(
       options,
       filters,
     );
@@ -130,17 +140,22 @@ export class IntentController {
    * @param intentDto
    * @private
    */
-  private _formatIntent(intentDto: IntentDto): Intent {
-    const intent: Intent = plainToInstance(Intent, snakecaseKeys(intentDto));
+  private formatIntent(intentDto: IntentDto): Intent {
+    const intent: Intent = plainToInstance(
+      Intent,
+      snakecaseKeys(<any>intentDto),
+    );
     if (intent.responses.findIndex((r) => !r.id) >= 0) {
       // Si on ajoute une nouvelle réponse on supprime les ids des précédentes
       intent.responses.map((r) => {
         delete r.id;
+        return r;
       });
     }
     intent.responses.map((r) => {
       // Association de la connaissance à la réponse pour la sauvegarde
       r.intent = <Intent>{ id: intent.id };
+      return r;
     });
     if (intent.knowledges) {
       intent.knowledges = intent.knowledges.filter((k) => k.question.trim());
@@ -150,6 +165,7 @@ export class IntentController {
         if (!k.id) {
           delete k.id;
         }
+        return k;
       });
       // Filtre des questions similaires identiques
       intent.knowledges = intent.knowledges

@@ -8,18 +8,18 @@ import * as fs from 'fs';
 import { ChatbotConfig } from '@core/entities/chatbot-config.entity';
 import { dotenvToJson, jsonToDotenv } from '@core/utils';
 import * as path from 'path';
-import { BotLogger } from '../logger/bot.logger';
-import { ChatbotConfigService } from '../chatbot-config/chatbot-config.service';
+import BotLogger from '../logger/bot.logger';
+import ChatbotConfigService from '../chatbot-config/chatbot-config.service';
 
 @Injectable()
-export class UpdateService {
-  private readonly _logger = new BotLogger('UpdateService');
+export default class UpdateService {
+  private readonly logger = new BotLogger('UpdateService');
 
-  private _appDir = path.resolve(__dirname, '../../../chatbot-back');
+  private appDir = path.resolve(__dirname, '../../../chatbot-back');
 
-  private _gitDir = path.resolve(__dirname, '../../../git/chatbot-back');
+  private gitDir = path.resolve(__dirname, '../../../git/chatbot-back');
 
-  constructor(private _configService: ChatbotConfigService) {}
+  constructor(private configService: ChatbotConfigService) {}
 
   /**
    * Vérification si une mise à jour du code source peut se lancer
@@ -28,18 +28,18 @@ export class UpdateService {
    * @param retry
    */
   async launchUpdate(updateChatbot: UpdateChatbotDto, files, retry = false) {
-    const config: ChatbotConfig = await this._configService.getChatbotConfig();
+    const config: ChatbotConfig = await this.configService.getChatbotConfig();
     // Si une mise à jour est déjà planifiée, on arrête
     if (config.need_update && !retry) {
-      this._logger.error('UPDATE - update already planned', null);
+      this.logger.error('UPDATE - update already planned', null);
       throw new HttpException(
         `Une mise à jour est déjà prévue.`,
         HttpStatus.NOT_ACCEPTABLE,
       );
     }
-    await this._configService.update(<ChatbotConfig>{ need_update: true });
+    await this.configService.update(<ChatbotConfig>{ need_update: true });
     if (config.training_rasa) {
-      this._logger.log('UPDATE - Waiting for RASA to train bot');
+      this.logger.log('UPDATE - Waiting for RASA to train bot');
       // On retente toutes les minutes
       setTimeout(() => {
         this.launchUpdate(updateChatbot, files, true);
@@ -48,7 +48,7 @@ export class UpdateService {
       try {
         await this.update(updateChatbot, files);
       } catch (err) {}
-      await this._configService.update(<ChatbotConfig>{ need_update: false });
+      await this.configService.update(<ChatbotConfig>{ need_update: false });
     }
   }
 
@@ -58,36 +58,36 @@ export class UpdateService {
    * @param files
    */
   async update(updateChatbot: UpdateChatbotDto, files) {
-    this._logger.log('Updating Chatbot...', JSON.stringify(updateChatbot));
+    this.logger.log('Updating Chatbot...', JSON.stringify(updateChatbot));
     // Mise à jour des repos git
-    await this._updateChatbotRepos(updateChatbot);
+    await this.updateChatbotRepos(updateChatbot);
     if (updateChatbot.domainName) {
       // @ts-ignore
-      await this._configService.update({
+      await this.configService.update({
         domain_name: updateChatbot.domainName,
       });
     }
 
     // Si il y a des nouveaux fichiers passés en paramètre, on les met à jour
     if (files && files.env && files.env[0]) {
-      fs.writeFileSync(`${this._appDir}/../git/.env`, files.env[0], 'utf8');
+      fs.writeFileSync(`${this.appDir}/../git/.env`, files.env[0], 'utf8');
     }
     if (files && files.nginx_conf && files.nginx_conf[0]) {
       fs.writeFileSync(
-        `${this._appDir}/../git/nginx.conf`,
+        `${this.appDir}/../git/nginx.conf`,
         files.nginx_conf[0].buffer,
         'utf8',
       );
     }
     if (files && files.nginx_site && files.nginx_site[0]) {
       fs.writeFileSync(
-        `${this._appDir}/../git/nginx_conf.cfg`,
+        `${this.appDir}/../git/nginx_conf.cfg`,
         files.nginx_site[0].buffer,
         'utf8',
       );
     }
 
-    const playbookOptions = new Options(`${this._gitDir}/ansible`);
+    const playbookOptions = new Options(`${this.gitDir}/ansible`);
     const ansiblePlaybook = new AnsiblePlaybook(playbookOptions);
     const extraVars = {
       ...updateChatbot,
@@ -99,26 +99,26 @@ export class UpdateService {
         DATABASE_NAME: process.env.DATABASE_NAME,
       },
     };
-    this._logger.log('DEPLOYING CHATBOT APP');
+    this.logger.log('DEPLOYING CHATBOT APP');
     await ansiblePlaybook
       .command(`playDeployapp.yml -e '${JSON.stringify(extraVars)}'`)
       .then(async (result) => {
-        this._logger.log(JSON.stringify(result));
+        this.logger.log(JSON.stringify(result));
         // if (updateChatbot.updateLogs && updateChatbot.elastic_host && updateChatbot.elastic_username && updateChatbot.elastic_password) {
         //   await ansiblePlaybook.command(`elastic/elastic.yml -e '${JSON.stringify(extraVars)}'`).then((result) => {
-        //     this._logger.log(JSON.stringify(result));
+        //     this.logger.log(JSON.stringify(result));
         //   })
         // }
         if (updateChatbot.updateBack) {
           await ansiblePlaybook
             .command(`playReloadback.yml -e '${JSON.stringify(extraVars)}'`)
             .then((result) => {
-              this._logger.log(JSON.stringify(result));
+              this.logger.log(JSON.stringify(result));
             });
         }
       })
       .catch((e) => {
-        this._logger.error('ERROR DEPLOYING CHATBOT APP', e);
+        this.logger.error('ERROR DEPLOYING CHATBOT APP', e);
       });
   }
 
@@ -127,7 +127,7 @@ export class UpdateService {
    * @param domainName
    */
   async updateDomainName(domainName: UpdateDomainNameDto) {
-    const playbookOptions = new Options(`${this._gitDir}/ansible`);
+    const playbookOptions = new Options(`${this.gitDir}/ansible`);
     const ansiblePlaybook = new AnsiblePlaybook(playbookOptions);
     const extraVars = {
       ...{
@@ -136,15 +136,15 @@ export class UpdateService {
         ansible_become_pass: domainName.userPassword,
       },
     };
-    this._logger.log('UPDATING DOMAIN NAME');
+    this.logger.log('UPDATING DOMAIN NAME');
     await ansiblePlaybook
       .command(`playUpdatenginx.yml -e '${JSON.stringify(extraVars)}'`)
       .then(async (result) => {
-        this._logger.log(JSON.stringify(result));
-        this._updateDomainNameEnv(domainName.domainName);
+        this.logger.log(JSON.stringify(result));
+        this.updateDomainNameEnv(domainName.domainName);
       })
       .catch((e) => {
-        this._logger.error('ERROR UPDATING DOMAIN NAME', e);
+        this.logger.error('ERROR UPDATING DOMAIN NAME', e);
       });
   }
 
@@ -153,30 +153,28 @@ export class UpdateService {
    * @param domainName
    * @private
    */
-  private async _updateDomainNameEnv(domainName: string) {
-    this._logger.log('UPDATING DOMAIN NAME ENV');
-    const dotenv = dotenvToJson(
-      fs.readFileSync(`${this._appDir}/.env`, 'utf8'),
-    );
+  private async updateDomainNameEnv(domainName: string) {
+    this.logger.log('UPDATING DOMAIN NAME ENV');
+    const dotenv = dotenvToJson(fs.readFileSync(`${this.appDir}/.env`, 'utf8'));
     dotenv.HOST_URL = `https://${domainName}`;
 
     try {
-      fs.writeFileSync(`${this._appDir}/.env`, jsonToDotenv(dotenv), 'utf8');
+      fs.writeFileSync(`${this.appDir}/.env`, jsonToDotenv(dotenv), 'utf8');
       fs.writeFileSync(
-        `${this._appDir}/dist/.env`,
+        `${this.appDir}/dist/.env`,
         jsonToDotenv(dotenv),
         'utf8',
       );
-      fs.writeFileSync(`${this._gitDir}/../.env`, jsonToDotenv(dotenv), 'utf8');
-      const playbookOptions = new Options(`${this._gitDir}/ansible`);
+      fs.writeFileSync(`${this.gitDir}/../.env`, jsonToDotenv(dotenv), 'utf8');
+      const playbookOptions = new Options(`${this.gitDir}/ansible`);
       const ansiblePlaybook = new AnsiblePlaybook(playbookOptions);
       await ansiblePlaybook
         .command(`playReloadback.yml -e '{"updateBack": true}'`)
         .then((result) => {
-          this._logger.log(JSON.stringify(result));
+          this.logger.log(JSON.stringify(result));
         });
     } catch (e) {
-      this._logger.error('ERROR UPDATING DOMAIN NAME ENV', e);
+      this.logger.error('ERROR UPDATING DOMAIN NAME ENV', e);
     }
   }
 
@@ -185,17 +183,17 @@ export class UpdateService {
    * @param updateChatbot
    * @private
    */
-  private async _updateChatbotRepos(updateChatbot: UpdateChatbotDto) {
-    const playbookOptions = new Options(`${this._appDir}/ansible`);
+  private async updateChatbotRepos(updateChatbot: UpdateChatbotDto) {
+    const playbookOptions = new Options(`${this.appDir}/ansible`);
     const ansiblePlaybook = new AnsiblePlaybook(playbookOptions);
-    this._logger.log('UPDATING CHATBOTS REPOSITORIES');
+    this.logger.log('UPDATING CHATBOTS REPOSITORIES');
     await ansiblePlaybook
       .command(`playUpdaterepos.yml -e '${JSON.stringify(updateChatbot)}'`)
       .then(async (result) => {
-        this._logger.log(JSON.stringify(result));
+        this.logger.log(JSON.stringify(result));
       })
       .catch((error) => {
-        this._logger.log('ERRROR UPDATING CHATBOTS REPOSITORIES', error);
+        this.logger.log('ERRROR UPDATING CHATBOTS REPOSITORIES', error);
       });
   }
 }

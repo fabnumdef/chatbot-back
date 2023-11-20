@@ -1,12 +1,12 @@
 import { StatsFilterDto } from '@core/dto/stats-filter.dto';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { FindManyOptions, LessThan, Repository, Between } from 'typeorm';
+import { LessThan, Repository, Between } from 'typeorm';
 import { Inbox } from '@core/entities/inbox.entity';
 import { InboxStatus, InboxStatus_Fr } from '@core/enums/inbox-status.enum';
 import { PaginationQueryDto } from '@core/dto/pagination-query.dto';
 import { paginate, Pagination } from 'nestjs-typeorm-paginate';
-import { PaginationUtils } from '@core/pagination-utils';
+import PaginationUtils from '@core/pagination-utils';
 import { InboxFilterDto } from '@core/dto/inbox-filter.dto';
 import { UpdateResult } from 'typeorm/query-builder/result/UpdateResult';
 import { Knowledge } from '@core/entities/knowledge.entity';
@@ -23,25 +23,25 @@ import * as fs from 'fs';
 import { WorkBook } from 'xlsx';
 import { StatsMostAskedCategoriesDto } from '@core/dto/stats-most-asked-categories.dto';
 import { FeedbackStatus } from '@core/enums/feedback-status.enum';
-import { UserService } from '../user/user.service';
-import { IntentService } from '../intent/intent.service';
-import { KnowledgeService } from '../knowledge/knowledge.service';
-import { MailService } from '../shared/services/mail.service';
+import UserService from '../user/user.service';
+import IntentService from '../intent/intent.service';
+import KnowledgeService from '../knowledge/knowledge.service';
+import MailService from '../shared/services/mail.service';
 
 const XLSX = require('xlsx');
 const uuid = require('uuid');
 
 @Injectable()
-export class InboxService {
+export default class InboxService {
   constructor(
     @InjectRepository(Inbox)
-    private readonly _inboxesRepository: Repository<Inbox>,
-    private readonly _knowledgeService: KnowledgeService,
-    private readonly _intentService: IntentService,
-    private readonly _userService: UserService,
-    private readonly _mailService: MailService,
+    private readonly inboxesRepository: Repository<Inbox>,
+    private readonly knowledgeService: KnowledgeService,
+    private readonly intentService: IntentService,
+    private readonly userService: UserService,
+    private readonly mailService: MailService,
     @InjectRepository(Events)
-    private readonly _eventsRepository: Repository<Events>,
+    private readonly eventsRepository: Repository<Events>,
   ) {}
 
   /**
@@ -49,10 +49,10 @@ export class InboxService {
    * @private
    */
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
-  private _clearOldValues() {
+  private clearOldValues() {
     const threeYearsAgo = moment().subtract(3, 'years').unix();
-    this._clearInboxes(threeYearsAgo);
-    this._clearEvents(threeYearsAgo);
+    this.clearInboxes(threeYearsAgo);
+    this.clearEvents(threeYearsAgo);
   }
 
   /**
@@ -67,7 +67,7 @@ export class InboxService {
       },
     },
   ): Promise<Inbox[]> {
-    return this._inboxesRepository.find(params);
+    return this.inboxesRepository.find(params);
   }
 
   /**
@@ -75,7 +75,7 @@ export class InboxService {
    * @param inboxId
    */
   findOne(inboxId) {
-    return this._inboxesRepository.findOne({
+    return this.inboxesRepository.findOne({
       where: {
         id: inboxId,
       },
@@ -90,7 +90,7 @@ export class InboxService {
    * @param inbox
    */
   save(inbox: Inbox): Promise<Inbox> {
-    return this._inboxesRepository.save(inbox);
+    return this.inboxesRepository.save(inbox);
   }
 
   /**
@@ -117,7 +117,7 @@ export class InboxService {
    * @param filters
    */
   getInboxQueryBuilder(whereClause: string, filters?: InboxFilterDto) {
-    const query = this._inboxesRepository
+    const query = this.inboxesRepository
       .createQueryBuilder('inbox')
       .leftJoinAndSelect('inbox.intent', 'intent')
       .leftJoin('inbox.user', 'user')
@@ -179,14 +179,14 @@ export class InboxService {
       intent: inbox.intent,
       question: inbox.question,
     };
-    await this._knowledgeService.createSafe(newKnowledge);
+    await this.knowledgeService.createSafe(newKnowledge);
     if (inbox.intent.status === IntentStatus.active) {
-      await this._intentService.updateManyByCondition(
+      await this.intentService.updateManyByCondition(
         { id: inbox.intent.id },
         { status: IntentStatus.active_modified },
       );
     }
-    return this._inboxesRepository.update(
+    return this.inboxesRepository.update(
       { id: inboxId },
       { status: InboxStatus.confirmed },
     );
@@ -199,9 +199,9 @@ export class InboxService {
    * @param userEmail
    */
   async assign(inboxId: number, userEmail?: string): Promise<UpdateResult> {
-    const user = userEmail ? await this._userService.findOne(userEmail) : null;
+    const user = userEmail ? await this.userService.findOne(userEmail) : null;
     const inbox = await this.findOne(inboxId);
-    const toReturn = await this._inboxesRepository.update(
+    const toReturn = await this.inboxesRepository.update(
       { id: inboxId },
       { user },
     );
@@ -210,7 +210,7 @@ export class InboxService {
       return toReturn;
     }
 
-    await this._mailService
+    await this.mailService
       .sendEmail(
         user.email,
         'Usine à Chatbots - Une requête vous a été attribuée',
@@ -232,7 +232,7 @@ export class InboxService {
    * @param inboxId
    */
   delete(inboxId): Promise<UpdateResult> {
-    return this._inboxesRepository.update(
+    return this.inboxesRepository.update(
       { id: inboxId },
       { status: InboxStatus.archived },
     );
@@ -250,7 +250,7 @@ export class InboxService {
     const endDate = filters.endDate
       ? moment(filters.endDate, 'DD/MM/YYYY').format('YYYY-MM-DD')
       : moment().format('YYYY-MM-DD');
-    const query = this._inboxesRepository
+    const query = this.inboxesRepository
       .createQueryBuilder('inbox')
       .select('DATE(to_timestamp(inbox.timestamp)) AS date')
       .addSelect('COUNT(*) AS count')
@@ -274,7 +274,7 @@ export class InboxService {
       ? moment(filters.endDate, 'DD/MM/YYYY').format('YYYY-MM-DD')
       : moment().format('YYYY-MM-DD');
 
-    const query = this._inboxesRepository
+    const query = this.inboxesRepository
       .createQueryBuilder('inbox')
       .select('DATE(to_timestamp(inbox.timestamp)) AS date')
       .addSelect('COUNT(DISTINCT sender_id) AS count')
@@ -298,7 +298,7 @@ export class InboxService {
       ? moment(filters.endDate, 'DD/MM/YYYY').format('YYYY-MM-DD')
       : null;
 
-    const query = this._inboxesRepository
+    const query = this.inboxesRepository
       .createQueryBuilder('inbox')
       .select('COUNT(DISTINCT sender_id) AS visitors');
     if (startDate) {
@@ -328,7 +328,7 @@ export class InboxService {
       ? moment(filters.endDate, 'DD/MM/YYYY').format('YYYY-MM-DD')
       : null;
 
-    const query = this._inboxesRepository
+    const query = this.inboxesRepository
       .createQueryBuilder('inbox')
       .select('int.main_question AS question')
       .addSelect('COUNT(inbox.intent) AS count')
@@ -380,7 +380,7 @@ export class InboxService {
       ? moment(filters.endDate, 'DD/MM/YYYY').format('YYYY-MM-DD')
       : null;
 
-    const query = this._inboxesRepository
+    const query = this.inboxesRepository
       .createQueryBuilder('inbox')
       .select('int.category AS category')
       .addSelect('COUNT(inbox.intent) AS count')
@@ -420,7 +420,7 @@ export class InboxService {
       ? moment(filters.endDate, 'DD/MM/YYYY').format('YYYY-MM-DD')
       : null;
 
-    const query = this._inboxesRepository
+    const query = this.inboxesRepository
       .createQueryBuilder('inbox')
       .select(
         'ROUND(count(*) * 1.0 / count(distinct inbox.sender_id), 2) as averageQuestions',
@@ -448,7 +448,7 @@ export class InboxService {
       ? moment(filters.endDate, 'DD/MM/YYYY').format('YYYY-MM-DD')
       : null;
 
-    const query = this._inboxesRepository
+    const query = this.inboxesRepository
       .createQueryBuilder('inbox')
       .select('ROUND(avg(inbox.response_time), 0) as averageResponse');
     if (startDate) {
@@ -485,7 +485,7 @@ export class InboxService {
       ? ` AND DATE(to_timestamp(inbox.timestamp)) <= '${endDate}'`
       : additionnalWhereClause;
 
-    const query = this._inboxesRepository
+    const query = this.inboxesRepository
       .createQueryBuilder('inbox')
       .select(
         `100 * (SELECT COUNT(inbox.id) from inbox WHERE inbox.confidence >= ${confidence.toString(
@@ -526,7 +526,7 @@ export class InboxService {
       ? ` AND DATE(to_timestamp(inbox.timestamp)) <= '${endDate}'`
       : additionnalWhereClause;
 
-    const query = this._inboxesRepository
+    const query = this.inboxesRepository
       .createQueryBuilder('inbox')
       .select(`COUNT(inbox.id)`, 'countFeedback')
       .where(
@@ -566,7 +566,7 @@ export class InboxService {
       ? ` AND DATE(to_timestamp(inbox.timestamp)) <= '${endDate}'`
       : additionnalWhereClause;
 
-    const query = this._inboxesRepository
+    const query = this.inboxesRepository
       .createQueryBuilder('inbox')
       .select(
         `100 * (SELECT COUNT(inbox.id) from inbox WHERE inbox.feedback_status = '${feedbackStatus}' ${additionnalWhereClause})/COUNT(inbox.id)`,
@@ -590,7 +590,7 @@ export class InboxService {
   public async updateInboxWithFeedback(feedback: Feedback): Promise<boolean> {
     const tenMinutes = 10 * 60;
     // We search the right inbox +- 10 minutes
-    const inbox: Inbox = await this._inboxesRepository
+    const inbox: Inbox = await this.inboxesRepository
       .createQueryBuilder('inbox')
       .where({
         timestamp: Between(
@@ -613,7 +613,7 @@ export class InboxService {
     }
 
     // @ts-ignore
-    await this._inboxesRepository.update(inbox.id, {
+    await this.inboxesRepository.update(inbox.id, {
       // @ts-ignore
       status: feedback.status,
       feedback_status: feedback.status,
@@ -631,8 +631,8 @@ export class InboxService {
     options: PaginationQueryDto,
     filters: InboxFilterDto,
   ): Promise<fs.ReadStream> {
-    return new Promise<fs.ReadStream>(async (resolve, reject) => {
-      const workbook = await this._generateWorkbook(options, filters);
+    return new Promise<fs.ReadStream>(async (resolve) => {
+      const workbook = await this.generateWorkbook(options, filters);
 
       const guidForClient = uuid.v1();
       const pathNameWithGuid = `${guidForClient}_result.xlsx`;
@@ -655,13 +655,13 @@ export class InboxService {
    * @param filters
    * @private
    */
-  private async _generateWorkbook(
+  private async generateWorkbook(
     options: PaginationQueryDto,
     filters: InboxFilterDto,
   ): Promise<WorkBook> {
     const workbook = XLSX.utils.book_new();
-    const worksheet_data = await this._generateWorksheet(options, filters);
-    const worksheet = XLSX.utils.aoa_to_sheet(worksheet_data);
+    const worksheetData = await this.generateWorksheet(options, filters);
+    const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
     XLSX.utils.book_append_sheet(workbook, worksheet);
     return workbook;
   }
@@ -672,7 +672,7 @@ export class InboxService {
    * @param filters
    * @private
    */
-  private async _generateWorksheet(
+  private async generateWorksheet(
     options: PaginationQueryDto,
     filters: InboxFilterDto,
   ) {
@@ -680,7 +680,6 @@ export class InboxService {
       PaginationUtils.setQuery(options, Inbox.getAttributesToSearch()),
       filters,
     ).getMany();
-    let idx = 1;
     const rows = [
       [
         'Question',
@@ -691,8 +690,7 @@ export class InboxService {
       ],
     ];
     inboxes.forEach((inbox: Inbox) => {
-      idx += 1;
-      rows.push(this._generateRow(inbox, idx));
+      rows.push(this.generateRow(inbox));
     });
     return rows;
   }
@@ -703,7 +701,7 @@ export class InboxService {
    * @param idx
    * @private
    */
-  private _generateRow(inbox: Inbox, idx: number) {
+  private generateRow(inbox: Inbox) {
     return [
       inbox.question,
       inbox.intent?.category,
@@ -718,8 +716,8 @@ export class InboxService {
    * @param timestamp
    * @private
    */
-  private async _clearInboxes(timestamp: number) {
-    await this._inboxesRepository.update(
+  private async clearInboxes(timestamp: number) {
+    await this.inboxesRepository.update(
       {
         timestamp: LessThan(timestamp),
       },
@@ -732,8 +730,8 @@ export class InboxService {
    * @param timestamp
    * @private
    */
-  private async _clearEvents(timestamp: number) {
-    await this._eventsRepository.update(
+  private async clearEvents(timestamp: number) {
+    await this.eventsRepository.update(
       {
         timestamp: LessThan(timestamp),
         type_name: 'user',

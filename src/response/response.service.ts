@@ -9,12 +9,12 @@ import { UpdateResult } from 'typeorm/query-builder/result/UpdateResult';
 import { ChatbotConfig } from '@core/entities/chatbot-config.entity';
 
 @Injectable()
-export class ResponseService {
+export default class ResponseService {
   constructor(
     @InjectRepository(Response)
-    private readonly _responsesRepository: Repository<Response>,
+    private readonly responsesRepository: Repository<Response>,
     @InjectRepository(ChatbotConfig)
-    private readonly _configRepository: Repository<ChatbotConfig>,
+    private readonly configRepository: Repository<ChatbotConfig>,
   ) {}
 
   /**
@@ -22,7 +22,7 @@ export class ResponseService {
    * @param intent
    */
   findByIntent(intent: IntentModel): Promise<Response[]> {
-    return this._responsesRepository.find({
+    return this.responsesRepository.find({
       where: { intent: { id: intent.id } },
       order: { id: 'ASC' },
     });
@@ -32,7 +32,7 @@ export class ResponseService {
    * Récupération de toutes les réponses
    */
   findAll(): Promise<Response[]> {
-    return this._responsesRepository.find();
+    return this.responsesRepository.find();
   }
 
   /**
@@ -40,7 +40,7 @@ export class ResponseService {
    * @param response
    */
   create(response: ResponseModel): Promise<Response> {
-    return this._responsesRepository.save(response);
+    return this.responsesRepository.save(response);
   }
 
   /**
@@ -48,7 +48,7 @@ export class ResponseService {
    * @param response
    */
   update(response: ResponseModel): Promise<UpdateResult> {
-    return this._responsesRepository.update({ id: response.id }, response);
+    return this.responsesRepository.update({ id: response.id }, response);
   }
 
   /**
@@ -56,7 +56,7 @@ export class ResponseService {
    * @param responses
    */
   saveMany(responses: Response[]): Promise<Response[]> {
-    return this._responsesRepository.save(responses);
+    return this.responsesRepository.save(responses);
   }
 
   /**
@@ -65,7 +65,7 @@ export class ResponseService {
    * @param newFile
    */
   async updateFileResponses(oldFile: string, newFile: string) {
-    const result = await this._responsesRepository
+    const result = await this.responsesRepository
       .createQueryBuilder('response')
       .update()
       .set({
@@ -74,7 +74,7 @@ export class ResponseService {
       .where(`response LIKE '%${oldFile}%'`)
       .execute();
     if (result.affected && result.affected > 0) {
-      await this._configRepository.update({ id: 1 }, { need_training: true });
+      await this.configRepository.update({ id: 1 }, { need_training: true });
     }
   }
 
@@ -84,7 +84,7 @@ export class ResponseService {
    * @param newIntentId
    */
   async updateIntentResponses(oldIntentId: string, newIntentId: string) {
-    await this._responsesRepository
+    await this.responsesRepository
       .createQueryBuilder('response')
       .update()
       .set({
@@ -99,7 +99,7 @@ export class ResponseService {
    * @param intents
    */
   deleteByIntents(intents: Intent[]): Promise<DeleteResult> {
-    return this._responsesRepository.delete({
+    return this.responsesRepository.delete({
       intent: In(intents.map((i) => i.id)),
     });
   }
@@ -109,6 +109,6 @@ export class ResponseService {
    * @param id
    */
   async remove(id: string): Promise<void> {
-    await this._responsesRepository.delete(id);
+    await this.responsesRepository.delete(id);
   }
 }

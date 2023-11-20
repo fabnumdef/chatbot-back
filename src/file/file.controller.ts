@@ -17,7 +17,7 @@ import {
   ApiOperation,
   ApiTags,
 } from '@nestjs/swagger';
-import { JwtGuard } from '@core/guards/jwt.guard';
+import JwtGuard from '@core/guards/jwt.guard';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { FileUploadDto } from '@core/dto/file-upload.dto';
 import { ImportFileDto } from '@core/dto/import-file.dto';
@@ -27,21 +27,21 @@ import { plainToInstance } from 'class-transformer';
 import { FileHistoric } from '@core/entities/file.entity';
 import { FileHistoricDto } from '@core/dto/file-historic.dto';
 import camelcaseKeys = require('camelcase-keys');
-import { RolesGuard } from '@core/guards/roles.guard';
+import RolesGuard from '@core/guards/roles.guard';
 import { UserRole } from '@core/enums/user-role.enum';
 import { Roles } from '@core/decorators/roles.decorator';
-import { FileService } from './file.service';
-import { BotLogger } from '../logger/bot.logger';
+import FileService from './file.service';
+import BotLogger from '../logger/bot.logger';
 
 @ApiTags('file')
 @Controller('file')
 @ApiBearerAuth()
 @UseGuards(JwtGuard, RolesGuard)
 @Roles(UserRole.admin)
-export class FileController {
-  private readonly _logger = new BotLogger('FileController');
+export default class FileController {
+  private readonly logger = new BotLogger('FileController');
 
-  constructor(private readonly _fileService: FileService) {}
+  constructor(private readonly fileService: FileService) {}
 
   @Post('check')
   @UseInterceptors(
@@ -59,7 +59,7 @@ export class FileController {
   })
   @ApiOperation({ summary: 'Vérification du fichier excel' })
   checkTemplateFile(@UploadedFile() file): TemplateFileCheckResumeDto {
-    return this._fileService.checkFile(file);
+    return this.fileService.checkFile(file);
   }
 
   @Post('import')
@@ -81,7 +81,7 @@ export class FileController {
     @UploadedFile() file,
     @Body() importFile: ImportFileDto,
   ): Promise<ImportResponseDto> {
-    const { errors } = this._fileService.checkFile(file);
+    const { errors } = this.fileService.checkFile(file);
     if (errors && Object.keys(errors).length > 0) {
       throw new HttpException(
         'Le fichier contient des erreurs bloquantes.',
@@ -90,21 +90,21 @@ export class FileController {
     }
     // @ts-ignore
     importFile.deleteIntents = importFile.deleteIntents == 'true';
-    return this._fileService.importFile(file, importFile);
+    return this.fileService.importFile(file, importFile);
   }
 
   @Get('export')
   @ApiOperation({ summary: 'Export de la base de connaissance' })
   async exportFile(@Res() res): Promise<any> {
     try {
-      const streamFile = await this._fileService.exportXls();
+      const streamFile = await this.fileService.exportXls();
       res.setHeader('Content-disposition', `attachment;`);
       res.contentType(
         'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       );
       streamFile.pipe(res);
     } catch (err) {
-      this._logger.error('', err);
+      this.logger.error('', err);
       throw new HttpException(
         `Une erreur est survenue durant l'export de la base de connaissance`,
         HttpStatus.INTERNAL_SERVER_ERROR,
@@ -117,7 +117,7 @@ export class FileController {
     summary: "Retourne l'historique de la base de connaissances",
   })
   async getHistory(): Promise<FileHistoricDto[]> {
-    const files: FileHistoric[] = await this._fileService.findAll();
+    const files: FileHistoric[] = await this.fileService.findAll();
     return plainToInstance(
       FileHistoricDto,
       camelcaseKeys(files, { deep: true }),

@@ -3,20 +3,18 @@ import { StatsMostAskedQuestionsDto } from '@core/dto/stats-most-asked-questions
 import { StatsMostAskedCategoriesDto } from '@core/dto/stats-most-asked-categories.dto';
 import { FeedbackStatus } from '@core/enums/feedback-status.enum';
 import { StatsFilterDto } from '../core/dto/stats-filter.dto';
-import { IntentService } from '../intent/intent.service';
-import { KnowledgeService } from '../knowledge/knowledge.service';
-import { InboxService } from '../inbox/inbox.service';
-import { FeedbackService } from '../feedback/feedback.service';
-import { FaqService } from '../faq/faq.service';
+import IntentService from '../intent/intent.service';
+import InboxService from '../inbox/inbox.service';
+import FeedbackService from '../feedback/feedback.service';
+import FaqService from '../faq/faq.service';
 
 @Injectable()
-export class StatsService {
+export default class StatsService {
   constructor(
-    private readonly _intentService: IntentService,
-    private readonly _knowledgeService: KnowledgeService,
-    private readonly _inboxService: InboxService,
-    private readonly _feedbackService: FeedbackService,
-    private readonly _faqService: FaqService,
+    private readonly intentService: IntentService,
+    private readonly inboxService: InboxService,
+    private readonly feedbackService: FeedbackService,
+    private readonly faqService: FaqService,
   ) {}
 
   /**
@@ -24,7 +22,7 @@ export class StatsService {
    * @param filters
    */
   getNbAskedQuestions(filters: StatsFilterDto): Promise<Array<string>> {
-    return this._inboxService.findNbInboxByTime(filters);
+    return this.inboxService.findNbInboxByTime(filters);
   }
 
   /**
@@ -32,7 +30,7 @@ export class StatsService {
    * @param filters
    */
   getNbVisitors(filters: StatsFilterDto): Promise<Array<string>> {
-    return this._inboxService.findNbVisitorsByTime(filters);
+    return this.inboxService.findNbVisitorsByTime(filters);
   }
 
   /**
@@ -40,7 +38,7 @@ export class StatsService {
    * @param filters
    */
   getNbUniqueVisitors(filters: StatsFilterDto): Promise<string> {
-    return this._inboxService.findNbUniqueVisitors(filters);
+    return this.inboxService.findNbUniqueVisitors(filters);
   }
 
   /**
@@ -48,7 +46,7 @@ export class StatsService {
    * @param filters
    */
   getFaqNbUniqueVisitors(filters: StatsFilterDto): Promise<string> {
-    return this._faqService.findNbUniqueVisitors(filters);
+    return this.faqService.findNbUniqueVisitors(filters);
   }
 
   /**
@@ -56,7 +54,7 @@ export class StatsService {
    * @param filters
    */
   getNbIntent(filters: StatsFilterDto): Promise<Array<string>> {
-    return this._intentService.findNbIntentByTime(filters);
+    return this.intentService.findNbIntentByTime(filters);
   }
 
   /**
@@ -64,7 +62,7 @@ export class StatsService {
    * @param filters
    */
   getNbFeedbacks(filters: StatsFilterDto): Promise<Array<string>> {
-    return this._feedbackService.findNbFeedbackByTime(filters);
+    return this.feedbackService.findNbFeedbackByTime(filters);
   }
 
   /**
@@ -74,7 +72,7 @@ export class StatsService {
   getMostAskedQuestions(
     filters: StatsFilterDto,
   ): Promise<StatsMostAskedQuestionsDto[]> {
-    return this._inboxService.findMostAskedQuestions(filters);
+    return this.inboxService.findMostAskedQuestions(filters);
   }
 
   /**
@@ -84,7 +82,7 @@ export class StatsService {
   getFaqMostAskedQuestions(
     filters: StatsFilterDto,
   ): Promise<StatsMostAskedQuestionsDto[]> {
-    return this._faqService.findMostAskedQuestions(filters);
+    return this.faqService.findMostAskedQuestions(filters);
   }
 
   /**
@@ -94,7 +92,7 @@ export class StatsService {
   getMostAskedCategories(
     filters: StatsFilterDto,
   ): Promise<StatsMostAskedCategoriesDto[]> {
-    return this._inboxService.findMostAskedCategories(filters);
+    return this.inboxService.findMostAskedCategories(filters);
   }
 
   /**
@@ -104,7 +102,7 @@ export class StatsService {
   getFaqMostAskedCategories(
     filters: StatsFilterDto,
   ): Promise<StatsMostAskedCategoriesDto[]> {
-    return this._faqService.findMostAskedCategories(filters);
+    return this.faqService.findMostAskedCategories(filters);
   }
 
   /**
@@ -112,7 +110,7 @@ export class StatsService {
    * @param filters
    */
   getNeverAskedQuestions(filters: StatsFilterDto): Promise<Array<string>> {
-    return this._intentService.findNeverUsedIntent(filters);
+    return this.intentService.findNeverUsedIntent(filters);
   }
 
   /**
@@ -120,7 +118,7 @@ export class StatsService {
    * @param filters
    */
   getAvgQuestPerVisitors(filters: StatsFilterDto): Promise<string> {
-    return this._inboxService.findAvgQuestPerVisitor(filters);
+    return this.inboxService.findAvgQuestPerVisitor(filters);
   }
 
   /**
@@ -128,7 +126,7 @@ export class StatsService {
    * @param filters
    */
   getFaqAvgQuestPerVisitors(filters: StatsFilterDto): Promise<string> {
-    return this._faqService.findAvgQuestPerVisitor(filters);
+    return this.faqService.findAvgQuestPerVisitor(filters);
   }
 
   /**
@@ -136,7 +134,7 @@ export class StatsService {
    * @param filters
    */
   getAvgResponseTime(filters: StatsFilterDto): Promise<string> {
-    return this._inboxService.findAvgResponseTime(filters);
+    return this.inboxService.findAvgResponseTime(filters);
   }
 
   /**
@@ -144,7 +142,7 @@ export class StatsService {
    * @param filters
    */
   getRatioResponseOk(filters: StatsFilterDto): Promise<string> {
-    return this._inboxService.findRatioResponseOk(filters);
+    return this.inboxService.findRatioResponseOk(filters);
   }
 
   /**
@@ -152,7 +150,7 @@ export class StatsService {
    * @param filters
    */
   getRatioResponseSure(filters: StatsFilterDto): Promise<string> {
-    return this._inboxService.findRatioResponseOk(filters, 0.95);
+    return this.inboxService.findRatioResponseOk(filters, 0.95);
   }
 
   /**
@@ -164,7 +162,7 @@ export class StatsService {
     filters: StatsFilterDto,
     feedbackStatus: FeedbackStatus,
   ): Promise<StatsMostAskedQuestionsDto[]> {
-    return this._inboxService.findMostAskedQuestions(filters, feedbackStatus);
+    return this.inboxService.findMostAskedQuestions(filters, feedbackStatus);
   }
 
   /**
@@ -176,7 +174,7 @@ export class StatsService {
     filters: StatsFilterDto,
     feedbackStatus: FeedbackStatus,
   ): Promise<StatsMostAskedCategoriesDto[]> {
-    return this._inboxService.findMostAskedCategories(filters, feedbackStatus);
+    return this.inboxService.findMostAskedCategories(filters, feedbackStatus);
   }
 
   /**
@@ -188,7 +186,7 @@ export class StatsService {
     filters: StatsFilterDto,
     feedbackStatus: FeedbackStatus,
   ): Promise<StatsMostAskedCategoriesDto[]> {
-    return this._inboxService.findCountFeedback(filters, feedbackStatus);
+    return this.inboxService.findCountFeedback(filters, feedbackStatus);
   }
 
   /**
@@ -200,6 +198,6 @@ export class StatsService {
     filters: StatsFilterDto,
     feedbackStatus: FeedbackStatus,
   ): Promise<StatsMostAskedCategoriesDto[]> {
-    return this._inboxService.findRatioFeedback(filters, feedbackStatus);
+    return this.inboxService.findRatioFeedback(filters, feedbackStatus);
   }
 }

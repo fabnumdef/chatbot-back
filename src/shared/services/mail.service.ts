@@ -1,15 +1,15 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { MailerService } from '@nestjs-modules/mailer';
 import * as path from 'path';
-import { BotLogger } from '../../logger/bot.logger';
+import BotLogger from '../../logger/bot.logger';
 
 @Injectable()
-export class MailService {
-  private readonly _logger = new BotLogger('MailService');
+export default class MailService {
+  private readonly logger = new BotLogger('MailService');
 
-  private _appDir = path.resolve(__dirname, '../../../../chatbot-back');
+  private appDir = path.resolve(__dirname, '../../../../chatbot-back');
 
-  constructor(private readonly _mailerService: MailerService) {}
+  constructor(private readonly mailerService: MailerService) {}
 
   /**
    * Envoi d'un email
@@ -24,25 +24,25 @@ export class MailService {
     template: string,
     context?: any,
   ): Promise<any> {
-    return this._mailerService
+    return this.mailerService
       .sendMail({
         to: email,
         from: `${
           process.env.MAIL_FROM ? process.env.MAIL_FROM : process.env.MAIL_USER
         }`,
         subject,
-        template: path.resolve(this._appDir, 'templates', template),
+        template: path.resolve(this.appDir, 'templates', template),
         context,
       })
-      .then((info) => {
-        this._logger.log(
+      .then(() => {
+        this.logger.log(
           `MAIL SEND TO: ${email} WITH SUBJECT: ${subject} WITH TEMPLATE: ${template} AND CONTEXT: ${JSON.stringify(
             context,
           )}`,
         );
       })
       .catch((error) => {
-        this._logger.error(
+        this.logger.error(
           `FAIL - MAIL SEND TO: ${email} WITH SUBJECT: ${subject} WITH TEMPLATE: ${template} AND CONTEXT: ${JSON.stringify(
             context,
           )}`,

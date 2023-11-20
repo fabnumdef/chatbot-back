@@ -10,18 +10,18 @@ const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 
 @Injectable()
-export class UserService {
+export default class UserService {
   constructor(
     @InjectRepository(User)
-    private readonly _usersRepository: Repository<User>,
-    private readonly _mailService: MailService,
+    private readonly usersRepository: Repository<User>,
+    private readonly mailService: MailService,
   ) {}
 
   /**
    * Récupération de tous les utilisateurs
    */
   findAll(): Promise<User[]> {
-    return this._usersRepository.find({
+    return this.usersRepository.find({
       order: {
         disabled: 'ASC',
         first_name: 'ASC',
@@ -50,7 +50,7 @@ export class UserService {
    * @param param
    */
   findOneWithParam(param: FindOneOptions): Promise<User> {
-    return this._usersRepository.findOne(param);
+    return this.usersRepository.findOne(param);
   }
 
   /**
@@ -66,7 +66,7 @@ export class UserService {
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
-    return this._usersRepository.save({
+    return this.usersRepository.save({
       ...userExists,
       ...data,
     });
@@ -90,7 +90,7 @@ export class UserService {
   async create(user: UserModel): Promise<UserModel> {
     const userExists = await this.findOne(user.email);
     if (!userExists) {
-      const userCreated = await this._usersRepository.save(user);
+      const userCreated = await this.usersRepository.save(user);
       // Envoi d'un email de création de compte
       await this.sendEmailPasswordToken(userCreated);
       return userCreated;
@@ -128,7 +128,7 @@ export class UserService {
     user.role = UserRole.admin;
     user.password = bcrypt.hashSync(user.password, 10);
 
-    const userUpdated = await this._usersRepository.save(user);
+    const userUpdated = await this.usersRepository.save(user);
     await this.sendEmailPasswordToken(userUpdated);
     return userUpdated;
   }
@@ -139,7 +139,7 @@ export class UserService {
    */
   async sendEmailPasswordToken(user: User) {
     const userUpdated = await this.setPasswordResetToken(user);
-    await this._mailService
+    await this.mailService
       .sendEmail(
         userUpdated.email,
         'Usine à Chatbots - Création de compte',

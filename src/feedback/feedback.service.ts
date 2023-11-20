@@ -6,17 +6,17 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 
 import * as moment from 'moment';
 import { StatsFilterDto } from '@core/dto/stats-filter.dto';
-import { InboxService } from '../inbox/inbox.service';
-import { BotLogger } from '../logger/bot.logger';
+import InboxService from '../inbox/inbox.service';
+import BotLogger from '../logger/bot.logger';
 
 @Injectable()
-export class FeedbackService {
-  private readonly _logger = new BotLogger('FeedbackService');
+export default class FeedbackService {
+  private readonly logger = new BotLogger('FeedbackService');
 
   constructor(
     @InjectRepository(Feedback)
-    private readonly _feedbacksRepository: Repository<Feedback>,
-    private readonly _inboxService: InboxService,
+    private readonly feedbacksRepository: Repository<Feedback>,
+    private readonly inboxService: InboxService,
   ) {}
 
   /**
@@ -26,17 +26,17 @@ export class FeedbackService {
    * @param feedback
    */
   async createSafe(feedback: Feedback): Promise<Feedback> {
-    const fEntity = await this._feedbacksRepository.findOne({
+    const fEntity = await this.feedbacksRepository.findOne({
       where: {
         user_question: feedback.user_question,
         timestamp: feedback.timestamp,
       },
     });
     if (!fEntity) {
-      return this._feedbacksRepository.save(feedback);
+      return this.feedbacksRepository.save(feedback);
     }
     if (fEntity && fEntity.status !== feedback.status) {
-      await this._feedbacksRepository.update(
+      await this.feedbacksRepository.update(
         { id: fEntity.id },
         { status: feedback.status },
       );
@@ -49,7 +49,7 @@ export class FeedbackService {
    */
   @Cron(CronExpression.EVERY_10_SECONDS)
   async checkFeedbacks() {
-    const feedbacks: Feedback[] = await this._feedbacksRepository.find({
+    const feedbacks: Feedback[] = await this.feedbacksRepository.find({
       order: {
         timestamp: 'ASC',
       },
@@ -64,18 +64,16 @@ export class FeedbackService {
     for (let i = 0; i < feedbacks.length; i++) {
       const feedback = feedbacks[i];
       // On associe une requête au feedback, si celle-ci est trouvée on peut supprimer le feedback
-      const updated = await this._inboxService.updateInboxWithFeedback(
-        feedback,
-      );
+      const updated = await this.inboxService.updateInboxWithFeedback(feedback);
       if (updated) {
         toDelete.push(feedback.id);
       }
     }
     if (toDelete && toDelete.length > 0) {
-      await this._feedbacksRepository.delete({
+      await this.feedbacksRepository.delete({
         id: In(toDelete),
       });
-      this._logger.log(`Finishing updating ${toDelete.length} feedbacks`);
+      this.logger.log(`Finishing updating ${toDelete.length} feedbacks`);
     }
   }
 
@@ -91,7 +89,7 @@ export class FeedbackService {
     const endDate = filters.endDate
       ? moment(filters.endDate, 'DD/MM/YYYY').format('YYYY-MM-DD')
       : moment().format('YYYY-MM-DD');
-    const query = this._feedbacksRepository
+    const query = this.feedbacksRepository
       .createQueryBuilder('feedback')
       .select('DATE(feedback.created_at) AS date')
       .addSelect('COUNT(*) AS count')

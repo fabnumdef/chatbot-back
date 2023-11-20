@@ -5,34 +5,34 @@ import { plainToInstance } from 'class-transformer';
 import camelcaseKeys = require('camelcase-keys');
 import { AuthResponseDto } from '@core/dto/auth-response.dto';
 import { ResetPasswordDto } from '@core/dto/reset-password.dto';
-import { AuthService } from './auth.service';
+import AuthService from './auth.service';
 
 @ApiTags('auth')
 @Controller('auth')
-export class AuthController {
-  constructor(private readonly _authService: AuthService) {}
+export default class AuthController {
+  constructor(private readonly authService: AuthService) {}
 
   @Post('reset-password/:email')
   @ApiOperation({
     summary: "Génération du token de reset password & envoi d'email",
   })
   async forgotPassword(@Param('email') email: string): Promise<any> {
-    return this._authService.sendEmailPasswordToken(email);
+    return this.authService.sendEmailPasswordToken(email);
   }
 
   @Post('reset-password')
   @ApiOperation({ summary: "Reset password & envoi d'email" })
   async resetPassword(@Body() resetPassword: ResetPasswordDto): Promise<any> {
-    return this._authService.resetPassword(resetPassword);
+    return this.authService.resetPassword(resetPassword);
   }
 
   @Post('login')
   @ApiOperation({ summary: 'Retourne le token jwt' })
   async login(@Body() user: LoginUserDto): Promise<AuthResponseDto> {
-    const login = await this._authService.login(user);
+    const login = await this.authService.login(user);
     return plainToInstance(
       AuthResponseDto,
-      camelcaseKeys(login, { deep: true }),
+      camelcaseKeys(<any>login, { deep: true }),
     );
   }
 }

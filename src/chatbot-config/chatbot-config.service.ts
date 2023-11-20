@@ -9,21 +9,21 @@ import { mkdirp } from 'mkdirp';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { plainToInstance } from 'class-transformer';
 import snakecaseKeys = require('snakecase-keys');
-import { MediaService } from '../media/media.service';
-import { BotLogger } from '../logger/bot.logger';
+import MediaService from '../media/media.service';
+import BotLogger from '../logger/bot.logger';
 
 const crypto = require('crypto');
 
 @Injectable()
-export class ChatbotConfigService {
-  private readonly _logger = new BotLogger('ChatbotConfigService');
+export default class ChatbotConfigService {
+  private readonly logger = new BotLogger('ChatbotConfigService');
 
   constructor(
     @InjectRepository(ChatbotConfig)
-    private readonly _configRepository: Repository<ChatbotConfig>,
-    private readonly _mediaService: MediaService,
+    private readonly configRepository: Repository<ChatbotConfig>,
+    private readonly mediaService: MediaService,
   ) {
-    this._initConfig();
+    this.initConfig();
   }
 
   /**
@@ -32,7 +32,7 @@ export class ChatbotConfigService {
    */
   getChatbotConfig(options?: FindOneOptions): Promise<ChatbotConfig> {
     const fullOptions: FindOneOptions = { ...{ where: { id: 1 } }, ...options };
-    return this._configRepository.findOne(fullOptions);
+    return this.configRepository.findOne(fullOptions);
   }
 
   /**
@@ -40,7 +40,7 @@ export class ChatbotConfigService {
    * @param config
    */
   update(config: ChatbotConfig): Promise<UpdateResult> {
-    return this._configRepository.update({ id: 1 }, config);
+    return this.configRepository.update({ id: 1 }, config);
   }
 
   /**
@@ -48,7 +48,7 @@ export class ChatbotConfigService {
    * @param config
    */
   save(config: ChatbotConfig): Promise<ChatbotConfig> {
-    return this._configRepository.save(config);
+    return this.configRepository.save(config);
   }
 
   /**
@@ -61,16 +61,18 @@ export class ChatbotConfigService {
     try {
       if (fromDb || !embedded) {
         const currentConfig = await this.getChatbotConfig();
-        await this._mediaService.deleteFile(currentConfig.icon);
+        await this.mediaService.deleteFile(currentConfig.icon);
       }
       if (fromDb || embedded) {
         const currentConfig = await this.getChatbotConfig();
-        await this._mediaService.deleteFile(currentConfig.embedded_icon);
+        await this.mediaService.deleteFile(currentConfig.embedded_icon);
       }
       if (fromDb) {
-        await this._configRepository.delete(1);
+        await this.configRepository.delete(1);
       }
-    } catch (e) {}
+    } catch (e) {
+      /* empty */
+    }
   }
 
   /**
@@ -108,12 +110,12 @@ export class ChatbotConfigService {
       return;
     }
     try {
-      // @ts-ignore
       const manifest = JSON.parse(
+        // @ts-ignore
         fs.readFileSync(path.resolve(frontDir, 'manifest.webmanifest')),
       );
-      // @ts-ignore
       const manifestWebchat = JSON.parse(
+        // @ts-ignore
         fs.readFileSync(path.resolve(webchatDir, 'manifest.webmanifest')),
       );
       manifest.name = `BACKOFFICE - ${botConfig.name}`;
@@ -139,7 +141,7 @@ export class ChatbotConfigService {
         );
       }
     } catch (e) {
-      this._logger.error('ERROR UPDATING MANIFESTS', e);
+      this.logger.error('ERROR UPDATING MANIFESTS', e);
     }
   }
 
@@ -148,7 +150,7 @@ export class ChatbotConfigService {
    * @private
    */
   @Cron(CronExpression.EVERY_HOUR)
-  private async _checkIcons() {
+  private async checkIcons() {
     const frontDir = path.resolve(__dirname, '../../../chatbot-front');
     if (!fs.existsSync(path.resolve(frontDir, 'assets/icons/icon.png'))) {
       this.updateFrontManifest();
@@ -159,7 +161,7 @@ export class ChatbotConfigService {
    * S'il n'y a pas de configuration au démarrage (premier démarrage notamment), on crée une configuration vide pour pouvoir la mettre à jour depuis le Backoffice
    * @private
    */
-  private async _initConfig() {
+  private async initConfig() {
     const config = await this.getChatbotConfig();
     if (!config) {
       await this.save(<ChatbotConfig>{});
