@@ -1,25 +1,24 @@
-import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Post, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { JwtGuard } from '@core/guards/jwt.guard';
+import JwtGuard from '@core/guards/jwt.guard';
 import { KnowledgeDto } from '@core/dto/knowledge.dto';
 import { plainToInstance } from 'class-transformer';
-import { Knowledge } from '@core/entities/knowledge.entity';
-import camelcaseKeys = require('camelcase-keys');
-import snakecaseKeys = require('snakecase-keys');
 import { KnowledgeModel } from '@core/models/knowledge.model';
-import { KnowledgeService } from './knowledge.service';
+import camelcaseKeys = require('camelcase-keys');
+import * as snakecaseKeys from 'snakecase-keys';
+import KnowledgeService from './knowledge.service';
 
 @ApiTags('knowledge')
 @Controller('knowledge')
 @ApiBearerAuth()
 @UseGuards(JwtGuard)
-export class KnowledgeController {
-  constructor(private readonly _knowledgeService: KnowledgeService) {}
+export default class KnowledgeController {
+  constructor(private readonly knowledgeService: KnowledgeService) {}
 
   // @Get('')
   // @ApiOperation({ summary: 'Returne toute les questions similaires' })
   // async getKnowledges(): Promise<KnowledgeDto[]> {
-  //   const knowledges: Knowledge[] = await this._knowledgeService.findAll();
+  //   const knowledges: Knowledge[] = await this.knowledgeService.findAll();
   //   return plainToInstance(KnowledgeDto, camelcaseKeys(knowledges, {deep: true}));
   // }
 
@@ -28,12 +27,12 @@ export class KnowledgeController {
   async createKnowledge(
     @Body() knowledge: KnowledgeDto,
   ): Promise<KnowledgeDto> {
-    const knowledgeEntity = await this._knowledgeService.create(
-      plainToInstance(KnowledgeModel, snakecaseKeys(knowledge)),
+    const knowledgeEntity = await this.knowledgeService.create(
+      plainToInstance(KnowledgeModel, snakecaseKeys(<any>knowledge)),
     );
     return plainToInstance(
       KnowledgeDto,
-      camelcaseKeys(knowledgeEntity, { deep: true }),
+      camelcaseKeys(<any>knowledgeEntity, { deep: true }),
     );
   }
 }

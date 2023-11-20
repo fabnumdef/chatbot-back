@@ -26,33 +26,33 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import * as moment from 'moment';
 import { AppConstants } from '@core/constant';
 import { ChatbotConfig } from '@core/entities/chatbot-config.entity';
-import { ChatbotConfigService } from '../chatbot-config/chatbot-config.service';
-import { BotLogger } from '../logger/bot.logger';
-import { ResponseService } from '../response/response.service';
-import { KnowledgeService } from '../knowledge/knowledge.service';
-import { IntentService } from '../intent/intent.service';
+import ChatbotConfigService from '../chatbot-config/chatbot-config.service';
+import BotLogger from '../logger/bot.logger';
+import ResponseService from '../response/response.service';
+import KnowledgeService from '../knowledge/knowledge.service';
+import IntentService from '../intent/intent.service';
 
 const XLSX = require('xlsx');
 const uuid = require('uuid');
 
 @Injectable()
-export class FileService {
-  private _xlsx = XLSX;
+export default class FileService {
+  private xlsx = XLSX;
 
-  private _historicDir = path.resolve(__dirname, '../../historic');
+  private historicDir = path.resolve(__dirname, '../../historic');
 
-  private readonly _logger = new BotLogger('FileService');
+  private readonly logger = new BotLogger('FileService');
 
   constructor(
-    private readonly _intentService: IntentService,
-    private readonly _knowledgeService: KnowledgeService,
-    private readonly _responseService: ResponseService,
-    private readonly _configService: ChatbotConfigService,
+    private readonly intentService: IntentService,
+    private readonly knowledgeService: KnowledgeService,
+    private readonly responseService: ResponseService,
+    private readonly configService: ChatbotConfigService,
     @InjectRepository(FileHistoric)
-    private readonly _fileHistoricRepository: Repository<FileHistoric>,
+    private readonly fileHistoricRepository: Repository<FileHistoric>,
   ) {
     // Création du dossier s'il n'existe pas
-    mkdirp(this._historicDir).then();
+    mkdirp(this.historicDir).then();
   }
 
   /**
@@ -66,19 +66,19 @@ export class FileService {
     let worksheet: WorkSheet;
     let templateFile: TemplateFileDto[];
     try {
-      workbook = this._xlsx.read(file.buffer);
+      workbook = this.xlsx.read(file.buffer);
       worksheet = workbook.Sheets[workbook.SheetNames[0]];
-      templateFile = this._convertExcelToJson(worksheet);
+      templateFile = this.convertExcelToJson(worksheet);
     } catch (error) {
-      this._logger.error('Erreur lors de la lecture du fichier', error);
+      this.logger.error('Erreur lors de la lecture du fichier', error);
       throw new HttpException(
         'Le fichier fournit ne peut pas être lu.',
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
     const templateFileCheckResume = new TemplateFileCheckResumeDto();
-    this._computeTemplateFile(templateFile, templateFileCheckResume);
-    this._checkFile(templateFile, templateFileCheckResume);
+    this.computeTemplateFile(templateFile, templateFileCheckResume);
+    this.fillCheckFile(templateFile, templateFileCheckResume);
 
     return templateFileCheckResume;
   }
@@ -94,19 +94,16 @@ export class FileService {
   ): Promise<ImportResponseDto> {
     const workbook: WorkBook = XLSX.read(file.buffer);
     const worksheet: WorkSheet = workbook.Sheets[workbook.SheetNames[0]];
-    const templateFile: TemplateFileDto[] = this._convertExcelToJson(worksheet);
+    const templateFile: TemplateFileDto[] = this.convertExcelToJson(worksheet);
     try {
-      this._logger.log('Importing File');
-      await this._configService.update(<ChatbotConfig>{ is_blocked: true });
-      const toReturn = await this._templateFileToDb(
-        templateFile,
-        importFileDto,
-      );
-      await this._configService.update(<ChatbotConfig>{ is_blocked: false });
-      this._logger.log('Finishing importing File');
+      this.logger.log('Importing File');
+      await this.configService.update(<ChatbotConfig>{ is_blocked: true });
+      const toReturn = await this.templateFileToDb(templateFile, importFileDto);
+      await this.configService.update(<ChatbotConfig>{ is_blocked: false });
+      this.logger.log('Finishing importing File');
       return toReturn;
     } catch (e) {
-      await this._configService.update(<ChatbotConfig>{ is_blocked: false });
+      await this.configService.update(<ChatbotConfig>{ is_blocked: false });
     }
   }
 
@@ -115,7 +112,7 @@ export class FileService {
    */
   exportXls(): Promise<fs.ReadStream> {
     return new Promise<fs.ReadStream>(async (resolve, reject) => {
-      const workbook = await this._generateWorkbook();
+      const workbook = await this.generateWorkbook();
 
       const guidForClient = uuid.v1();
       const pathNameWithGuid = `${guidForClient}_result.xlsx`;
@@ -137,29 +134,29 @@ export class FileService {
    */
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
   async storeHistoricFile() {
-    const botConfig = await this._configService.getChatbotConfig();
+    const botConfig = await this.configService.getChatbotConfig();
     if (
       botConfig.last_training_at &&
       moment().diff(moment(botConfig.last_training_at), 'hours') > 24
     ) {
       return;
     }
-    this._logger.log('Storing historic file');
-    const workbook = await this._generateWorkbook();
+    this.logger.log('Storing historic file');
+    const workbook = await this.generateWorkbook();
 
     const timestamp = Date.now();
     const pathNameWithGuid = `base_connaissance-${timestamp}.xlsx`;
-    XLSX.writeFile(workbook, path.resolve(this._historicDir, pathNameWithGuid));
+    XLSX.writeFile(workbook, path.resolve(this.historicDir, pathNameWithGuid));
 
-    await this._fileHistoricRepository.save({ name: pathNameWithGuid });
-    this._logger.log('Finish storing historic file');
+    await this.fileHistoricRepository.save({ name: pathNameWithGuid });
+    this.logger.log('Finish storing historic file');
   }
 
   /**
    * Récupération de toutes les sauvegardes des connaissances
    */
   async findAll() {
-    return this._fileHistoricRepository.find();
+    return this.fileHistoricRepository.find();
   }
 
   /** ********************************************************************************** PRIVATE FUNCTIONS *********************************************************************************** */
@@ -168,7 +165,7 @@ export class FileService {
    * Converti une feuille excel en entrée vers un tableau d'objets TemplateFileDto
    * @param worksheet
    */
-  private _convertExcelToJson(worksheet: WorkSheet): TemplateFileDto[] {
+  private convertExcelToJson(worksheet: WorkSheet): TemplateFileDto[] {
     const headers = {
       ID: 'id',
       Catégorie: 'category',
@@ -180,7 +177,7 @@ export class FileService {
     };
     const options: Sheet2JSONOpts = {};
     // Converti le fichier excel en JSON brut
-    const excelJson = this._xlsx.utils.sheet_to_json(worksheet, options);
+    const excelJson = this.xlsx.utils.sheet_to_json(worksheet, options);
     return excelJson.map((t: TemplateFileDto, idx: number) => {
       // On filtre les données utiles, si la colonne n'est pas utile, on la supprime
       for (const key of Object.keys(t)) {
@@ -220,7 +217,7 @@ export class FileService {
    * @param templateFile
    * @param templateFileCheckResume
    */
-  private _checkFile(
+  private fillCheckFile(
     templateFile: TemplateFileDto[],
     templateFileCheckResume?: TemplateFileCheckResumeDto,
   ): void | boolean {
@@ -228,28 +225,28 @@ export class FileService {
       const excelIndex = index + 2;
       // Erreurs
       if (!excelRow.id) {
-        this._addMessage(
+        this.addMessage(
           templateFileCheckResume.errors,
           excelIndex,
           `L'ID n'est pas renseigné.`,
         );
       }
       if (excelRow.response && !excelRow.response_type) {
-        this._addMessage(
+        this.addMessage(
           templateFileCheckResume.errors,
           excelIndex,
           `Le type de réponse n'est pas renseigné.`,
         );
       }
       if (!excelRow.response && excelRow.response_type) {
-        this._addMessage(
+        this.addMessage(
           templateFileCheckResume.errors,
           excelIndex,
           `La réponse n'est pas renseignée.`,
         );
       }
       if (!excelRow.response && !excelRow.response_type) {
-        this._addMessage(
+        this.addMessage(
           templateFileCheckResume.errors,
           excelIndex,
           `La réponse et le type de réponse n'est pas renseigné.`,
@@ -264,7 +261,7 @@ export class FileService {
         (templateFile[index - 1]?.response_type !== ResponseType.text ||
           templateFile[index - 1]?.id !== excelRow.id)
       ) {
-        this._addMessage(
+        this.addMessage(
           templateFileCheckResume.errors,
           excelIndex,
           `Ce type de réponse nécessite d'être précédée d'une réponse de type texte.`,
@@ -274,14 +271,14 @@ export class FileService {
       if (excelRow.main_question) {
         // Avertissements (non bloquant)
         if (!excelRow.category) {
-          this._addMessage(
+          this.addMessage(
             templateFileCheckResume.warnings,
             excelIndex,
             `La catégorie n'est pas renseignée.`,
           );
         }
         if (excelRow.questions.length < 1) {
-          this._addMessage(
+          this.addMessage(
             templateFileCheckResume.warnings,
             excelIndex,
             `Aucune question synonyme n'a été renseignée, le chatbot aura du mal à reconnaitre cette demande.`,
@@ -296,7 +293,7 @@ export class FileService {
             (t.response && t.response.includes(`<${excelRow.id}>`)),
         );
         if (!mainQuestion && !excludedIds.includes(excelRow.id)) {
-          this._addMessage(
+          this.addMessage(
             templateFileCheckResume.errors,
             excelIndex,
             `Aucune question n'est renseignée pour cet identifiant.`,
@@ -311,7 +308,7 @@ export class FileService {
    * @param templateFile
    * @param templateFileCheckResume
    */
-  private _computeTemplateFile(
+  private computeTemplateFile(
     templateFile: TemplateFileDto[],
     templateFileCheckResume: TemplateFileCheckResumeDto,
   ): void {
@@ -330,7 +327,7 @@ export class FileService {
    * @param index
    * @param message
    */
-  private _addMessage(
+  private addMessage(
     keyValueObject: { [key: string]: string },
     index: number,
     message: string,
@@ -348,7 +345,7 @@ export class FileService {
    * @param importFileDto
    * @private
    */
-  private async _templateFileToDb(
+  private async templateFileToDb(
     templateFile: TemplateFileDto[],
     importFileDto: ImportFileDto,
   ): Promise<ImportResponseDto> {
@@ -372,7 +369,7 @@ export class FileService {
       }
     });
     // Sauvegarde des connaissances
-    const intentsSaved: Intent[] = await this._intentService.saveMany(
+    const intentsSaved: Intent[] = await this.intentService.saveMany(
       plainToInstance(IntentModel, snakecaseKeys(intents)),
     );
 
@@ -403,21 +400,21 @@ export class FileService {
           // Option pour changer l'URL dans les réponses (dans le cas d'un export d'un serveur à un autre par exemple)
           response:
             !!importFileDto.oldURL && !!importFileDto.newURL
-              ? this._changeURL(t.response, importFileDto)
+              ? this.changeURL(t.response, importFileDto)
               : t.response,
         });
       }
     });
     // Sauvegarde des questions similaires
-    const knowledgesSaved = await this._knowledgeService.findOrSave(knowledges);
+    const knowledgesSaved = await this.knowledgeService.findOrSave(knowledges);
 
     // Suppressions des anciennes réponses puis sauvegarde des nouvelles réponses
-    await this._responseService.deleteByIntents(intentsSaved);
-    const responsesSaved = await this._responseService.saveMany(responses);
+    await this.responseService.deleteByIntents(intentsSaved);
+    const responsesSaved = await this.responseService.saveMany(responses);
 
     // Option pour supprimer les anciennes connaissances lors de l'import d'un fichier
     if (importFileDto.deleteIntents) {
-      await this._intentService.updateManyByCondition(
+      await this.intentService.updateManyByCondition(
         {
           id: Not(
             In([
@@ -429,7 +426,7 @@ export class FileService {
         { status: IntentStatus.to_archive },
       );
     }
-    await this._intentService.updateManyByCondition(
+    await this.intentService.updateManyByCondition(
       { id: In([...intents.map((i) => i.id)]) },
       { status: IntentStatus.to_deploy },
     );
@@ -446,11 +443,11 @@ export class FileService {
    * Génération d'un object Workbook content une feuille de données
    * @private
    */
-  private async _generateWorkbook(): Promise<WorkBook> {
+  private async generateWorkbook(): Promise<WorkBook> {
     const workbook = XLSX.utils.book_new();
-    const worksheet_data = await this._generateWorksheet();
+    const worksheet_data = await this.generateWorksheet();
     const worksheet = XLSX.utils.aoa_to_sheet(worksheet_data);
-    this._setPropertiesOnXls(worksheet);
+    this.setPropertiesOnXls(worksheet);
     XLSX.utils.book_append_sheet(workbook, worksheet);
     return workbook;
   }
@@ -459,8 +456,8 @@ export class FileService {
    * Génération de la feuille de données avec les connaissances
    * @private
    */
-  private async _generateWorksheet() {
-    const intents = await this._intentService
+  private async generateWorksheet() {
+    const intents = await this.intentService
       .getRepository()
       .createQueryBuilder('intent')
       .leftJoinAndSelect('intent.responses', 'response')
@@ -496,7 +493,7 @@ export class FileService {
     intents.forEach((intent: Intent) => {
       intent.responses.forEach((r, idxResponse) => {
         idx += 1;
-        rows.push(this._generateRow(intent, idx, idxResponse));
+        rows.push(this.generateRow(intent, idx, idxResponse));
       });
     });
     return rows;
@@ -508,7 +505,7 @@ export class FileService {
    * @param worksheet
    * @private
    */
-  private _setPropertiesOnXls(worksheet: WorkSheet) {
+  private setPropertiesOnXls(worksheet: WorkSheet) {
     worksheet['!cols'] = [
       { width: 18 },
       { width: 18 },
@@ -527,7 +524,7 @@ export class FileService {
    * @param idxResponse
    * @private
    */
-  private _generateRow(intent: Intent, idx: number, idxResponse: number) {
+  private generateRow(intent: Intent, idx: number, idxResponse: number) {
     return [
       intent.id,
       intent.category && idxResponse === 0 ? intent.category : '',
@@ -551,7 +548,7 @@ export class FileService {
    * @param importFileDto
    * @private
    */
-  private _changeURL(string: string, importFileDto: ImportFileDto): string {
+  private changeURL(string: string, importFileDto: ImportFileDto): string {
     const newUrl =
       importFileDto.newURL.slice(-1) === '/'
         ? importFileDto.newURL.slice(0, -1)

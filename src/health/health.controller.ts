@@ -8,7 +8,7 @@ import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
 @ApiTags('health')
 @Controller('health')
-export class HealthController {
+export default class HealthController {
   constructor(
     private health: HealthCheckService,
     private dns: HttpHealthIndicator,

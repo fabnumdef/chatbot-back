@@ -15,26 +15,26 @@ import { plainToInstance } from 'class-transformer';
 import { User } from '@core/entities/user.entity';
 import { CreateUserDto } from '@core/dto/create-user.dto';
 import { UserModel } from '@core/models/user.model';
-import { JwtGuard } from '@core/guards/jwt.guard';
-import { RolesGuard } from '@core/guards/roles.guard';
+import JwtGuard from '@core/guards/jwt.guard';
+import RolesGuard from '@core/guards/roles.guard';
 import { UserRole } from '@core/enums/user-role.enum';
 import { Roles } from '@core/decorators/roles.decorator';
 import { UpdateUserDto } from '@core/dto/update-user.dto';
-import camelcaseKeys = require('camelcase-keys');
 import snakecaseKeys = require('snakecase-keys');
-import { UserService } from './user.service';
+import camelcaseKeys = require('camelcase-keys');
+import UserService from './user.service';
 
 @Controller('user')
 @ApiTags('user')
-export class UserController {
-  constructor(private readonly _userService: UserService) {}
+export default class UserController {
+  constructor(private readonly userService: UserService) {}
 
   @Get('')
   @ApiOperation({ summary: 'Retourne tout les utilisateurs' })
   @ApiBearerAuth()
   @UseGuards(JwtGuard)
   async getUsers(@Req() req): Promise<UserDto[]> {
-    let users: User[] = await this._userService.findAll();
+    let users: User[] = await this.userService.findAll();
 
     // Si on est sur l'environnement de dev / test, on ne renvoie que l'utilisateur courant (sauf si mail en @fabnum.fr ou @beta.gouv.fr)
     // Pour éviter que les utilisateurs des environnements de tests puissent voir tous les autres utilisateurs
@@ -57,10 +57,13 @@ export class UserController {
     type: CreateUserDto,
   })
   async generateAdminUser(@Body() user: CreateUserDto): Promise<UserDto> {
-    const userModel = await this._userService.generateAdminUser(
-      plainToInstance(UserModel, snakecaseKeys(user)),
+    const userModel = await this.userService.generateAdminUser(
+      plainToInstance(UserModel, snakecaseKeys(<any>user)),
     );
-    return plainToInstance(UserDto, camelcaseKeys(userModel, { deep: true }));
+    return plainToInstance(
+      UserDto,
+      camelcaseKeys(<any>userModel, { deep: true }),
+    );
   }
 
   @Post('')
@@ -73,10 +76,13 @@ export class UserController {
   @UseGuards(JwtGuard, RolesGuard)
   @Roles(UserRole.admin)
   async create(@Body() user: CreateUserDto): Promise<UserDto> {
-    const userModel = await this._userService.create(
-      plainToInstance(UserModel, snakecaseKeys(user)),
+    const userModel = await this.userService.create(
+      plainToInstance(UserModel, snakecaseKeys(<any>user)),
     );
-    return plainToInstance(UserDto, camelcaseKeys(userModel, { deep: true }));
+    return plainToInstance(
+      UserDto,
+      camelcaseKeys(<any>userModel, { deep: true }),
+    );
   }
 
   @Put(':email')
@@ -92,11 +98,14 @@ export class UserController {
     @Body() user: UpdateUserDto,
     @Param('email') email: string,
   ): Promise<UserDto> {
-    const userModel = await this._userService.update(
+    const userModel = await this.userService.update(
       email,
-      plainToInstance(UserModel, snakecaseKeys(user)),
+      plainToInstance(UserModel, snakecaseKeys(<any>user)),
     );
-    return plainToInstance(UserDto, camelcaseKeys(userModel, { deep: true }));
+    return plainToInstance(
+      UserDto,
+      camelcaseKeys(<any>userModel, { deep: true }),
+    );
   }
 
   @Delete(':email')
@@ -105,6 +114,6 @@ export class UserController {
   @UseGuards(JwtGuard, RolesGuard)
   @Roles(UserRole.admin)
   async delete(@Param('email') email: string): Promise<void> {
-    return this._userService.delete(email);
+    return this.userService.delete(email);
   }
 }

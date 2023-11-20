@@ -21,7 +21,7 @@ import {
   ApiOperation,
   ApiTags,
 } from '@nestjs/swagger';
-import { JwtGuard } from '@core/guards/jwt.guard';
+import JwtGuard from '@core/guards/jwt.guard';
 import { Media } from '@core/entities/media.entity';
 import { MediaDto } from '@core/dto/media.dto';
 import { plainToInstance } from 'class-transformer';
@@ -32,27 +32,28 @@ import { PaginationQueryDto } from '@core/dto/pagination-query.dto';
 import { Pagination } from 'nestjs-typeorm-paginate';
 import { User } from '@core/entities/user.entity';
 import { MediaModel } from '@core/models/media.model';
+// eslint-disable-next-line import/no-extraneous-dependencies
 import { Response } from 'express';
-import { MediaService } from './media.service';
+import MediaService from './media.service';
 
 @ApiTags('media')
 @Controller('media')
 @ApiBearerAuth()
 @UseGuards(JwtGuard)
-export class MediaController {
-  constructor(private readonly _mediaService: MediaService) {}
+export default class MediaController {
+  constructor(private readonly mediaService: MediaService) {}
 
   @Get('')
   @ApiOperation({ summary: 'Retourne tout les médias' })
   async getMedias(): Promise<MediaDto[]> {
-    const medias: Media[] = await this._mediaService.findAll();
+    const medias: Media[] = await this.mediaService.findAll();
     return plainToInstance(MediaDto, camelcaseKeys(medias, { deep: true }));
   }
 
   @Get('export')
   @ApiOperation({ summary: 'Exporte tout les médias en .zip' })
   async exportMedias(@Res() res: Response): Promise<any> {
-    return this._mediaService.export(res);
+    return this.mediaService.export(res);
   }
 
   @Post('search')
@@ -60,14 +61,12 @@ export class MediaController {
   async getMediasPagination(
     @Query() options: PaginationQueryDto,
   ): Promise<Pagination<MediaDto>> {
-    const medias: Pagination<MediaModel> = await this._mediaService.paginate(
-      options,
-    );
+    const medias: Pagination<MediaModel> =
+      await this.mediaService.paginate(options);
     medias.items.map((i) =>
-      plainToInstance(MediaDto, camelcaseKeys(i, { deep: true })),
+      plainToInstance(MediaDto, camelcaseKeys(<any>i, { deep: true })),
     );
-    // @ts-ignore
-    return camelcaseKeys(medias, { deep: true });
+    return camelcaseKeys(<any>medias, { deep: true });
   }
 
   @Post('')
@@ -89,7 +88,7 @@ export class MediaController {
   async addFile(@UploadedFiles() files, @Req() req): Promise<MediaDto[]> {
     const userRequest: User = req.user;
     const medias = await Promise.all(
-      files.map((file) => this._mediaService.create(file, userRequest)),
+      files.map((file) => this.mediaService.create(file, userRequest)),
     );
     return plainToInstance(MediaDto, camelcaseKeys(medias, { deep: true }));
   }
@@ -116,12 +115,12 @@ export class MediaController {
     @Req() req,
   ): Promise<MediaDto> {
     const userRequest: User = req.user;
-    const media = await this._mediaService.update(
-      parseInt(mediaId),
+    const media = await this.mediaService.update(
+      parseInt(mediaId, 10),
       file,
       userRequest,
     );
-    return plainToInstance(MediaDto, camelcaseKeys(media, { deep: true }));
+    return plainToInstance(MediaDto, camelcaseKeys(<any>media, { deep: true }));
   }
 
   @Put(':id/edit')
@@ -135,19 +134,19 @@ export class MediaController {
     @Body() file: { file: string },
   ): Promise<MediaDto> {
     const fileName = encodeURI(file.file.trim());
-    const media = await this._mediaService.edit(parseInt(mediaId), fileName);
-    return plainToInstance(MediaDto, camelcaseKeys(media, { deep: true }));
+    const media = await this.mediaService.edit(parseInt(mediaId, 10), fileName);
+    return plainToInstance(MediaDto, camelcaseKeys(<any>media, { deep: true }));
   }
 
   @Delete(':id')
   @ApiOperation({ summary: "Suppression d'un média" })
   async deleteMedia(@Param('id') mediaId: number): Promise<void> {
-    await this._mediaService.delete(mediaId);
+    await this.mediaService.delete(mediaId);
   }
 
   @Post('delete')
   @ApiOperation({ summary: 'Suppression de plusieurs médias' })
   async deleteMedias(@Body() ids: number[]): Promise<void> {
-    await this._mediaService.deleteMultiples(ids);
+    await this.mediaService.deleteMultiples(ids);
   }
 }

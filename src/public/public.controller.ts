@@ -2,26 +2,26 @@ import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ChatbotConfig } from '@core/entities/chatbot-config.entity';
 import { plainToInstance } from 'class-transformer';
-import camelcaseKeys = require('camelcase-keys');
 import { PublicConfigDto } from '@core/dto/public-config.dto';
 import { IntentDto } from '@core/dto/intent.dto';
 import { Intent } from '@core/entities/intent.entity';
 import { FeedbackDto } from '@core/dto/feedback.dto';
+import camelcaseKeys = require('camelcase-keys');
 import snakecaseKeys = require('snakecase-keys/index');
 import { Feedback } from '@core/entities/feedback.entity';
-import { FeedbackService } from '../feedback/feedback.service';
-import { IntentService } from '../intent/intent.service';
-import { ChatbotConfigService } from '../chatbot-config/chatbot-config.service';
-import { FaqService } from '../faq/faq.service';
+import FeedbackService from '../feedback/feedback.service';
+import IntentService from '../intent/intent.service';
+import ChatbotConfigService from '../chatbot-config/chatbot-config.service';
+import FaqService from '../faq/faq.service';
 
 @ApiTags('public')
 @Controller('public')
-export class PublicController {
+export default class PublicController {
   constructor(
-    private readonly _configService: ChatbotConfigService,
-    private readonly _intentService: IntentService,
-    private readonly _faqService: FaqService,
-    private readonly _feedbackService: FeedbackService,
+    private readonly configService: ChatbotConfigService,
+    private readonly intentService: IntentService,
+    private readonly faqService: FaqService,
+    private readonly feedbackService: FeedbackService,
   ) {}
 
   @Get('')
@@ -29,7 +29,7 @@ export class PublicController {
     summary: 'Retourne les données publiques de la configuration du Chatbot',
   })
   async getChabotConfig(): Promise<PublicConfigDto> {
-    const config: ChatbotConfig = await this._configService.getChatbotConfig({
+    const config: ChatbotConfig = await this.configService.getChatbotConfig({
       select: [
         'name',
         'icon',
@@ -56,7 +56,10 @@ export class PublicController {
       ],
     });
     return config
-      ? plainToInstance(PublicConfigDto, camelcaseKeys(config, { deep: true }))
+      ? plainToInstance(
+          PublicConfigDto,
+          camelcaseKeys(<any>config, { deep: true }),
+        )
       : null;
   }
 
@@ -70,7 +73,7 @@ export class PublicController {
     @Query('intentsNumber') intentsNumber: number,
     @Query('getResponses') getResponses: boolean,
   ): Promise<IntentDto[]> {
-    const intents: Intent[] = await this._intentService.findIntentsMatching(
+    const intents: Intent[] = await this.intentService.findIntentsMatching(
       decodeURIComponent(query),
       intentsNumber,
       getResponses,
@@ -84,14 +87,14 @@ export class PublicController {
   })
   async getIntentsName(@Body() intentsId: string[]): Promise<IntentDto[]> {
     const intents: Intent[] =
-      await this._intentService.findIntentsMainQuestions(intentsId);
+      await this.intentService.findIntentsMainQuestions(intentsId);
     return plainToInstance(IntentDto, camelcaseKeys(intents, { deep: true }));
   }
 
   @Post('/faq')
   @ApiOperation({ summary: "L'utilisateur se connecte à la FAQ" })
   async connectToFaq(@Body() body: { senderId: string }): Promise<void> {
-    await this._faqService.connectToFaq(body.senderId);
+    await this.faqService.connectToFaq(body.senderId);
   }
 
   @Post('/faq/:intentId')
@@ -100,13 +103,13 @@ export class PublicController {
     @Body() body: { senderId: string },
     @Param('intentId') intentId: string,
   ): Promise<void> {
-    await this._faqService.clickIntent(body.senderId, intentId);
+    await this.faqService.clickIntent(body.senderId, intentId);
   }
 
   @Get('/categories')
   @ApiOperation({ summary: 'Retourne toute les catégories actives' })
   async getCategories(): Promise<string[]> {
-    return this._intentService.findAllCategories(true);
+    return this.intentService.findAllCategories(true);
   }
 
   @Get('/category/:category')
@@ -117,8 +120,8 @@ export class PublicController {
     @Query() options: { senderId: string },
     @Param('category') category: string,
   ): Promise<IntentDto[]> {
-    await this._faqService.searchCategory(options.senderId, category);
-    const intents: Intent[] = await this._intentService.findByCategory(
+    await this.faqService.searchCategory(options.senderId, category);
+    const intents: Intent[] = await this.intentService.findByCategory(
       decodeURIComponent(category),
     );
     return plainToInstance(IntentDto, camelcaseKeys(intents, { deep: true }));
@@ -129,12 +132,12 @@ export class PublicController {
     summary: "Création d'un feedback suite à une réponse du Chatbot",
   })
   async createFeedback(@Body() feedbackDto: FeedbackDto): Promise<FeedbackDto> {
-    const feedback = await this._feedbackService.createSafe(
-      plainToInstance(Feedback, snakecaseKeys(feedbackDto)),
+    const feedback = await this.feedbackService.createSafe(
+      plainToInstance(Feedback, snakecaseKeys(<any>feedbackDto)),
     );
     return plainToInstance(
       FeedbackDto,
-      camelcaseKeys(feedback, { deep: true }),
+      camelcaseKeys(<any>feedback, { deep: true }),
     );
   }
 }

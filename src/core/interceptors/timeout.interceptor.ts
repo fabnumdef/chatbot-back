@@ -9,7 +9,7 @@ import { Observable, throwError, TimeoutError } from 'rxjs';
 import { catchError, timeout } from 'rxjs/operators';
 
 @Injectable()
-export class TimeoutInterceptor implements NestInterceptor {
+export default class TimeoutInterceptor implements NestInterceptor {
   /**
    * Augmentation du timeout par défaut sur la route /rasa/train qui peut prendre pas mal de temps
    * @param context

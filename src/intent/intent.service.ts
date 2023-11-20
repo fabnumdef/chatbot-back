@@ -7,7 +7,7 @@ import { UpdateResult } from 'typeorm/query-builder/result/UpdateResult';
 import { IntentStatus } from '@core/enums/intent-status.enum';
 import { PaginationQueryDto } from '@core/dto/pagination-query.dto';
 import { paginate, Pagination } from 'nestjs-typeorm-paginate';
-import { PaginationUtils } from '@core/pagination-utils';
+import PaginationUtils from '@core/pagination-utils';
 import { IntentFilterDto } from '@core/dto/intent-filter.dto';
 import { ChatbotConfig } from '@core/entities/chatbot-config.entity';
 import { StatsFilterDto } from '@core/dto/stats-filter.dto';
@@ -16,18 +16,18 @@ import { AppConstants } from '@core/constant';
 import { Response } from '@core/entities/response.entity';
 import { ResponseType } from '@core/enums/response-type.enum';
 import { SelectQueryBuilder } from 'typeorm/query-builder/SelectQueryBuilder';
-import { ChatbotConfigService } from '../chatbot-config/chatbot-config.service';
-import { ResponseService } from '../response/response.service';
-import { KnowledgeService } from '../knowledge/knowledge.service';
+import ChatbotConfigService from '../chatbot-config/chatbot-config.service';
+import ResponseService from '../response/response.service';
+import KnowledgeService from '../knowledge/knowledge.service';
 
 @Injectable()
-export class IntentService {
+export default class IntentService {
   constructor(
     @InjectRepository(Intent)
-    private readonly _intentsRepository: Repository<Intent>,
-    private readonly _knowledgeService: KnowledgeService,
-    private readonly _responseService: ResponseService,
-    private readonly _configService: ChatbotConfigService,
+    private readonly intentsRepository: Repository<Intent>,
+    private readonly knowledgeService: KnowledgeService,
+    private readonly responseService: ResponseService,
+    private readonly configService: ChatbotConfigService,
   ) {}
 
   /**
@@ -36,7 +36,7 @@ export class IntentService {
    * @param params
    */
   findAll(params: any = { status: IntentStatus.active }): Promise<Intent[]> {
-    return this._intentsRepository.find(params);
+    return this.intentsRepository.find(params);
   }
 
   /**
@@ -110,10 +110,10 @@ export class IntentService {
         results.items.map(async (item: IntentModel) => {
           const [knowledges, responses, previousIntents, nextIntents] =
             await Promise.all([
-              this._knowledgeService.findByIntent(item),
-              this._responseService.findByIntent(item),
-              this._findPreviousIntents(item),
-              this._findNextIntents(item),
+              this.knowledgeService.findByIntent(item),
+              this.responseService.findByIntent(item),
+              this.findPreviousIntents(item),
+              this.findNextIntents(item),
             ]);
           // @ts-ignore
           item.knowledges = knowledges;
@@ -143,7 +143,7 @@ export class IntentService {
     filters?: IntentFilterDto,
     getResponses?: boolean,
   ): SelectQueryBuilder<any> {
-    let query = this._intentsRepository
+    let query = this.intentsRepository
       .createQueryBuilder('intent')
       .where('intent.status IN (:...status)', {
         status: [
@@ -174,7 +174,7 @@ export class IntentService {
         .addOrderBy('intent.main_question', 'ASC', 'NULLS LAST');
     }
 
-    query = this._addFilters(query, filters);
+    query = this.addFilters(query, filters);
     return query;
   }
 
@@ -195,7 +195,7 @@ export class IntentService {
     getResponses = true,
     getKnowledges = true,
   ): SelectQueryBuilder<any> {
-    let query = this._intentsRepository
+    let query = this.intentsRepository
       .createQueryBuilder('intent')
       .where('intent.status IN (:...status)', {
         status: [
@@ -212,7 +212,7 @@ export class IntentService {
         'intent.id': 'ASC',
       });
 
-    query = this._addFilters(query, filters);
+    query = this.addFilters(query, filters);
 
     if (getKnowledges) {
       query
@@ -232,7 +232,7 @@ export class IntentService {
    * Récupération de toutes les connaissances ainsi que leurs réponses
    */
   getIntentAndResponseQueryBuilder() {
-    return this._intentsRepository
+    return this.intentsRepository
       .createQueryBuilder('intent')
       .select('intent.main_question')
       .addSelect('intent.id')
@@ -258,7 +258,7 @@ export class IntentService {
    * @param active
    */
   async findAllCategories(active = false): Promise<string[]> {
-    const query = this._intentsRepository
+    const query = this.intentsRepository
       .createQueryBuilder('intent')
       .select('DISTINCT category', 'category')
       .where("intent.id NOT LIKE 'st\\_%' ESCAPE '\\'")
@@ -299,9 +299,9 @@ export class IntentService {
     }
     const [previousIntents, nextIntents] = await Promise.all([
       // @ts-ignore
-      this._findPreviousIntents(intent),
+      this.findPreviousIntents(intent),
       // @ts-ignore
-      this._findNextIntents(intent),
+      this.findNextIntents(intent),
     ]);
     // @ts-ignore
     intent.previousIntents = previousIntents;
@@ -374,7 +374,7 @@ export class IntentService {
       IntentStatus.active_modified,
       IntentStatus.in_training,
     ];
-    return this._intentsRepository.find({
+    return this.intentsRepository.find({
       select: ['id', 'main_question'],
       where: {
         id: In(intentsId),
@@ -405,13 +405,13 @@ export class IntentService {
         intent.status = IntentStatus.active_modified;
         break;
     }
-    const intentCreatedEdited = await this._intentsRepository.save(intent);
+    const intentCreatedEdited = await this.intentsRepository.save(intent);
     // Si édition de l'ID d'une connaissance on doit supprimer l'ancienne
     if (id) {
       await this.delete(id);
-      await this._responseService.updateIntentResponses(id, intent.id);
+      await this.responseService.updateIntentResponses(id, intent.id);
     }
-    await this._updateNeedTraining();
+    await this.updateNeedTraining();
     return intentCreatedEdited;
   }
 
@@ -426,11 +426,11 @@ export class IntentService {
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
-    const intentDeleted = await this._intentsRepository.update(
+    const intentDeleted = await this.intentsRepository.update(
       { id: intentId },
       { status: IntentStatus.to_archive },
     );
-    await this._updateNeedTraining();
+    await this.updateNeedTraining();
     return intentDeleted;
   }
 
@@ -439,8 +439,8 @@ export class IntentService {
    * @param intents
    */
   async saveMany(intents: IntentModel[]): Promise<Intent[]> {
-    const intentsCreated = await this._intentsRepository.save(intents);
-    await this._updateNeedTraining();
+    const intentsCreated = await this.intentsRepository.save(intents);
+    await this.updateNeedTraining();
     return intentsCreated;
   }
 
@@ -453,11 +453,11 @@ export class IntentService {
     condition: any,
     params: any,
   ): Promise<UpdateResult> {
-    const intentsUpdated = await this._intentsRepository.update(
+    const intentsUpdated = await this.intentsRepository.update(
       condition,
       params,
     );
-    await this._updateNeedTraining();
+    await this.updateNeedTraining();
     return intentsUpdated;
   }
 
@@ -465,7 +465,7 @@ export class IntentService {
    * Récupération du repository
    */
   getRepository(): Repository<Intent> {
-    return this._intentsRepository;
+    return this.intentsRepository;
   }
 
   /**
@@ -480,7 +480,7 @@ export class IntentService {
     const endDate = filters.endDate
       ? moment(filters.endDate, 'DD/MM/YYYY').format('YYYY-MM-DD')
       : moment().format('YYYY-MM-DD');
-    const query = this._intentsRepository
+    const query = this.intentsRepository
       .createQueryBuilder('intent')
       .select('DATE(intent.created_at) AS date')
       .addSelect('COUNT(*) AS count')
@@ -504,7 +504,7 @@ export class IntentService {
       ? moment(filters.endDate, 'DD/MM/YYYY').format('YYYY-MM-DD')
       : null;
 
-    const query = this._intentsRepository
+    const query = this.intentsRepository
       .createQueryBuilder('intent')
       .select('intent.main_question as question')
       .leftJoin(
@@ -555,7 +555,7 @@ export class IntentService {
       true,
       false,
     );
-    return this._buildIntentsTree(intents, allIntents);
+    return this.buildIntentsTree(intents, allIntents);
   }
 
   /**
@@ -563,8 +563,8 @@ export class IntentService {
    * @param intent
    * @private
    */
-  private _findPreviousIntents(intent: IntentModel): Promise<Intent[]> {
-    const sql = this._intentsRepository
+  private findPreviousIntents(intent: IntentModel): Promise<Intent[]> {
+    const sql = this.intentsRepository
       .createQueryBuilder('intent')
       .select([
         'intent.id as id',
@@ -583,9 +583,9 @@ export class IntentService {
    * @param intent
    * @private
    */
-  private async _findNextIntents(intent: IntentModel): Promise<Intent[]> {
+  private async findNextIntents(intent: IntentModel): Promise<Intent[]> {
     // Récupération des réponses de la connaissance
-    let intentsId = (await this._responseService.findByIntent(intent))
+    let intentsId = (await this.responseService.findByIntent(intent))
       .map((r: Response) => {
         // Si la réponse n'est pas une réponse répide ou un bouton, on passe
         if (
@@ -608,7 +608,7 @@ export class IntentService {
     if (intentsId.length < 1) {
       return;
     }
-    const sql = this._intentsRepository
+    const sql = this.intentsRepository
       .createQueryBuilder('intent')
       .select([
         'intent.id as id',
@@ -627,8 +627,8 @@ export class IntentService {
    * Mise à jour de la configuration si au moins une connaissance a besoin d'être ingérée par RASA
    * @private
    */
-  private async _updateNeedTraining() {
-    const needTraining = await this._intentsRepository.count({
+  private async updateNeedTraining() {
+    const needTraining = await this.intentsRepository.count({
       where: {
         status: In([
           IntentStatus.to_deploy,
@@ -637,7 +637,7 @@ export class IntentService {
         ]),
       },
     });
-    await this._configService.update(<ChatbotConfig>{
+    await this.configService.update(<ChatbotConfig>{
       need_training: needTraining > 0,
     });
   }
@@ -648,7 +648,7 @@ export class IntentService {
    * @param allIntents
    * @private
    */
-  private _buildIntentsTree(intents: Intent[], allIntents: Intent[]): Intent[] {
+  private buildIntentsTree(intents: Intent[], allIntents: Intent[]): Intent[] {
     const rootIntents: Intent[] = [];
     intents.forEach((intent) => {
       // On récupère les racines de l'arbre
@@ -663,7 +663,7 @@ export class IntentService {
         rootIntents.push(intent);
       }
     });
-    this._buildIntentBranch(rootIntents, allIntents);
+    this.buildIntentBranch(rootIntents, allIntents);
     return rootIntents;
   }
 
@@ -673,10 +673,10 @@ export class IntentService {
    * @param fullIntents
    * @private
    */
-  private _buildIntentBranch(rootIntents: Intent[], fullIntents: Intent[]) {
+  private buildIntentBranch(rootIntents: Intent[], fullIntents: Intent[]) {
     // Pour chaque racine
     rootIntents.forEach((rootIntent) => {
-      let intentsId = rootIntent.responses.map((r: Response) => {
+      const intentsTmp: string[][] = rootIntent.responses.map((r: Response) => {
         if (
           ![ResponseType.quick_reply, ResponseType.button].includes(
             r.response_type,
@@ -691,7 +691,7 @@ export class IntentService {
             text.substring(text.indexOf('<') + 1, text.indexOf('>')).trim(),
           );
       });
-      intentsId = [].concat(...intentsId);
+      let intentsId: string[] = [].concat(...intentsTmp);
       // On exclut les connaissances qui sont déjà des racines pour éviter une boucle infinie ou des branches en doublon
       intentsId = intentsId.filter(
         (id) =>
@@ -709,25 +709,20 @@ export class IntentService {
       );
     });
 
-    // @ts-ignore
-    let nextRootIntents = rootIntents.map((r) => {
-      // @ts-ignore
+    let nextRootIntents = rootIntents.map((r: any | Intent) => {
       r.nextIntents = r.nextIntents.map((n) => {
-        // @ts-ignore
         n.parents = r.parents ? r.parents : [];
         n.parents.push(r.id);
         return n;
       });
-      // @ts-ignore
       return r.nextIntents;
-      // @ts-ignore
     });
     nextRootIntents = [].concat(...nextRootIntents);
     if (!nextRootIntents || nextRootIntents.length < 1) {
       return;
     }
     // On itère pour construire la branche complète
-    this._buildIntentBranch(nextRootIntents, fullIntents);
+    this.buildIntentBranch(nextRootIntents, fullIntents);
   }
 
   /**
@@ -736,7 +731,7 @@ export class IntentService {
    * @param filters
    * @private
    */
-  private _addFilters(
+  private addFilters(
     query: SelectQueryBuilder<any>,
     filters: IntentFilterDto,
   ): SelectQueryBuilder<any> {

@@ -6,10 +6,10 @@ import { KnowledgeModel } from '@core/models/knowledge.model';
 import { IntentModel } from '@core/models/intent.model';
 
 @Injectable()
-export class KnowledgeService {
+export default class KnowledgeService {
   constructor(
     @InjectRepository(Knowledge)
-    private readonly _knowledgesRepository: Repository<Knowledge>,
+    private readonly knowledgesRepository: Repository<Knowledge>,
   ) {}
 
   /**
@@ -17,7 +17,7 @@ export class KnowledgeService {
    * @param intent
    */
   async findByIntent(intent: IntentModel): Promise<Knowledge[]> {
-    return this._knowledgesRepository.find({
+    return this.knowledgesRepository.find({
       where: { intent: { id: intent.id } },
       order: { id: 'ASC' },
     });
@@ -27,7 +27,7 @@ export class KnowledgeService {
   //  * Retourne toutes les questions similaires
   //  */
   // findAll(): Promise<Knowledge[]> {
-  //   return this._knowledgesRepository.find();
+  //   return this.knowledgesRepository.find();
   // }
 
   /**
@@ -35,7 +35,7 @@ export class KnowledgeService {
    * @param knowledge
    */
   create(knowledge: KnowledgeModel): Promise<Knowledge> {
-    return this._knowledgesRepository.save(knowledge);
+    return this.knowledgesRepository.save(knowledge);
   }
 
   /**
@@ -44,7 +44,7 @@ export class KnowledgeService {
    * @param knowledge
    */
   async createSafe(knowledge: Knowledge): Promise<Knowledge> {
-    const query = this._knowledgesRepository
+    const query = this.knowledgesRepository
       .createQueryBuilder('knowledge')
       .select()
       .where({
@@ -52,7 +52,7 @@ export class KnowledgeService {
         question: knowledge.question,
       });
     if (!(await query.getOne())) {
-      return this._knowledgesRepository.save(knowledge);
+      return this.knowledgesRepository.save(knowledge);
     }
     return knowledge;
   }
@@ -63,7 +63,7 @@ export class KnowledgeService {
    */
   async findOrSave(knowledges: Knowledge[]): Promise<Knowledge[]> {
     // On récupère tout les knowledges possibles
-    const knowledgesExisting = await this._knowledgesRepository
+    const knowledgesExisting = await this.knowledgesRepository
       .createQueryBuilder('knowledge')
       .select()
       .leftJoinAndSelect('knowledge.intent', 'intent')
@@ -96,6 +96,6 @@ export class KnowledgeService {
    * @param id
    */
   async remove(id: string): Promise<void> {
-    await this._knowledgesRepository.delete(id);
+    await this.knowledgesRepository.delete(id);
   }
 }

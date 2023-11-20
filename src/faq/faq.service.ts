@@ -9,10 +9,10 @@ import { AppConstants } from '@core/constant';
 import { StatsMostAskedCategoriesDto } from '@core/dto/stats-most-asked-categories.dto';
 
 @Injectable()
-export class FaqService {
+export default class FaqService {
   constructor(
     @InjectRepository(FaqEvents)
-    private readonly _faqEventsRepository: Repository<FaqEvents>,
+    private readonly faqEventsRepository: Repository<FaqEvents>,
   ) {}
 
   /**
@@ -20,7 +20,7 @@ export class FaqService {
    * @param senderId
    */
   connectToFaq(senderId: string) {
-    return this._createFaqEvent(senderId, 'connection');
+    return this.createFaqEvent(senderId, 'connection');
   }
 
   /**
@@ -29,7 +29,7 @@ export class FaqService {
    * @param category
    */
   searchCategory(senderId: string, category: string) {
-    return this._createFaqEvent(senderId, 'category', category);
+    return this.createFaqEvent(senderId, 'category', category);
   }
 
   /**
@@ -38,7 +38,7 @@ export class FaqService {
    * @param intentId
    */
   clickIntent(senderId: string, intentId: string) {
-    return this._createFaqEvent(senderId, 'intent', null, intentId);
+    return this.createFaqEvent(senderId, 'intent', null, intentId);
   }
 
   /**
@@ -56,7 +56,7 @@ export class FaqService {
       ? moment(filters.endDate, 'DD/MM/YYYY').format('YYYY-MM-DD')
       : null;
 
-    const query = this._faqEventsRepository
+    const query = this.faqEventsRepository
       .createQueryBuilder('faq_events')
       .select('int.main_question AS question')
       .addSelect('COUNT(faq_events.intent_name) AS count')
@@ -95,7 +95,7 @@ export class FaqService {
       ? moment(filters.endDate, 'DD/MM/YYYY').format('YYYY-MM-DD')
       : null;
 
-    const query = this._faqEventsRepository
+    const query = this.faqEventsRepository
       .createQueryBuilder('faq_events')
       .select('int.category AS category')
       .addSelect('COUNT(faq_events.intent_name) AS count')
@@ -132,7 +132,7 @@ export class FaqService {
       ? moment(filters.endDate, 'DD/MM/YYYY').format('YYYY-MM-DD')
       : null;
 
-    const query = this._faqEventsRepository
+    const query = this.faqEventsRepository
       .createQueryBuilder('faq_events')
       .select('COUNT(DISTINCT sender_id) AS visitors');
     if (startDate) {
@@ -158,7 +158,7 @@ export class FaqService {
       ? moment(filters.endDate, 'DD/MM/YYYY').format('YYYY-MM-DD')
       : null;
 
-    const query = this._faqEventsRepository
+    const query = this.faqEventsRepository
       .createQueryBuilder('faq_events')
       .select(
         'COALESCE(ROUND(count(*) * 1.0 / NULLIF(count(distinct faq_events.sender_id),0), 2), 0) as averageQuestions',
@@ -181,7 +181,7 @@ export class FaqService {
    * @param intent
    * @private
    */
-  private async _createFaqEvent(
+  private async createFaqEvent(
     senderId: string,
     type: string,
     category?: string,
@@ -196,6 +196,6 @@ export class FaqService {
       category_name: category || null,
       intent_name: intent || null,
     };
-    return this._faqEventsRepository.save(toCreate);
+    return this.faqEventsRepository.save(toCreate);
   }
 }

@@ -1,20 +1,20 @@
 import { Body, Controller, Post, UseGuards } from '@nestjs/common';
 import { StatsFilterDto } from '@core/dto/stats-filter.dto';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { JwtGuard } from '@core/guards/jwt.guard';
+import JwtGuard from '@core/guards/jwt.guard';
 import { plainToInstance } from 'class-transformer';
 import { StatsMostAskedQuestionsDto } from '@core/dto/stats-most-asked-questions.dto';
 import { StatsMostAskedCategoriesDto } from '@core/dto/stats-most-asked-categories.dto';
 import { forkJoin } from 'rxjs';
 import { FeedbackStatus } from '@core/enums/feedback-status.enum';
-import { StatsService } from './stats.service';
+import StatsService from './stats.service';
 
 @ApiTags('stats')
 @Controller('stats')
 @ApiBearerAuth()
 @UseGuards(JwtGuard)
-export class StatsController {
-  constructor(private readonly _statsService: StatsService) {}
+export default class StatsController {
+  constructor(private readonly statsService: StatsService) {}
 
   @Post('line_data')
   @ApiOperation({
@@ -23,20 +23,20 @@ export class StatsController {
   async sendLineData(@Body() filters: StatsFilterDto) {
     // TODO Deprecated
     return forkJoin({
-      askedQuestionsNumber: this._statsService.getNbAskedQuestions(filters),
-      visitorNumber: this._statsService.getNbVisitors(filters),
-      dbQuestionSize: this._statsService.getNbIntent(filters),
-      feedbacksNumber: this._statsService.getNbFeedbacks(filters),
+      askedQuestionsNumber: this.statsService.getNbAskedQuestions(filters),
+      visitorNumber: this.statsService.getNbVisitors(filters),
+      dbQuestionSize: this.statsService.getNbIntent(filters),
+      feedbacksNumber: this.statsService.getNbFeedbacks(filters),
     });
   }
 
   @Post('best_data')
   @ApiOperation({ summary: 'Retourne les connaissances les plus demandées' })
   async sendBestData(@Body() filters: StatsFilterDto) {
-    const result = {};
+    const result: any = {};
     result.mostAskedQuestions = plainToInstance(
       StatsMostAskedQuestionsDto,
-      await this._statsService.getMostAskedQuestions(filters),
+      await this.statsService.getMostAskedQuestions(filters),
     );
     return result;
   }
@@ -44,10 +44,10 @@ export class StatsController {
   @Post('best_categories')
   @ApiOperation({ summary: 'Retourne les catégories les plus demandées' })
   async sendBestCategories(@Body() filters: StatsFilterDto) {
-    const result = {};
+    const result: any = {};
     result.mostAskedCategories = plainToInstance(
       StatsMostAskedCategoriesDto,
-      await this._statsService.getMostAskedCategories(filters),
+      await this.statsService.getMostAskedCategories(filters),
     );
     return result;
   }
@@ -55,10 +55,9 @@ export class StatsController {
   @Post('worst_data')
   @ApiOperation({ summary: 'Retourne les connaissances les moins demandées' })
   async sendWorstData(@Body() filters: StatsFilterDto) {
-    const result = {};
-    result.lessAskedQuestions = await this._statsService.getNeverAskedQuestions(
-      filters,
-    );
+    const result: any = {};
+    result.lessAskedQuestions =
+      await this.statsService.getNeverAskedQuestions(filters);
     return result;
   }
 
@@ -67,12 +66,11 @@ export class StatsController {
   async sendKPIData(@Body() filters: StatsFilterDto) {
     // TODO Deprecated
     return forkJoin({
-      uniqueVisitorsNumber: this._statsService.getNbUniqueVisitors(filters),
-      avgQuestionPerVisitor: this._statsService.getAvgQuestPerVisitors(filters),
-      avgChatbotResponseTime: this._statsService.getAvgResponseTime(filters),
-      ratioChatbotResponseOk: this._statsService.getRatioResponseOk(filters),
-      ratioChatbotResponseSure:
-        this._statsService.getRatioResponseSure(filters),
+      uniqueVisitorsNumber: this.statsService.getNbUniqueVisitors(filters),
+      avgQuestionPerVisitor: this.statsService.getAvgQuestPerVisitors(filters),
+      avgChatbotResponseTime: this.statsService.getAvgResponseTime(filters),
+      ratioChatbotResponseOk: this.statsService.getRatioResponseOk(filters),
+      ratioChatbotResponseSure: this.statsService.getRatioResponseSure(filters),
     });
   }
 
@@ -81,10 +79,10 @@ export class StatsController {
     summary: 'Retourne les connaissances les plus demandées via la FAQ',
   })
   async sendFaqMostQuestions(@Body() filters: StatsFilterDto) {
-    const result = {};
+    const result: any = {};
     result.mostAskedQuestions = plainToInstance(
       StatsMostAskedQuestionsDto,
-      await this._statsService.getFaqMostAskedQuestions(filters),
+      await this.statsService.getFaqMostAskedQuestions(filters),
     );
     return result;
   }
@@ -94,10 +92,10 @@ export class StatsController {
     summary: 'Retourne les catégories les plus demandées via la FAQ',
   })
   async sendFaqMostCategories(@Body() filters: StatsFilterDto) {
-    const result = {};
+    const result: any = {};
     result.mostAskedCategories = plainToInstance(
       StatsMostAskedCategoriesDto,
-      await this._statsService.getFaqMostAskedCategories(filters),
+      await this.statsService.getFaqMostAskedCategories(filters),
     );
     return result;
   }
@@ -107,9 +105,9 @@ export class StatsController {
   async sendFaqKPIData(@Body() filters: StatsFilterDto) {
     // TODO Deprecated
     return forkJoin({
-      uniqueVisitorsNumber: this._statsService.getFaqNbUniqueVisitors(filters),
+      uniqueVisitorsNumber: this.statsService.getFaqNbUniqueVisitors(filters),
       avgQuestionPerVisitor:
-        this._statsService.getFaqAvgQuestPerVisitors(filters),
+        this.statsService.getFaqAvgQuestPerVisitors(filters),
     });
   }
 
@@ -118,10 +116,10 @@ export class StatsController {
     summary: 'Retourne les connaissances ayant été flaguées comme pertinentes',
   })
   async sendFeedbackRelevantQuestions(@Body() filters: StatsFilterDto) {
-    const result = {};
+    const result: any = {};
     result.mostAskedQuestions = plainToInstance(
       StatsMostAskedQuestionsDto,
-      await this._statsService.getFeedbackQuestions(
+      await this.statsService.getFeedbackQuestions(
         filters,
         FeedbackStatus.relevant,
       ),
@@ -135,10 +133,10 @@ export class StatsController {
       'Retourne les catégories liées aux connaissances ayant été flaguées comme pertinentes',
   })
   async sendFeedbackRelevantCategories(@Body() filters: StatsFilterDto) {
-    const result = {};
+    const result: any = {};
     result.mostAskedCategories = plainToInstance(
       StatsMostAskedQuestionsDto,
-      await this._statsService.getFeedbackCategories(
+      await this.statsService.getFeedbackCategories(
         filters,
         FeedbackStatus.relevant,
       ),
@@ -151,10 +149,10 @@ export class StatsController {
     summary: 'Retourne les connaissances ayant été flaguées comme fausses',
   })
   async sendFeedbackWrongQuestions(@Body() filters: StatsFilterDto) {
-    const result = {};
+    const result: any = {};
     result.mostAskedQuestions = plainToInstance(
       StatsMostAskedQuestionsDto,
-      await this._statsService.getFeedbackQuestions(
+      await this.statsService.getFeedbackQuestions(
         filters,
         FeedbackStatus.wrong,
       ),
@@ -168,10 +166,10 @@ export class StatsController {
       'Retourne les catégories liées aux connaissances ayant été flaguées comme fausses',
   })
   async sendFeedbackWrongCategories(@Body() filters: StatsFilterDto) {
-    const result = {};
+    const result: any = {};
     result.mostAskedCategories = plainToInstance(
       StatsMostAskedQuestionsDto,
-      await this._statsService.getFeedbackCategories(
+      await this.statsService.getFeedbackCategories(
         filters,
         FeedbackStatus.wrong,
       ),
@@ -184,10 +182,10 @@ export class StatsController {
     summary: 'Retourne les connaissances ayant été flaguées comme hors-sujet',
   })
   async sendFeedbackOfftopicQuestions(@Body() filters: StatsFilterDto) {
-    const result = {};
+    const result: any = {};
     result.mostAskedQuestions = plainToInstance(
       StatsMostAskedQuestionsDto,
-      await this._statsService.getFeedbackQuestions(
+      await this.statsService.getFeedbackQuestions(
         filters,
         FeedbackStatus.off_topic,
       ),
@@ -201,10 +199,10 @@ export class StatsController {
       'Retourne les catégories liées aux connaissances ayant été flaguées comme hors-sujet',
   })
   async sendFeedbackOfftopicCategories(@Body() filters: StatsFilterDto) {
-    const result = {};
+    const result: any = {};
     result.mostAskedCategories = plainToInstance(
       StatsMostAskedQuestionsDto,
-      await this._statsService.getFeedbackCategories(
+      await this.statsService.getFeedbackCategories(
         filters,
         FeedbackStatus.off_topic,
       ),
@@ -217,27 +215,27 @@ export class StatsController {
   async sendFeedbackKPIData(@Body() filters: StatsFilterDto) {
     // TODO Deprecated
     return forkJoin({
-      relevantQuestions: this._statsService.getFeedbackKpi(
+      relevantQuestions: this.statsService.getFeedbackKpi(
         filters,
         FeedbackStatus.relevant,
       ),
-      relevantQuestionsPct: this._statsService.getFeedbackPctKpi(
+      relevantQuestionsPct: this.statsService.getFeedbackPctKpi(
         filters,
         FeedbackStatus.relevant,
       ),
-      wrongQuestions: this._statsService.getFeedbackKpi(
+      wrongQuestions: this.statsService.getFeedbackKpi(
         filters,
         FeedbackStatus.wrong,
       ),
-      wrongQuestionsPct: this._statsService.getFeedbackPctKpi(
+      wrongQuestionsPct: this.statsService.getFeedbackPctKpi(
         filters,
         FeedbackStatus.wrong,
       ),
-      offtopicQuestions: this._statsService.getFeedbackKpi(
+      offtopicQuestions: this.statsService.getFeedbackKpi(
         filters,
         FeedbackStatus.off_topic,
       ),
-      offtopicQuestionsPct: this._statsService.getFeedbackPctKpi(
+      offtopicQuestionsPct: this.statsService.getFeedbackPctKpi(
         filters,
         FeedbackStatus.off_topic,
       ),
