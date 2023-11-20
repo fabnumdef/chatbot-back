@@ -1,5 +1,5 @@
-import { IsNumber, IsOptional, IsString } from "class-validator";
-import { ResponseType } from "@core/enums/response-type.enum";
+import { IsNumber, IsOptional, IsString } from 'class-validator';
+import { ResponseType } from '@core/enums/response-type.enum';
 
 export class ResponseDto {
   @IsNumber()

@@ -6,12 +6,12 @@ import {
   IsNumber,
   IsOptional,
   IsString,
-  ValidateIf
-} from "class-validator";
-import { IntentStatus } from "@core/enums/intent-status.enum";
-import { ResponseDto } from "@core/dto/response.dto";
-import { KnowledgeDto } from "@core/dto/knowledge.dto";
-import { AppConstants } from "@core/constant";
+  ValidateIf,
+} from 'class-validator';
+import { IntentStatus } from '@core/enums/intent-status.enum';
+import { ResponseDto } from '@core/dto/response.dto';
+import { KnowledgeDto } from '@core/dto/knowledge.dto';
+import { AppConstants } from '@core/constant';
 
 export class IntentDto {
   @IsString()
@@ -22,7 +22,9 @@ export class IntentDto {
   @IsOptional()
   category?: string;
 
-  @ValidateIf(intent => !AppConstants.General.excluded_Ids.includes(intent.id))
+  @ValidateIf(
+    (intent) => !AppConstants.General.excluded_Ids.includes(intent.id),
+  )
   @IsNotEmpty()
   mainQuestion?: string;
 

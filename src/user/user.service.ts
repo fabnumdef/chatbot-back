@@ -11,10 +11,11 @@ const crypto = require('crypto');
 
 @Injectable()
 export class UserService {
-  constructor(@InjectRepository(User)
-  private readonly _usersRepository: Repository<User>,
-    private readonly _mailService: MailService) {
-  }
+  constructor(
+    @InjectRepository(User)
+    private readonly _usersRepository: Repository<User>,
+    private readonly _mailService: MailService,
+  ) {}
 
   /**
    * Récupération de tous les utilisateurs
@@ -24,8 +25,8 @@ export class UserService {
       order: {
         disabled: 'ASC',
         first_name: 'ASC',
-        last_name: 'ASC'
-      }
+        last_name: 'ASC',
+      },
     });
   }
 
@@ -60,11 +61,14 @@ export class UserService {
   async findAndUpdate(email: string, data: any): Promise<User> {
     const userExists = await this.findOne(email);
     if (!userExists) {
-      throw new HttpException('Cet utilisateur n\'existe pas.', HttpStatus.INTERNAL_SERVER_ERROR);
+      throw new HttpException(
+        "Cet utilisateur n'existe pas.",
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
     return this._usersRepository.save({
       ...userExists,
-      ...data
+      ...data,
     });
   }
 
@@ -91,7 +95,10 @@ export class UserService {
       await this.sendEmailPasswordToken(userCreated);
       return userCreated;
     }
-    throw new HttpException('Un utilisateur avec cet email existe déjà.', HttpStatus.FORBIDDEN);
+    throw new HttpException(
+      'Un utilisateur avec cet email existe déjà.',
+      HttpStatus.FORBIDDEN,
+    );
   }
 
   /**
@@ -109,11 +116,14 @@ export class UserService {
   async generateAdminUser(user: UserModel): Promise<UserModel> {
     const adminExists = await this.findOneWithParam({
       where: {
-        role: UserRole.admin
-      }
+        role: UserRole.admin,
+      },
     });
     if (adminExists) {
-      throw new HttpException('Un administrateur existe déjà.', HttpStatus.FORBIDDEN);
+      throw new HttpException(
+        'Un administrateur existe déjà.',
+        HttpStatus.FORBIDDEN,
+      );
     }
     user.role = UserRole.admin;
     user.password = bcrypt.hashSync(user.password, 10);
@@ -129,15 +139,18 @@ export class UserService {
    */
   async sendEmailPasswordToken(user: User) {
     const userUpdated = await this.setPasswordResetToken(user);
-    await this._mailService.sendEmail(userUpdated.email,
-      'Usine à Chatbots - Création de compte',
-      'create-account',
-      {  // Data to be sent to template engine.
-        firstName: userUpdated.first_name,
-        url: `${process.env.HOST_URL}/backoffice/auth/reset-password?token=${userUpdated.reset_password_token}`
-      })
-      .then(() => {
-      });
+    await this._mailService
+      .sendEmail(
+        userUpdated.email,
+        'Usine à Chatbots - Création de compte',
+        'create-account',
+        {
+          // Data to be sent to template engine.
+          firstName: userUpdated.first_name,
+          url: `${process.env.HOST_URL}/backoffice/auth/reset-password?token=${userUpdated.reset_password_token}`,
+        },
+      )
+      .then(() => {});
   }
 
   /**
@@ -156,16 +169,16 @@ export class UserService {
 
     const valuesToUpdate = {
       reset_password_token: token,
-      reset_password_expires: new Date((Date.now() + 86400000))
+      reset_password_expires: new Date(Date.now() + 86400000),
     };
     return this.findAndUpdate(user.email, valuesToUpdate);
   }
 
   /**
    * Il doit toujours y avoir au moins un administrateur actif que ce soit lui-même ou un autre.
-   * 
-   * 1/ Si l'utilisateur est un administrateur et qu'il est le seul actif, on vérifie qu'on ne modifie pas son rôle ou sa date de fin d'activité.  
-   * 2/ Si l'utilisateur est un administrateur et qu'il n'est pas le seul actif, on vérifie qu'au moins un des autres administrateurs n'a pas de date de fin d'activité.  
+   *
+   * 1/ Si l'utilisateur est un administrateur et qu'il est le seul actif, on vérifie qu'on ne modifie pas son rôle ou sa date de fin d'activité.
+   * 2/ Si l'utilisateur est un administrateur et qu'il n'est pas le seul actif, on vérifie qu'au moins un des autres administrateurs n'a pas de date de fin d'activité.
    * 3/ Si l'utilisateur n'est pas un administrateur, on ne fait rien.
    */
   private async _isOneActiveAdminLeft(editing: UserModel): Promise<boolean> {

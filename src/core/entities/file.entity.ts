@@ -1,4 +1,9 @@
-import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn } from "typeorm";
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 
 @Entity('file_historic')
 export class FileHistoric {
@@ -8,6 +13,6 @@ export class FileHistoric {
   @Column({ nullable: false, length: 50 })
   name: string;
 
-  @CreateDateColumn({type: 'timestamp'})
+  @CreateDateColumn({ type: 'timestamp' })
   created_at: number;
 }

@@ -1,23 +1,26 @@
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from "@nestjs/typeorm";
-import { In, Repository } from "typeorm";
-import { Knowledge } from "@core/entities/knowledge.entity";
-import { KnowledgeModel } from "@core/models/knowledge.model";
-import { IntentModel } from "@core/models/intent.model";
+import { InjectRepository } from '@nestjs/typeorm';
+import { In, Repository } from 'typeorm';
+import { Knowledge } from '@core/entities/knowledge.entity';
+import { KnowledgeModel } from '@core/models/knowledge.model';
+import { IntentModel } from '@core/models/intent.model';
 
 @Injectable()
 export class KnowledgeService {
-
-  constructor(@InjectRepository(Knowledge)
-              private readonly _knowledgesRepository: Repository<Knowledge>) {
-  }
+  constructor(
+    @InjectRepository(Knowledge)
+    private readonly _knowledgesRepository: Repository<Knowledge>,
+  ) {}
 
   /**
    * Retourne les questions similaires d'une connaissance
    * @param intent
    */
   async findByIntent(intent: IntentModel): Promise<Knowledge[]> {
-    return this._knowledgesRepository.find({where: {intent: {id: intent.id}}, order: {id: 'ASC'}});
+    return this._knowledgesRepository.find({
+      where: { intent: { id: intent.id } },
+      order: { id: 'ASC' },
+    });
   }
 
   // /**
@@ -41,11 +44,12 @@ export class KnowledgeService {
    * @param knowledge
    */
   async createSafe(knowledge: Knowledge): Promise<Knowledge> {
-    const query = this._knowledgesRepository.createQueryBuilder('knowledge')
+    const query = this._knowledgesRepository
+      .createQueryBuilder('knowledge')
       .select()
       .where({
         intent: knowledge.intent,
-        question: knowledge.question
+        question: knowledge.question,
       });
     if (!(await query.getOne())) {
       return this._knowledgesRepository.save(knowledge);
@@ -59,22 +63,28 @@ export class KnowledgeService {
    */
   async findOrSave(knowledges: Knowledge[]): Promise<Knowledge[]> {
     // On récupère tout les knowledges possibles
-    const knowledgesExisting = await this._knowledgesRepository.createQueryBuilder('knowledge')
+    const knowledgesExisting = await this._knowledgesRepository
+      .createQueryBuilder('knowledge')
       .select()
       .leftJoinAndSelect('knowledge.intent', 'intent')
       .where({
-        intent: In(knowledges.map(k => k.intent).map(i => i.id))
-      }).getMany();
+        intent: In(knowledges.map((k) => k.intent).map((i) => i.id)),
+      })
+      .getMany();
     const knowledgesToSave = [];
-    knowledges.forEach(k => {
-      if (knowledgesExisting.findIndex(ke => ke.intent.id === k.intent.id && ke.question === k.question) < 0) {
+    knowledges.forEach((k) => {
+      if (
+        knowledgesExisting.findIndex(
+          (ke) => ke.intent.id === k.intent.id && ke.question === k.question,
+        ) < 0
+      ) {
         knowledgesToSave.push(k);
       }
     });
     // On ne sait pas si le knowledge existe, pour éviter de faire péter la constraint unique
     let knowledgesEntity: Knowledge[] = [];
     const promises = [];
-    await knowledgesToSave.forEach(k => {
+    await knowledgesToSave.forEach((k) => {
       promises.push(this.create(k));
     });
     knowledgesEntity = await Promise.all(promises);

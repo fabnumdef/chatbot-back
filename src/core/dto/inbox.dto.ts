@@ -1,6 +1,12 @@
-import { IsJSON, IsNotEmpty, IsNumber, IsObject, IsString } from "class-validator";
-import { InboxStatus } from "@core/enums/inbox-status.enum";
-import { Intent } from "@core/entities/intent.entity";
+import {
+  IsJSON,
+  IsNotEmpty,
+  IsNumber,
+  IsObject,
+  IsString,
+} from 'class-validator';
+import { InboxStatus } from '@core/enums/inbox-status.enum';
+import { Intent } from '@core/entities/intent.entity';
 
 export class InboxDto {
   @IsNumber()

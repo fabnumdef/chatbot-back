@@ -1,23 +1,28 @@
-import { RasaNluModel } from "@core/models/rasa-nlu.model";
-import { RasaStoryModel } from "@core/models/rasa-story.model";
-import { RasaRuleModel } from "@core/models/rasa-rule.model";
+import { RasaNluModel } from '@core/models/rasa-nlu.model';
+import { RasaStoryModel } from '@core/models/rasa-story.model';
+import { RasaRuleModel } from '@core/models/rasa-rule.model';
 
 export class RasaDomainModel {
   version: string;
+
   intents: string[];
+
   actions: string[];
+
   slots: any;
+
   responses: { [key: string]: RasaUtterResponseModel[] };
+
   session_config: {
     session_expiration_time: number;
-    carry_over_slots_to_new_session: boolean
+    carry_over_slots_to_new_session: boolean;
   };
   // nlu: RasaNluModel[];
   // stories: RasaStoryModel[];
   // rules: RasaRuleModel[];
 
   constructor() {
-    this.version = "3.1";
+    this.version = '3.1';
     this.intents = [];
     this.responses = {};
     // this.nlu = [];
@@ -27,14 +32,12 @@ export class RasaDomainModel {
     this.slots = {
       return_suggestions: {
         type: 'bool',
-        mappings: [
-          {type: 'custom'}
-        ]
-      }
+        mappings: [{ type: 'custom' }],
+      },
     };
     this.session_config = {
       session_expiration_time: 60,
-      carry_over_slots_to_new_session: true
+      carry_over_slots_to_new_session: true,
     };
   }
 }
@@ -47,15 +50,18 @@ export interface RasaUtterResponseModel {
 
 export class RasaButtonModel {
   title: string;
+
   payload: string;
 
   constructor(title: string, payload?: string) {
-    if (!!payload) {
+    if (payload) {
       this.title = title;
       this.payload = payload;
     } else {
       this.title = title.substring(0, title.indexOf('<')).trim();
-      this.payload = title.substring(title.indexOf('<') + 1, title.indexOf('>')).trim();
+      this.payload = title
+        .substring(title.indexOf('<') + 1, title.indexOf('>'))
+        .trim();
     }
   }
 }

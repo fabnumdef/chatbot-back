@@ -1,5 +1,6 @@
 export class RasaNluModel {
   intent: string;
+
   examples: string;
 
   constructor(intentId) {

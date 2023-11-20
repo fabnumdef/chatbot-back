@@ -1,4 +1,4 @@
-import { ResponseType } from "@core/enums/response-type.enum";
+import { ResponseType } from '@core/enums/response-type.enum';
 
 export interface TemplateFileDto {
   id: string;
@@ -6,6 +6,6 @@ export interface TemplateFileDto {
   main_question: string;
   response_type: ResponseType;
   response: string;
-  questions: string [];
+  questions: string[];
   expires_at: any;
 }

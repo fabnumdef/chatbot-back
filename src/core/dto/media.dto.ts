@@ -1,5 +1,11 @@
-import { IsNotEmpty, IsNumber, IsObject, IsOptional, IsString } from "class-validator";
-import { IntentDto } from "@core/dto/intent.dto";
+import {
+  IsNotEmpty,
+  IsNumber,
+  IsObject,
+  IsOptional,
+  IsString,
+} from 'class-validator';
+import { IntentDto } from '@core/dto/intent.dto';
 
 export class MediaDto {
   @IsNumber()

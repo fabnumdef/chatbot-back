@@ -1,5 +1,5 @@
-import { IsNotEmpty, IsNumber, IsString } from "class-validator";
-import { FeedbackStatus } from "@core/enums/feedback-status.enum";
+import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import { FeedbackStatus } from '@core/enums/feedback-status.enum';
 
 export class FeedbackDto {
   @IsString()

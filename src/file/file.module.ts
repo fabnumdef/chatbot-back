@@ -1,12 +1,12 @@
 import { Module } from '@nestjs/common';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { FileHistoric } from '@core/entities/file.entity';
 import { FileController } from './file.controller';
 import { FileService } from './file.service';
-import { IntentModule } from "../intent/intent.module";
-import { KnowledgeModule } from "../knowledge/knowledge.module";
-import { ResponseModule } from "../response/response.module";
-import { TypeOrmModule } from "@nestjs/typeorm";
-import { FileHistoric } from "@core/entities/file.entity";
-import { ChatbotConfigModule } from "../chatbot-config/chatbot-config.module";
+import { IntentModule } from '../intent/intent.module';
+import { KnowledgeModule } from '../knowledge/knowledge.module';
+import { ResponseModule } from '../response/response.module';
+import { ChatbotConfigModule } from '../chatbot-config/chatbot-config.module';
 
 @Module({
   controllers: [FileController],
@@ -16,11 +16,8 @@ import { ChatbotConfigModule } from "../chatbot-config/chatbot-config.module";
     KnowledgeModule,
     ResponseModule,
     TypeOrmModule.forFeature([FileHistoric]),
-    ChatbotConfigModule
+    ChatbotConfigModule,
   ],
-  exports: [
-    FileService
-  ]
+  exports: [FileService],
 })
-export class FileModule {
-}
+export class FileModule {}

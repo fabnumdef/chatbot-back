@@ -1,25 +1,27 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { UserService } from "../user/user.service";
-import { JwtService } from "@nestjs/jwt";
-import { LoginUserDto } from "@core/dto/login-user.dto";
-import { AuthResponseDto } from "@core/dto/auth-response.dto";
-import { ResetPasswordDto } from "@core/dto/reset-password.dto";
-import { MoreThan } from "typeorm";
-import { MailService } from "../shared/services/mail.service";
+import { JwtService } from '@nestjs/jwt';
+import { LoginUserDto } from '@core/dto/login-user.dto';
+import { AuthResponseDto } from '@core/dto/auth-response.dto';
+import { ResetPasswordDto } from '@core/dto/reset-password.dto';
+import { MoreThan } from 'typeorm';
 import * as moment from 'moment';
-import { User } from "@core/entities/user.entity";
+import { User } from '@core/entities/user.entity';
+import { MailService } from '../shared/services/mail.service';
+import { UserService } from '../user/user.service';
 
 const bcrypt = require('bcrypt');
 
 @Injectable()
 export class AuthService {
   private _saltRounds = 10;
+
   private _failedLoginAttempts = 5;
 
-  constructor(private readonly _userService: UserService,
+  constructor(
+    private readonly _userService: UserService,
     private readonly _jwtService: JwtService,
-    private readonly _mailService: MailService) {
-  }
+    private readonly _mailService: MailService,
+  ) {}
 
   /**
    * Récupération de l'utilisateur logué et renvoi du token JWT
@@ -29,8 +31,10 @@ export class AuthService {
     const userToReturn = await this._validateUser(user);
     if (userToReturn) {
       return {
-        chatbotToken: this._jwtService.sign(JSON.parse(JSON.stringify(userToReturn))),
-        user: userToReturn
+        chatbotToken: this._jwtService.sign(
+          JSON.parse(JSON.stringify(userToReturn)),
+        ),
+        user: userToReturn,
       };
     }
     return null;
@@ -45,17 +49,22 @@ export class AuthService {
     if (!userWithoutPassword) {
       return;
     }
-    const userUpdated = await this._userService.setPasswordResetToken(userWithoutPassword);
+    const userUpdated = await this._userService.setPasswordResetToken(
+      userWithoutPassword,
+    );
 
-    await this._mailService.sendEmail(userUpdated.email,
-      'Usine à Chatbots - Réinitialisation de mot de passe',
-      'forgot-password',
-      {  // Data to be sent to template engine.
-        firstName: userUpdated.first_name,
-        url: `${process.env.HOST_URL}/backoffice/auth/reset-password?token=${userUpdated.reset_password_token}`
-      })
-      .then(() => {
-      });
+    await this._mailService
+      .sendEmail(
+        userUpdated.email,
+        'Usine à Chatbots - Réinitialisation de mot de passe',
+        'forgot-password',
+        {
+          // Data to be sent to template engine.
+          firstName: userUpdated.first_name,
+          url: `${process.env.HOST_URL}/backoffice/auth/reset-password?token=${userUpdated.reset_password_token}`,
+        },
+      )
+      .then(() => {});
   }
 
   /**
@@ -66,31 +75,43 @@ export class AuthService {
     const userWithoutPassword = await this._userService.findOneWithParam({
       where: {
         reset_password_token: resetPassword.token,
-        reset_password_expires: MoreThan(new Date())
-      }
+        reset_password_expires: MoreThan(new Date()),
+      },
     });
     if (!userWithoutPassword) {
-      throw new HttpException('Cet utilisateur n\'existe pas.', HttpStatus.INTERNAL_SERVER_ERROR);
+      throw new HttpException(
+        "Cet utilisateur n'existe pas.",
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
-    const hashPassword = bcrypt.hashSync(resetPassword.password, this._saltRounds);
+    const hashPassword = bcrypt.hashSync(
+      resetPassword.password,
+      this._saltRounds,
+    );
     const valuesToUpdate = {
       password: hashPassword,
       reset_password_token: undefined,
       reset_password_expires: undefined,
       lock_until: undefined,
-      failed_login_attempts: 0
+      failed_login_attempts: 0,
     };
-    const userUpdated = await this._userService.findAndUpdate(userWithoutPassword.email, valuesToUpdate);
+    const userUpdated = await this._userService.findAndUpdate(
+      userWithoutPassword.email,
+      valuesToUpdate,
+    );
 
-    await this._mailService.sendEmail(userUpdated.email,
-      'Usine à Chatbots - Mot de passe modifié',
-      'reset-password',
-      {  // Data to be sent to template engine.
-        firstName: userUpdated.first_name,
-        url: `${process.env.HOST_URL}/backoffice/auth/login`
-      })
-      .then(() => {
-      });
+    await this._mailService
+      .sendEmail(
+        userUpdated.email,
+        'Usine à Chatbots - Mot de passe modifié',
+        'reset-password',
+        {
+          // Data to be sent to template engine.
+          firstName: userUpdated.first_name,
+          url: `${process.env.HOST_URL}/backoffice/auth/login`,
+        },
+      )
+      .then(() => {});
   }
 
   /**
@@ -114,8 +135,10 @@ export class AuthService {
       return await this._wrongPassword(userToReturn);
     }
     if (userToReturn && userToReturn.disabled) {
-      throw new HttpException('Votre compte a été supprimé. Merci de prendre contact avec l\'administrateur si vous souhaitez réactiver votre compte.',
-        HttpStatus.UNAUTHORIZED);
+      throw new HttpException(
+        "Votre compte a été supprimé. Merci de prendre contact avec l'administrateur si vous souhaitez réactiver votre compte.",
+        HttpStatus.UNAUTHORIZED,
+      );
     }
     const now = new Date();
     if (userToReturn?.end_date && userToReturn.end_date < now) {
@@ -145,26 +168,37 @@ export class AuthService {
   private async _wrongPassword(user: User): Promise<any> {
     user = await this._userService.findOne(user.email);
     user.failed_login_attempts++;
-    if (user.failed_login_attempts >= this._failedLoginAttempts && !user.lock_until) {
+    if (
+      user.failed_login_attempts >= this._failedLoginAttempts &&
+      !user.lock_until
+    ) {
       // @ts-ignore
-      user.lock_until = new Date((Date.now()));
+      user.lock_until = new Date(Date.now());
     }
     await this._userService.findAndUpdate(user.email, {
       failed_login_attempts: user.failed_login_attempts,
-      lock_until: user.lock_until
-    })
+      lock_until: user.lock_until,
+    });
     if (user.failed_login_attempts >= this._failedLoginAttempts) {
-      let unlockTime = moment.duration(moment(user.lock_until).add(1, 'd').diff(moment()));
+      let unlockTime = moment.duration(
+        moment(user.lock_until).add(1, 'd').diff(moment()),
+      );
       // @ts-ignore
       unlockTime = unlockTime.asHours().toFixed(1);
-      throw new HttpException(`Votre compte est bloqué suite à de trop nombreuses tentatives. Vous devez attendre ${unlockTime}h pour de nouveau vous connecter ou bien cliquer sur Mot de passe oublié.`,
-        HttpStatus.UNAUTHORIZED);
+      throw new HttpException(
+        `Votre compte est bloqué suite à de trop nombreuses tentatives. Vous devez attendre ${unlockTime}h pour de nouveau vous connecter ou bien cliquer sur Mot de passe oublié.`,
+        HttpStatus.UNAUTHORIZED,
+      );
     }
-    if (user.failed_login_attempts === (this._failedLoginAttempts - 1)) {
-      throw new HttpException('Mauvais identifiant ou mot de passe. Une seule tentative restante avant de bloquer votre compte pour 24h.',
-        HttpStatus.UNAUTHORIZED);
+    if (user.failed_login_attempts === this._failedLoginAttempts - 1) {
+      throw new HttpException(
+        'Mauvais identifiant ou mot de passe. Une seule tentative restante avant de bloquer votre compte pour 24h.',
+        HttpStatus.UNAUTHORIZED,
+      );
     }
-    throw new HttpException('Mauvais identifiant ou mot de passe.',
-      HttpStatus.UNAUTHORIZED);
+    throw new HttpException(
+      'Mauvais identifiant ou mot de passe.',
+      HttpStatus.UNAUTHORIZED,
+    );
   }
 }

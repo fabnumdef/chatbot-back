@@ -1,18 +1,19 @@
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
-import { FaqEvents } from "@core/entities/faq-events.entity";
-import { StatsFilterDto } from "@core/dto/stats-filter.dto";
-import { StatsMostAskedQuestionsDto } from "@core/dto/stats-most-asked-questions.dto";
-import * as moment from "moment";
-import { AppConstants } from "@core/constant";
-import { StatsMostAskedCategoriesDto } from "@core/dto/stats-most-asked-categories.dto";
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { FaqEvents } from '@core/entities/faq-events.entity';
+import { StatsFilterDto } from '@core/dto/stats-filter.dto';
+import { StatsMostAskedQuestionsDto } from '@core/dto/stats-most-asked-questions.dto';
+import * as moment from 'moment';
+import { AppConstants } from '@core/constant';
+import { StatsMostAskedCategoriesDto } from '@core/dto/stats-most-asked-categories.dto';
 
 @Injectable()
 export class FaqService {
-  constructor(@InjectRepository(FaqEvents)
-              private readonly _faqEventsRepository: Repository<FaqEvents>) {
-  }
+  constructor(
+    @InjectRepository(FaqEvents)
+    private readonly _faqEventsRepository: Repository<FaqEvents>,
+  ) {}
 
   /**
    * Ajout d'un événement connection
@@ -45,25 +46,35 @@ export class FaqService {
    * Possibilité de filtrer par dates
    * @param filters
    */
-  findMostAskedQuestions(filters: StatsFilterDto): Promise<StatsMostAskedQuestionsDto[]> {
-    const startDate = filters.startDate ? (moment(filters.startDate, 'DD/MM/YYYY').format('YYYY-MM-DD')) : null;
-    const endDate = filters.endDate ? moment(filters.endDate, 'DD/MM/YYYY').format('YYYY-MM-DD') : null;
+  findMostAskedQuestions(
+    filters: StatsFilterDto,
+  ): Promise<StatsMostAskedQuestionsDto[]> {
+    const startDate = filters.startDate
+      ? moment(filters.startDate, 'DD/MM/YYYY').format('YYYY-MM-DD')
+      : null;
+    const endDate = filters.endDate
+      ? moment(filters.endDate, 'DD/MM/YYYY').format('YYYY-MM-DD')
+      : null;
 
-    const query = this._faqEventsRepository.createQueryBuilder('faq_events')
+    const query = this._faqEventsRepository
+      .createQueryBuilder('faq_events')
       .select('int.main_question AS question')
-      .addSelect("COUNT(faq_events.intent_name) AS count")
-      .innerJoin("intent", "int", 'int.id = faq_events.intent_name')
+      .addSelect('COUNT(faq_events.intent_name) AS count')
+      .innerJoin('intent', 'int', 'int.id = faq_events.intent_name')
       // On exclut les phrases génériques
-      .where('int.id NOT IN (:...excludedIds)', {excludedIds: AppConstants.General.excluded_Ids})
+      .where('int.id NOT IN (:...excludedIds)', {
+        excludedIds: AppConstants.General.excluded_Ids,
+      })
       // On exclut les small talks
-      .andWhere(`int.id NOT LIKE 'st\\_%' ESCAPE '\\'`)
+      .andWhere(`int.id NOT LIKE 'st\\_%' ESCAPE '\\'`);
     if (startDate) {
-      query.andWhere(`DATE(faq_events.timestamp) >= '${startDate}'`)
+      query.andWhere(`DATE(faq_events.timestamp) >= '${startDate}'`);
     }
     if (endDate) {
-      query.andWhere(`DATE(faq_events.timestamp) <= '${endDate}'`)
+      query.andWhere(`DATE(faq_events.timestamp) <= '${endDate}'`);
     }
-    query.groupBy('int.main_question')
+    query
+      .groupBy('int.main_question')
       .orderBy('count', 'DESC', 'NULLS LAST')
       .limit(15);
     return query.getRawMany();
@@ -74,25 +85,35 @@ export class FaqService {
    * Possibilité de filtrer par dates
    * @param filters
    */
-  findMostAskedCategories(filters: StatsFilterDto): Promise<StatsMostAskedCategoriesDto[]> {
-    const startDate = filters.startDate ? (moment(filters.startDate, 'DD/MM/YYYY').format('YYYY-MM-DD')) : null;
-    const endDate = filters.endDate ? moment(filters.endDate, 'DD/MM/YYYY').format('YYYY-MM-DD') : null;
+  findMostAskedCategories(
+    filters: StatsFilterDto,
+  ): Promise<StatsMostAskedCategoriesDto[]> {
+    const startDate = filters.startDate
+      ? moment(filters.startDate, 'DD/MM/YYYY').format('YYYY-MM-DD')
+      : null;
+    const endDate = filters.endDate
+      ? moment(filters.endDate, 'DD/MM/YYYY').format('YYYY-MM-DD')
+      : null;
 
-    const query = this._faqEventsRepository.createQueryBuilder('faq_events')
+    const query = this._faqEventsRepository
+      .createQueryBuilder('faq_events')
       .select('int.category AS category')
-      .addSelect("COUNT(faq_events.intent_name) AS count")
-      .innerJoin("intent", "int", 'int.id = faq_events.intent_name')
+      .addSelect('COUNT(faq_events.intent_name) AS count')
+      .innerJoin('intent', 'int', 'int.id = faq_events.intent_name')
       // On exclut les phrases génériques
-      .where('int.id NOT IN (:...excludedIds)', {excludedIds: AppConstants.General.excluded_Ids})
+      .where('int.id NOT IN (:...excludedIds)', {
+        excludedIds: AppConstants.General.excluded_Ids,
+      })
       // On exclut les small talks
-      .andWhere(`int.id NOT LIKE 'st\\_%' ESCAPE '\\'`)
+      .andWhere(`int.id NOT LIKE 'st\\_%' ESCAPE '\\'`);
     if (startDate) {
-      query.andWhere(`DATE(faq_events.timestamp) >= '${startDate}'`)
+      query.andWhere(`DATE(faq_events.timestamp) >= '${startDate}'`);
     }
     if (endDate) {
-      query.andWhere(`DATE(faq_events.timestamp) <= '${endDate}'`)
+      query.andWhere(`DATE(faq_events.timestamp) <= '${endDate}'`);
     }
-    query.groupBy('int.category')
+    query
+      .groupBy('int.category')
       .orderBy('count', 'DESC', 'NULLS LAST')
       .limit(15);
     return query.getRawMany();
@@ -104,16 +125,21 @@ export class FaqService {
    * @param filters
    */
   findNbUniqueVisitors(filters: StatsFilterDto): Promise<string> {
-    const startDate = filters.startDate ? (moment(filters.startDate, 'DD/MM/YYYY').format('YYYY-MM-DD')) : null;
-    const endDate = filters.endDate ? moment(filters.endDate, 'DD/MM/YYYY').format('YYYY-MM-DD') : null;
+    const startDate = filters.startDate
+      ? moment(filters.startDate, 'DD/MM/YYYY').format('YYYY-MM-DD')
+      : null;
+    const endDate = filters.endDate
+      ? moment(filters.endDate, 'DD/MM/YYYY').format('YYYY-MM-DD')
+      : null;
 
-    const query = this._faqEventsRepository.createQueryBuilder('faq_events')
-      .select("COUNT(DISTINCT sender_id) AS visitors");
+    const query = this._faqEventsRepository
+      .createQueryBuilder('faq_events')
+      .select('COUNT(DISTINCT sender_id) AS visitors');
     if (startDate) {
-      query.where(`DATE(faq_events.timestamp) >= '${startDate}'`)
+      query.where(`DATE(faq_events.timestamp) >= '${startDate}'`);
     }
     if (endDate) {
-      query.andWhere(`DATE(faq_events.timestamp) <= '${endDate}'`)
+      query.andWhere(`DATE(faq_events.timestamp) <= '${endDate}'`);
     }
 
     return query.getRawOne();
@@ -125,17 +151,23 @@ export class FaqService {
    * @param filters
    */
   findAvgQuestPerVisitor(filters: StatsFilterDto): Promise<string> {
-    const startDate = filters.startDate ? (moment(filters.startDate, 'DD/MM/YYYY').format('YYYY-MM-DD')) : null;
-    const endDate = filters.endDate ? moment(filters.endDate, 'DD/MM/YYYY').format('YYYY-MM-DD') : null;
+    const startDate = filters.startDate
+      ? moment(filters.startDate, 'DD/MM/YYYY').format('YYYY-MM-DD')
+      : null;
+    const endDate = filters.endDate
+      ? moment(filters.endDate, 'DD/MM/YYYY').format('YYYY-MM-DD')
+      : null;
 
     const query = this._faqEventsRepository
       .createQueryBuilder('faq_events')
-      .select("COALESCE(ROUND(count(*) * 1.0 / NULLIF(count(distinct faq_events.sender_id),0), 2), 0) as averageQuestions")
+      .select(
+        'COALESCE(ROUND(count(*) * 1.0 / NULLIF(count(distinct faq_events.sender_id),0), 2), 0) as averageQuestions',
+      );
     if (startDate) {
-      query.where(`DATE(faq_events.timestamp) >= '${startDate}'`)
+      query.where(`DATE(faq_events.timestamp) >= '${startDate}'`);
     }
     if (endDate) {
-      query.andWhere(`DATE(faq_events.timestamp) <= '${endDate}'`)
+      query.andWhere(`DATE(faq_events.timestamp) <= '${endDate}'`);
     }
 
     return query.getRawOne();
@@ -149,16 +181,21 @@ export class FaqService {
    * @param intent
    * @private
    */
-  private async _createFaqEvent(senderId: string, type: string, category?: string, intent?: string) {
+  private async _createFaqEvent(
+    senderId: string,
+    type: string,
+    category?: string,
+    intent?: string,
+  ) {
     if (!senderId) {
       return;
     }
     const toCreate = <FaqEvents>{
       sender_id: senderId,
       type_name: type,
-      category_name: category ? category : null,
-      intent_name: intent ? intent : null
+      category_name: category || null,
+      intent_name: intent || null,
     };
-    return await this._faqEventsRepository.save(toCreate);
+    return this._faqEventsRepository.save(toCreate);
   }
 }

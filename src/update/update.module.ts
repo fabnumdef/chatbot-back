@@ -1,14 +1,12 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { UpdateController } from './update.controller';
 import { UpdateService } from './update.service';
-import { ChatbotConfigModule } from "../chatbot-config/chatbot-config.module";
+import { ChatbotConfigModule } from '../chatbot-config/chatbot-config.module';
 
 @Module({
-  imports: [
-    forwardRef(() => ChatbotConfigModule)
-  ],
+  imports: [forwardRef(() => ChatbotConfigModule)],
   controllers: [UpdateController],
   providers: [UpdateService],
-  exports: [UpdateService]
+  exports: [UpdateService],
 })
 export class UpdateModule {}

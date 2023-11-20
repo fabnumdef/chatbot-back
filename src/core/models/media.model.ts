@@ -1,6 +1,12 @@
-import { IsNotEmpty, IsNumber, IsObject, IsOptional, IsString } from "class-validator";
-import { Intent } from "@core/entities/intent.entity";
-import { IntentModel } from "@core/models/intent.model";
+import {
+  IsNotEmpty,
+  IsNumber,
+  IsObject,
+  IsOptional,
+  IsString,
+} from 'class-validator';
+import { Intent } from '@core/entities/intent.entity';
+import { IntentModel } from '@core/models/intent.model';
 
 export class MediaModel {
   @IsNumber()

@@ -1,27 +1,39 @@
-import { Controller, HttpException, HttpStatus, Post, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from "@nestjs/swagger";
-import { JwtGuard } from "@core/guards/jwt.guard";
-import { RasaService } from "./rasa.service";
-import { FileService } from "../file/file.service";
+import {
+  Controller,
+  HttpException,
+  HttpStatus,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { JwtGuard } from '@core/guards/jwt.guard';
+import { RasaService } from './rasa.service';
+import { FileService } from '../file/file.service';
 
 @ApiTags('rasa')
 @Controller('rasa')
 @ApiBearerAuth()
 @UseGuards(JwtGuard)
 export class RasaController {
-
-  constructor(private readonly _rasaService: RasaService,
-              private readonly _fileService: FileService) {}
+  constructor(
+    private readonly _rasaService: RasaService,
+    private readonly _fileService: FileService,
+  ) {}
 
   @Post('train')
-  @ApiOperation({summary: 'Converti la base de connaissances en fichiers RASA & entraine le Chatbot'})
+  @ApiOperation({
+    summary:
+      'Converti la base de connaissances en fichiers RASA & entraine le Chatbot',
+  })
   async trainRasa(): Promise<void> {
-    if(!(await this._rasaService.canTrainRasa())) {
-      throw new HttpException(`Le chatbot est déjà entrain d'être mis à jour. Merci de patienter quelques minutes.`, HttpStatus.NOT_ACCEPTABLE);
+    if (!(await this._rasaService.canTrainRasa())) {
+      throw new HttpException(
+        `Le chatbot est déjà entrain d'être mis à jour. Merci de patienter quelques minutes.`,
+        HttpStatus.NOT_ACCEPTABLE,
+      );
     }
 
     await this._rasaService.generateFiles();
     await this._rasaService.trainRasa();
-    return;
   }
 }

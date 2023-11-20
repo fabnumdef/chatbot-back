@@ -1,5 +1,5 @@
-import { IsHexColor, IsOptional, IsString, MaxLength } from "class-validator";
-import { ApiProperty } from "@nestjs/swagger";
+import { IsHexColor, IsOptional, IsString, MaxLength } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
 
 export class ConfigUpdateDto {
   @IsString()
@@ -8,7 +8,7 @@ export class ConfigUpdateDto {
   name: string;
 
   @IsOptional()
-  @ApiProperty({type: 'string', format: 'binary'})
+  @ApiProperty({ type: 'string', format: 'binary' })
   icon: any;
 
   @IsString()
@@ -37,7 +37,7 @@ export class ConfigUpdateDto {
   audience: string;
 
   @IsOptional()
-  @ApiProperty({type: 'string', format: 'binary'})
+  @ApiProperty({ type: 'string', format: 'binary' })
   embeddedIcon: any;
 
   @IsString()

@@ -1,16 +1,14 @@
 import { Module } from '@nestjs/common';
-import { ResponseController } from './response.controller';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { Response } from '@core/entities/response.entity';
+import { ChatbotConfig } from '@core/entities/chatbot-config.entity';
 import { ResponseService } from './response.service';
-import { TypeOrmModule } from "@nestjs/typeorm";
-import { Response } from "@core/entities/response.entity";
-import { ChatbotConfig } from "@core/entities/chatbot-config.entity";
+import { ResponseController } from './response.controller';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([Response, ChatbotConfig])
-  ],
+  imports: [TypeOrmModule.forFeature([Response, ChatbotConfig])],
   controllers: [ResponseController],
   providers: [ResponseService],
-  exports: [ResponseService]
+  exports: [ResponseService],
 })
 export class ResponseModule {}

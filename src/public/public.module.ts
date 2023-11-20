@@ -1,11 +1,11 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from "@nestjs/typeorm";
-import { ChatbotConfig } from "@core/entities/chatbot-config.entity";
-import { PublicController } from "./public.controller";
-import { ChatbotConfigModule } from "../chatbot-config/chatbot-config.module";
-import { IntentModule } from "../intent/intent.module";
-import { FeedbackModule } from "../feedback/feedback.module";
-import { FaqModule } from "../faq/faq.module";
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { ChatbotConfig } from '@core/entities/chatbot-config.entity';
+import { PublicController } from './public.controller';
+import { ChatbotConfigModule } from '../chatbot-config/chatbot-config.module';
+import { IntentModule } from '../intent/intent.module';
+import { FeedbackModule } from '../feedback/feedback.module';
+import { FaqModule } from '../faq/faq.module';
 
 @Module({
   imports: [
@@ -13,9 +13,9 @@ import { FaqModule } from "../faq/faq.module";
     ChatbotConfigModule,
     IntentModule,
     FeedbackModule,
-    FaqModule
+    FaqModule,
   ],
   controllers: [PublicController],
-  providers: []
+  providers: [],
 })
 export class PublicModule {}
