@@ -169,11 +169,11 @@ export class UserService {
    * 3/ Si l'utilisateur n'est pas un administrateur, on ne fait rien.
    */
   private async _isOneActiveAdminLeft(editing: UserModel): Promise<boolean> {
-    const users = await this.findAll();
+    const users = await this._usersRepository.find({ where: { role: UserRole.admin } });
     for (const user of users) {
       if (user.email === editing.email && editing.role === UserRole.admin && !user.disabled && !editing.end_date) {
         return true;
-      } else if (user.email !== editing.email && user.role === UserRole.admin && !user.disabled && !user.end_date) {
+      } else if (user.email !== editing.email && !user.disabled && !user.end_date) {
         return true;
       }
     }
