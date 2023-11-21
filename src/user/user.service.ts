@@ -2,10 +2,11 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from "@nestjs/typeorm";
 import { FindOneOptions, Repository } from "typeorm";
 import { User } from "@core/entities/user.entity";
-import { MailService } from "../shared/services/mail.service";
 import { UserModel } from "@core/models/user.model";
 import { UserRole } from "@core/enums/user-role.enum";
 import { getCols } from '@core/repository-utils';
+import MailService from '../shared/services/mail.service';
+
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 
@@ -37,11 +38,11 @@ export default class UserService {
    */
   findOne(email: string, password = false): Promise<User> {
     if (!password) {
-      return this._usersRepository.findOne({ where: { email: email } });
+      return this.usersRepository.findOne({ where: { email } });
     }
-    return this._usersRepository.findOne({
-      select: getCols(this._usersRepository),
-      where: { email: email }
+    return this.usersRepository.findOne({
+      select: getCols(this.usersRepository),
+      where: { email },
     });
   }
 
@@ -76,11 +77,14 @@ export default class UserService {
    * Mise à jour d'un utilisateur
    */
   async update(email: string, data: UserModel): Promise<User> {
-    if (await this._isOneActiveAdminLeft({ ...data, email })) {
-      await this._usersRepository.update({ email }, data);
+    if (await this.isOneActiveAdminLeft({ ...data, email })) {
+      await this.usersRepository.update({ email }, data);
       return this.findOne(email);
     }
-    throw new HttpException('Vous devez toujours conserver au moins un administrateur actif et sans date de fin d\'activité.', HttpStatus.FORBIDDEN);
+    throw new HttpException(
+      "Vous devez toujours conserver au moins un administrateur actif et sans date de fin d'activité.",
+      HttpStatus.FORBIDDEN,
+    );
   }
 
   /**
@@ -106,7 +110,7 @@ export default class UserService {
    * @param email
    */
   async delete(email: string): Promise<void> {
-    await this._usersRepository.update({ email: email }, { disabled: true });
+    await this.usersRepository.update({ email }, { disabled: true });
   }
 
   /**
@@ -181,12 +185,20 @@ export default class UserService {
    * 2/ Si l'utilisateur est un administrateur et qu'il n'est pas le seul actif, on vérifie qu'au moins un des autres administrateurs n'a pas de date de fin d'activité.
    * 3/ Si l'utilisateur n'est pas un administrateur, on ne fait rien.
    */
-  private async _isOneActiveAdminLeft(editing: UserModel): Promise<boolean> {
-    const users = await this._usersRepository.find({ where: { role: UserRole.admin } });
+  private async isOneActiveAdminLeft(editing: UserModel): Promise<boolean> {
+    const users = await this.usersRepository.find({
+      where: { role: UserRole.admin },
+    });
     for (const user of users) {
-      if (user.email === editing.email && editing.role === UserRole.admin && !user.disabled && !editing.end_date) {
+      if (
+        user.email === editing.email &&
+        editing.role === UserRole.admin &&
+        !user.disabled &&
+        !editing.end_date
+      ) {
         return true;
-      } else if (user.email !== editing.email && !user.disabled && !user.end_date) {
+      }
+      if (user.email !== editing.email && !user.disabled && !user.end_date) {
         return true;
       }
     }
