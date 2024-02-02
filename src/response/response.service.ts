@@ -1,62 +1,62 @@
-import { Injectable } from '@nestjs/common'
-import { InjectRepository } from '@nestjs/typeorm'
-import { type DeleteResult, In, Repository } from 'typeorm'
-import { Response } from '@core/entities/response.entity'
-import { type ResponseModel } from '@core/models/response.model'
-import { type Intent } from '@core/entities/intent.entity'
-import { type IntentModel } from '@core/models/intent.model'
-import { type UpdateResult } from 'typeorm/query-builder/result/UpdateResult'
-import { ChatbotConfig } from '@core/entities/chatbot-config.entity'
+import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { type DeleteResult, In, Repository } from 'typeorm';
+import { Response } from '@core/entities/response.entity';
+import { type ResponseModel } from '@core/models/response.model';
+import { type Intent } from '@core/entities/intent.entity';
+import { type IntentModel } from '@core/models/intent.model';
+import { type UpdateResult } from 'typeorm/query-builder/result/UpdateResult';
+import { ChatbotConfig } from '@core/entities/chatbot-config.entity';
 
 @Injectable()
 export default class ResponseService {
-  constructor (
+  constructor(
     @InjectRepository(Response)
     private readonly responsesRepository: Repository<Response>,
     @InjectRepository(ChatbotConfig)
-    private readonly configRepository: Repository<ChatbotConfig>
+    private readonly configRepository: Repository<ChatbotConfig>,
   ) {}
 
   /**
    * Récupération des réponses par rapport à une connaissance passée en argument
    * @param intent
    */
-  async findByIntent (intent: IntentModel): Promise<Response[]> {
+  async findByIntent(intent: IntentModel): Promise<Response[]> {
     return this.responsesRepository.find({
       where: { intent: { id: intent.id } },
-      order: { id: 'ASC' }
-    })
+      order: { id: 'ASC' },
+    });
   }
 
   /**
    * Récupération de toutes les réponses
    */
-  async findAll (): Promise<Response[]> {
-    return this.responsesRepository.find()
+  async findAll(): Promise<Response[]> {
+    return this.responsesRepository.find();
   }
 
   /**
    * Création d'une réponse
    * @param response
    */
-  async create (response: ResponseModel): Promise<Response> {
-    return this.responsesRepository.save(response)
+  async create(response: ResponseModel): Promise<Response> {
+    return this.responsesRepository.save(response);
   }
 
   /**
    * Edition d'une réponse
    * @param response
    */
-  async update (response: ResponseModel): Promise<UpdateResult> {
-    return this.responsesRepository.update({ id: response.id }, response)
+  async update(response: ResponseModel): Promise<UpdateResult> {
+    return this.responsesRepository.update({ id: response.id }, response);
   }
 
   /**
    * Sauvegarde de plusieurs réponses
    * @param responses
    */
-  async saveMany (responses: Response[]): Promise<Response[]> {
-    return this.responsesRepository.save(responses)
+  async saveMany(responses: Response[]): Promise<Response[]> {
+    return this.responsesRepository.save(responses);
   }
 
   /**
@@ -64,17 +64,17 @@ export default class ResponseService {
    * @param oldFile
    * @param newFile
    */
-  async updateFileResponses (oldFile: string, newFile: string) {
+  async updateFileResponses(oldFile: string, newFile: string) {
     const result = await this.responsesRepository
       .createQueryBuilder('response')
       .update()
       .set({
-        response: () => `REPLACE(response, '${oldFile}', '${newFile}')`
+        response: () => `REPLACE(response, '${oldFile}', '${newFile}')`,
       })
       .where(`response LIKE '%${oldFile}%'`)
-      .execute()
+      .execute();
     if (result.affected && result.affected > 0) {
-      await this.configRepository.update({ id: 1 }, { need_training: true })
+      await this.configRepository.update({ id: 1 }, { need_training: true });
     }
   }
 
@@ -83,36 +83,36 @@ export default class ResponseService {
    * @param oldIntentId
    * @param newIntentId
    */
-  async updateIntentResponses (oldIntentId: string, newIntentId: string) {
+  async updateIntentResponses(oldIntentId: string, newIntentId: string) {
     await this.responsesRepository
       .createQueryBuilder('response')
       .update()
       .set({
-        response: () => `REPLACE(response, '${oldIntentId}', '${newIntentId}')`
+        response: () => `REPLACE(response, '${oldIntentId}', '${newIntentId}')`,
       })
       .where(`response LIKE '%<${oldIntentId}>%'`)
-      .execute()
+      .execute();
   }
 
   /**
    * Suppression des réponses d'une connaissance passée en argument
    * @param intents
    */
-  async deleteByIntents (intents: Intent[]): Promise<DeleteResult> {
+  async deleteByIntents(intents: Intent[]): Promise<DeleteResult> {
     return this.responsesRepository.delete({
-      intent: In(intents.map((i) => i.id))
-    })
+      intent: In(intents.map((i) => i.id)),
+    });
   }
 
   /**
    * Suppression d'une réponse
    * @param id
    */
-  async remove (id: string): Promise<void> {
-    await this.responsesRepository.delete(id)
+  async remove(id: string): Promise<void> {
+    await this.responsesRepository.delete(id);
   }
 
-  resetData () {
-    this.responsesRepository.createQueryBuilder().delete().execute(); 
+  async resetData() {
+    await this.responsesRepository.createQueryBuilder().delete().execute();
   }
 }

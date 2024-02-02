@@ -1,39 +1,39 @@
-import { type StatsFilterDto } from '@core/dto/stats-filter.dto'
-import { Injectable } from '@nestjs/common'
-import { InjectRepository } from '@nestjs/typeorm'
-import { LessThan, Repository, Between } from 'typeorm'
-import { Inbox } from '@core/entities/inbox.entity'
-import { InboxStatus, InboxStatus_Fr } from '@core/enums/inbox-status.enum'
-import { type PaginationQueryDto } from '@core/dto/pagination-query.dto'
-import { paginate, type Pagination } from 'nestjs-typeorm-paginate'
-import PaginationUtils from '@core/pagination-utils'
-import { type InboxFilterDto } from '@core/dto/inbox-filter.dto'
-import { type UpdateResult } from 'typeorm/query-builder/result/UpdateResult'
-import { type Knowledge } from '@core/entities/knowledge.entity'
-import { IntentStatus } from '@core/enums/intent-status.enum'
-import * as moment from 'moment'
-import { type StatsMostAskedQuestionsDto } from '@core/dto/stats-most-asked-questions.dto'
-import { type Feedback } from '@core/entities/feedback.entity'
-import * as escape from 'pg-escape'
+import { type StatsFilterDto } from '@core/dto/stats-filter.dto';
+import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { LessThan, Repository, Between } from 'typeorm';
+import { Inbox } from '@core/entities/inbox.entity';
+import { InboxStatus, InboxStatus_Fr } from '@core/enums/inbox-status.enum';
+import { type PaginationQueryDto } from '@core/dto/pagination-query.dto';
+import { paginate, type Pagination } from 'nestjs-typeorm-paginate';
+import PaginationUtils from '@core/pagination-utils';
+import { type InboxFilterDto } from '@core/dto/inbox-filter.dto';
+import { type UpdateResult } from 'typeorm/query-builder/result/UpdateResult';
+import { type Knowledge } from '@core/entities/knowledge.entity';
+import { IntentStatus } from '@core/enums/intent-status.enum';
+import * as moment from 'moment';
+import { type StatsMostAskedQuestionsDto } from '@core/dto/stats-most-asked-questions.dto';
+import { type Feedback } from '@core/entities/feedback.entity';
+import * as escape from 'pg-escape';
 
-import { AppConstants } from '@core/constant'
-import { Cron, CronExpression } from '@nestjs/schedule'
-import { Events } from '@core/entities/events.entity'
-import * as fs from 'fs'
-import { type WorkBook } from 'xlsx'
-import { type StatsMostAskedCategoriesDto } from '@core/dto/stats-most-asked-categories.dto'
-import { type FeedbackStatus } from '@core/enums/feedback-status.enum'
-import UserService from '../user/user.service'
-import IntentService from '../intent/intent.service'
-import KnowledgeService from '../knowledge/knowledge.service'
-import MailService from '../shared/services/mail.service'
+import { AppConstants } from '@core/constant';
+import { Cron, CronExpression } from '@nestjs/schedule';
+import { Events } from '@core/entities/events.entity';
+import * as fs from 'fs';
+import { type WorkBook } from 'xlsx';
+import { type StatsMostAskedCategoriesDto } from '@core/dto/stats-most-asked-categories.dto';
+import { type FeedbackStatus } from '@core/enums/feedback-status.enum';
+import UserService from '../user/user.service';
+import IntentService from '../intent/intent.service';
+import KnowledgeService from '../knowledge/knowledge.service';
+import MailService from '../shared/services/mail.service';
 
-const XLSX = require('xlsx')
-const uuid = require('uuid')
+const XLSX = require('xlsx');
+const uuid = require('uuid');
 
 @Injectable()
 export default class InboxService {
-  constructor (
+  constructor(
     @InjectRepository(Inbox)
     private readonly inboxesRepository: Repository<Inbox>,
     private readonly knowledgeService: KnowledgeService,
@@ -41,7 +41,7 @@ export default class InboxService {
     private readonly userService: UserService,
     private readonly mailService: MailService,
     @InjectRepository(Events)
-    private readonly eventsRepository: Repository<Events>
+    private readonly eventsRepository: Repository<Events>,
   ) {}
 
   /**
@@ -49,14 +49,14 @@ export default class InboxService {
    * @private
    */
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
-  private clearOldValues () {
-    const threeYearsAgo = moment().subtract(3, 'years').unix()
-    this.clearInboxes(threeYearsAgo)
-    this.clearEvents(threeYearsAgo)
+  private clearOldValues() {
+    const threeYearsAgo = moment().subtract(3, 'years').unix();
+    this.clearInboxes(threeYearsAgo);
+    this.clearEvents(threeYearsAgo);
   }
 
-  resetData () {
-    this.inboxesRepository.createQueryBuilder().delete().execute(); 
+  async resetData() {
+    await this.inboxesRepository.createQueryBuilder().delete().execute();
   }
 
   /**
@@ -64,37 +64,37 @@ export default class InboxService {
    * Par défaut celles au statut A traiter
    * @param params
    */
-  async findAll (
+  async findAll(
     params = {
       where: {
-        status: InboxStatus.pending
-      }
-    }
+        status: InboxStatus.pending,
+      },
+    },
   ): Promise<Inbox[]> {
-    return this.inboxesRepository.find(params)
+    return this.inboxesRepository.find(params);
   }
 
   /**
    * Récupération d'une requête
    * @param inboxId
    */
-  async findOne (inboxId) {
+  async findOne(inboxId) {
     return this.inboxesRepository.findOne({
       where: {
-        id: inboxId
+        id: inboxId,
       },
       relations: {
-        intent: true
-      }
-    })
+        intent: true,
+      },
+    });
   }
 
   /**
    * Sauvegarde d'une requête
    * @param inbox
    */
-  async save (inbox: Inbox): Promise<Inbox> {
-    return this.inboxesRepository.save(inbox)
+  async save(inbox: Inbox): Promise<Inbox> {
+    return this.inboxesRepository.save(inbox);
   }
 
   /**
@@ -102,17 +102,17 @@ export default class InboxService {
    * @param options
    * @param filters
    */
-  async paginate (
+  async paginate(
     options: PaginationQueryDto,
-    filters: InboxFilterDto
+    filters: InboxFilterDto,
   ): Promise<Pagination<Inbox>> {
     return paginate<Inbox>(
       this.getInboxQueryBuilder(
         PaginationUtils.setQuery(options, Inbox.getAttributesToSearch()),
-        filters
+        filters,
       ),
-      options
-    )
+      options,
+    );
   }
 
   /**
@@ -120,7 +120,7 @@ export default class InboxService {
    * @param whereClause
    * @param filters
    */
-  getInboxQueryBuilder (whereClause: string, filters?: InboxFilterDto) {
+  getInboxQueryBuilder(whereClause: string, filters?: InboxFilterDto) {
     const query = this.inboxesRepository
       .createQueryBuilder('inbox')
       .leftJoinAndSelect('inbox.intent', 'intent')
@@ -129,46 +129,46 @@ export default class InboxService {
         'user.email',
         'user.first_name',
         'user.last_name',
-        'user.role'
+        'user.role',
       ])
-      .andWhere(whereClause ? whereClause.toString() : '\'1\'')
+      .andWhere(whereClause ? whereClause.toString() : "'1'")
       .orderBy({
-        'inbox.timestamp': 'DESC'
-      })
+        'inbox.timestamp': 'DESC',
+      });
 
     if (!filters) {
-      return query
+      return query;
     }
     if (filters.categories && filters.categories.length > 0) {
       query.andWhere('intent.category IN (:...categories)', {
-        categories: filters.categories
-      })
+        categories: filters.categories,
+      });
     }
     if (filters.statutes && filters.statutes.length > 0) {
       query.andWhere('inbox.status IN (:...statutes)', {
-        statutes: filters.statutes
-      })
+        statutes: filters.statutes,
+      });
     }
     if (filters.startDate) {
       const startDate = moment(filters.startDate, 'DD/MM/YYYY').format(
-        'YYYY-MM-DD'
-      )
-      query.andWhere(`to_timestamp(inbox.timestamp)::date >= '${startDate}'`)
+        'YYYY-MM-DD',
+      );
+      query.andWhere(`to_timestamp(inbox.timestamp)::date >= '${startDate}'`);
     }
     if (filters.endDate) {
       const endDate = moment(filters.endDate, 'DD/MM/YYYY').format(
-        'YYYY-MM-DD'
-      )
-      query.andWhere(`to_timestamp(inbox.timestamp)::date <= '${endDate}'`)
+        'YYYY-MM-DD',
+      );
+      query.andWhere(`to_timestamp(inbox.timestamp)::date <= '${endDate}'`);
     }
     if (filters.assignedTo) {
-      query.andWhere(`inbox.user.email = '${filters.assignedTo}'`)
+      query.andWhere(`inbox.user.email = '${filters.assignedTo}'`);
     }
     if (filters.assignedToAll) {
-      query.andWhere('inbox.user.email is not null')
+      query.andWhere('inbox.user.email is not null');
     }
 
-    return query
+    return query;
   }
 
   /**
@@ -176,24 +176,24 @@ export default class InboxService {
    * Cela se traduit par la création d'une question similaire
    * @param inboxId
    */
-  async validate (inboxId): Promise<UpdateResult> {
-    const inbox = await this.findOne(inboxId)
+  async validate(inboxId): Promise<UpdateResult> {
+    const inbox = await this.findOne(inboxId);
     const newKnowledge: Knowledge = {
       id: null,
       intent: inbox.intent,
-      question: inbox.question
-    }
-    await this.knowledgeService.createSafe(newKnowledge)
+      question: inbox.question,
+    };
+    await this.knowledgeService.createSafe(newKnowledge);
     if (inbox.intent.status === IntentStatus.active) {
       await this.intentService.updateManyByCondition(
         { id: inbox.intent.id },
-        { status: IntentStatus.active_modified }
-      )
+        { status: IntentStatus.active_modified },
+      );
     }
     return this.inboxesRepository.update(
       { id: inboxId },
-      { status: InboxStatus.confirmed }
-    )
+      { status: InboxStatus.confirmed },
+    );
   }
 
   /**
@@ -202,16 +202,16 @@ export default class InboxService {
    * @param inboxId
    * @param userEmail
    */
-  async assign (inboxId: number, userEmail?: string): Promise<UpdateResult> {
-    const user = userEmail ? await this.userService.findOne(userEmail) : null
-    const inbox = await this.findOne(inboxId)
+  async assign(inboxId: number, userEmail?: string): Promise<UpdateResult> {
+    const user = userEmail ? await this.userService.findOne(userEmail) : null;
+    const inbox = await this.findOne(inboxId);
     const toReturn = await this.inboxesRepository.update(
       { id: inboxId },
-      { user }
-    )
+      { user },
+    );
 
     if (!user) {
-      return toReturn
+      return toReturn;
     }
 
     await this.mailService
@@ -223,23 +223,23 @@ export default class InboxService {
           // Data to be sent to template engine.
           firstName: user.first_name,
           question: inbox.question,
-          url: `${process.env.HOST_URL}/backoffice`
-        }
+          url: `${process.env.HOST_URL}/backoffice`,
+        },
       )
-      .then(() => {})
+      .then(() => {});
 
-    return toReturn
+    return toReturn;
   }
 
   /**
    * Archivation d'une requête
    * @param inboxId
    */
-  async delete (inboxId): Promise<UpdateResult> {
+  async delete(inboxId): Promise<UpdateResult> {
     return this.inboxesRepository.update(
       { id: inboxId },
-      { status: InboxStatus.archived }
-    )
+      { status: InboxStatus.archived },
+    );
   }
 
   /**
@@ -247,13 +247,13 @@ export default class InboxService {
    * Possibilité de filtrer par dates
    * @param filters
    */
-  async findNbInboxByTime (filters: StatsFilterDto): Promise<string[]> {
+  async findNbInboxByTime(filters: StatsFilterDto): Promise<string[]> {
     const startDate = filters.startDate
       ? moment(filters.startDate, 'DD/MM/YYYY').format('YYYY-MM-DD')
-      : moment().subtract(1, 'month').format('YYYY-MM-DD')
+      : moment().subtract(1, 'month').format('YYYY-MM-DD');
     const endDate = filters.endDate
       ? moment(filters.endDate, 'DD/MM/YYYY').format('YYYY-MM-DD')
-      : moment().format('YYYY-MM-DD')
+      : moment().format('YYYY-MM-DD');
     const query = this.inboxesRepository
       .createQueryBuilder('inbox')
       .select('DATE(to_timestamp(inbox.timestamp)) AS date')
@@ -261,8 +261,8 @@ export default class InboxService {
       .where(`DATE(to_timestamp(inbox.timestamp)) >= '${startDate}'`)
       .andWhere(`DATE(to_timestamp(inbox.timestamp)) <= '${endDate}'`)
       .groupBy('DATE(to_timestamp(inbox.timestamp))')
-      .orderBy('DATE(to_timestamp(inbox.timestamp))', 'ASC')
-    return query.getRawMany()
+      .orderBy('DATE(to_timestamp(inbox.timestamp))', 'ASC');
+    return query.getRawMany();
   }
 
   /**
@@ -270,13 +270,13 @@ export default class InboxService {
    * Possibilité de filtrer par dates
    * @param filters
    */
-  async findNbVisitorsByTime (filters: StatsFilterDto): Promise<string[]> {
+  async findNbVisitorsByTime(filters: StatsFilterDto): Promise<string[]> {
     const startDate = filters.startDate
       ? moment(filters.startDate, 'DD/MM/YYYY').format('YYYY-MM-DD')
-      : moment().subtract(1, 'month').format('YYYY-MM-DD')
+      : moment().subtract(1, 'month').format('YYYY-MM-DD');
     const endDate = filters.endDate
       ? moment(filters.endDate, 'DD/MM/YYYY').format('YYYY-MM-DD')
-      : moment().format('YYYY-MM-DD')
+      : moment().format('YYYY-MM-DD');
 
     const query = this.inboxesRepository
       .createQueryBuilder('inbox')
@@ -285,8 +285,8 @@ export default class InboxService {
       .where(`DATE(to_timestamp(inbox.timestamp)) >= '${startDate}'`)
       .andWhere(`DATE(to_timestamp(inbox.timestamp)) <= '${endDate}'`)
       .groupBy('DATE(to_timestamp(inbox.timestamp))')
-      .orderBy('DATE(to_timestamp(inbox.timestamp))', 'ASC')
-    return query.getRawMany()
+      .orderBy('DATE(to_timestamp(inbox.timestamp))', 'ASC');
+    return query.getRawMany();
   }
 
   /**
@@ -294,25 +294,25 @@ export default class InboxService {
    * Possibilité de filtrer par dates
    * @param filters
    */
-  async findNbUniqueVisitors (filters: StatsFilterDto): Promise<string> {
+  async findNbUniqueVisitors(filters: StatsFilterDto): Promise<string> {
     const startDate = filters.startDate
       ? moment(filters.startDate, 'DD/MM/YYYY').format('YYYY-MM-DD')
-      : null
+      : null;
     const endDate = filters.endDate
       ? moment(filters.endDate, 'DD/MM/YYYY').format('YYYY-MM-DD')
-      : null
+      : null;
 
     const query = this.inboxesRepository
       .createQueryBuilder('inbox')
-      .select('COUNT(DISTINCT sender_id) AS visitors')
+      .select('COUNT(DISTINCT sender_id) AS visitors');
     if (startDate) {
-      query.where(`DATE(to_timestamp(inbox.timestamp)) >= '${startDate}'`)
+      query.where(`DATE(to_timestamp(inbox.timestamp)) >= '${startDate}'`);
     }
     if (endDate) {
-      query.andWhere(`DATE(to_timestamp(inbox.timestamp)) <= '${endDate}'`)
+      query.andWhere(`DATE(to_timestamp(inbox.timestamp)) <= '${endDate}'`);
     }
 
-    return query.getRawOne()
+    return query.getRawOne();
   }
 
   /**
@@ -321,16 +321,16 @@ export default class InboxService {
    * @param filters
    * @param feedbackStatus
    */
-  async findMostAskedQuestions (
+  async findMostAskedQuestions(
     filters: StatsFilterDto,
-    feedbackStatus?: FeedbackStatus
+    feedbackStatus?: FeedbackStatus,
   ): Promise<StatsMostAskedQuestionsDto[]> {
     const startDate = filters.startDate
       ? moment(filters.startDate, 'DD/MM/YYYY').format('YYYY-MM-DD')
-      : null
+      : null;
     const endDate = filters.endDate
       ? moment(filters.endDate, 'DD/MM/YYYY').format('YYYY-MM-DD')
-      : null
+      : null;
 
     const query = this.inboxesRepository
       .createQueryBuilder('inbox')
@@ -339,32 +339,32 @@ export default class InboxService {
       .innerJoin('intent', 'int', 'int.id = inbox.intent')
       // Remove phrase_presentation & co
       .where('int.id NOT IN (:...excludedIds)', {
-        excludedIds: AppConstants.General.excluded_Ids
+        excludedIds: AppConstants.General.excluded_Ids,
       })
       // Remove small talks
-      .andWhere('int.id NOT LIKE \'st\\_%\' ESCAPE \'\\\'')
+      .andWhere("int.id NOT LIKE 'st\\_%' ESCAPE '\\'");
     if (startDate) {
       query.andWhere(
         `DATE(to_timestamp(inbox.${
           feedbackStatus ? 'feedback_timestamp' : 'timestamp'
-        })) >= '${startDate}'`
-      )
+        })) >= '${startDate}'`,
+      );
     }
     if (endDate) {
       query.andWhere(
         `DATE(to_timestamp(inbox.${
           feedbackStatus ? 'feedback_timestamp' : 'timestamp'
-        })) <= '${endDate}'`
-      )
+        })) <= '${endDate}'`,
+      );
     }
     if (feedbackStatus) {
-      query.andWhere(`inbox.feedback_status = '${feedbackStatus}'`)
+      query.andWhere(`inbox.feedback_status = '${feedbackStatus}'`);
     }
     query
       .groupBy('int.main_question')
       .orderBy('count', 'DESC', 'NULLS LAST')
-      .limit(15)
-    return query.getRawMany()
+      .limit(15);
+    return query.getRawMany();
   }
 
   /**
@@ -373,16 +373,16 @@ export default class InboxService {
    * @param filters
    * @param feedbackStatus
    */
-  async findMostAskedCategories (
+  async findMostAskedCategories(
     filters: StatsFilterDto,
-    feedbackStatus?: FeedbackStatus
+    feedbackStatus?: FeedbackStatus,
   ): Promise<StatsMostAskedCategoriesDto[]> {
     const startDate = filters.startDate
       ? moment(filters.startDate, 'DD/MM/YYYY').format('YYYY-MM-DD')
-      : null
+      : null;
     const endDate = filters.endDate
       ? moment(filters.endDate, 'DD/MM/YYYY').format('YYYY-MM-DD')
-      : null
+      : null;
 
     const query = this.inboxesRepository
       .createQueryBuilder('inbox')
@@ -391,24 +391,24 @@ export default class InboxService {
       .innerJoin('intent', 'int', 'int.id = inbox.intent')
       // Remove phrase_presentation & co
       .where('int.id NOT IN (:...excludedIds)', {
-        excludedIds: AppConstants.General.excluded_Ids
+        excludedIds: AppConstants.General.excluded_Ids,
       })
       // Remove small talks
-      .andWhere('int.id NOT LIKE \'st\\_%\' ESCAPE \'\\\'')
+      .andWhere("int.id NOT LIKE 'st\\_%' ESCAPE '\\'");
     if (startDate) {
-      query.andWhere(`DATE(to_timestamp(inbox.timestamp)) >= '${startDate}'`)
+      query.andWhere(`DATE(to_timestamp(inbox.timestamp)) >= '${startDate}'`);
     }
     if (endDate) {
-      query.andWhere(`DATE(to_timestamp(inbox.timestamp)) <= '${endDate}'`)
+      query.andWhere(`DATE(to_timestamp(inbox.timestamp)) <= '${endDate}'`);
     }
     if (feedbackStatus) {
-      query.andWhere(`inbox.feedback_status = '${feedbackStatus}'`)
+      query.andWhere(`inbox.feedback_status = '${feedbackStatus}'`);
     }
     query
       .groupBy('int.category')
       .orderBy('count', 'DESC', 'NULLS LAST')
-      .limit(15)
-    return query.getRawMany()
+      .limit(15);
+    return query.getRawMany();
   }
 
   /**
@@ -416,27 +416,27 @@ export default class InboxService {
    * Possibilité de filtrer par date
    * @param filters
    */
-  async findAvgQuestPerVisitor (filters: StatsFilterDto): Promise<string> {
+  async findAvgQuestPerVisitor(filters: StatsFilterDto): Promise<string> {
     const startDate = filters.startDate
       ? moment(filters.startDate, 'DD/MM/YYYY').format('YYYY-MM-DD')
-      : null
+      : null;
     const endDate = filters.endDate
       ? moment(filters.endDate, 'DD/MM/YYYY').format('YYYY-MM-DD')
-      : null
+      : null;
 
     const query = this.inboxesRepository
       .createQueryBuilder('inbox')
       .select(
-        'ROUND(count(*) * 1.0 / count(distinct inbox.sender_id), 2) as averageQuestions'
-      )
+        'ROUND(count(*) * 1.0 / count(distinct inbox.sender_id), 2) as averageQuestions',
+      );
     if (startDate) {
-      query.where(`DATE(to_timestamp(inbox.timestamp)) >= '${startDate}'`)
+      query.where(`DATE(to_timestamp(inbox.timestamp)) >= '${startDate}'`);
     }
     if (endDate) {
-      query.andWhere(`DATE(to_timestamp(inbox.timestamp)) <= '${endDate}'`)
+      query.andWhere(`DATE(to_timestamp(inbox.timestamp)) <= '${endDate}'`);
     }
 
-    return query.getRawOne()
+    return query.getRawOne();
   }
 
   /**
@@ -444,25 +444,25 @@ export default class InboxService {
    * Possibilité de filtrer par date
    * @param filters
    */
-  async findAvgResponseTime (filters: StatsFilterDto): Promise<string> {
+  async findAvgResponseTime(filters: StatsFilterDto): Promise<string> {
     const startDate = filters.startDate
       ? moment(filters.startDate, 'DD/MM/YYYY').format('YYYY-MM-DD')
-      : null
+      : null;
     const endDate = filters.endDate
       ? moment(filters.endDate, 'DD/MM/YYYY').format('YYYY-MM-DD')
-      : null
+      : null;
 
     const query = this.inboxesRepository
       .createQueryBuilder('inbox')
-      .select('ROUND(avg(inbox.response_time), 0) as averageResponse')
+      .select('ROUND(avg(inbox.response_time), 0) as averageResponse');
     if (startDate) {
-      query.where(`DATE(to_timestamp(inbox.timestamp)) >= '${startDate}'`)
+      query.where(`DATE(to_timestamp(inbox.timestamp)) >= '${startDate}'`);
     }
     if (endDate) {
-      query.andWhere(`DATE(to_timestamp(inbox.timestamp)) <= '${endDate}'`)
+      query.andWhere(`DATE(to_timestamp(inbox.timestamp)) <= '${endDate}'`);
     }
 
-    return query.getRawOne()
+    return query.getRawOne();
   }
 
   /**
@@ -471,39 +471,39 @@ export default class InboxService {
    * @param filters
    * @param confidence
    */
-  async findRatioResponseOk (
+  async findRatioResponseOk(
     filters: StatsFilterDto,
-    confidence = 0.6
+    confidence = 0.6,
   ): Promise<string> {
     const startDate = filters.startDate
       ? moment(filters.startDate, 'DD/MM/YYYY').format('YYYY-MM-DD')
-      : null
+      : null;
     const endDate = filters.endDate
       ? moment(filters.endDate, 'DD/MM/YYYY').format('YYYY-MM-DD')
-      : null
+      : null;
 
     let additionnalWhereClause = startDate
       ? `AND DATE(to_timestamp(inbox.timestamp)) >= '${startDate}'`
-      : ''
+      : '';
     additionnalWhereClause += endDate
       ? ` AND DATE(to_timestamp(inbox.timestamp)) <= '${endDate}'`
-      : additionnalWhereClause
+      : additionnalWhereClause;
 
     const query = this.inboxesRepository
       .createQueryBuilder('inbox')
       .select(
         `100 * (SELECT COUNT(inbox.id) from inbox WHERE inbox.confidence >= ${confidence.toString(
-          10
-        )} ${additionnalWhereClause})/COUNT(inbox.id) as ratioResponseOk`
-      )
+          10,
+        )} ${additionnalWhereClause})/COUNT(inbox.id) as ratioResponseOk`,
+      );
     if (startDate) {
-      query.where(`DATE(to_timestamp(inbox.timestamp)) >= '${startDate}'`)
+      query.where(`DATE(to_timestamp(inbox.timestamp)) >= '${startDate}'`);
     }
     if (endDate) {
-      query.andWhere(`DATE(to_timestamp(inbox.timestamp)) <= '${endDate}'`)
+      query.andWhere(`DATE(to_timestamp(inbox.timestamp)) <= '${endDate}'`);
     }
 
-    return query.getRawOne()
+    return query.getRawOne();
   }
 
   /**
@@ -512,38 +512,38 @@ export default class InboxService {
    * @param filters
    * @param feedbackStatus
    */
-  async findCountFeedback (
+  async findCountFeedback(
     filters: StatsFilterDto,
-    feedbackStatus: FeedbackStatus
+    feedbackStatus: FeedbackStatus,
   ) {
     const startDate = filters.startDate
       ? moment(filters.startDate, 'DD/MM/YYYY').format('YYYY-MM-DD')
-      : null
+      : null;
     const endDate = filters.endDate
       ? moment(filters.endDate, 'DD/MM/YYYY').format('YYYY-MM-DD')
-      : null
+      : null;
 
     let additionnalWhereClause = startDate
       ? `AND DATE(to_timestamp(inbox.timestamp)) >= '${startDate}'`
-      : ''
+      : '';
     additionnalWhereClause += endDate
       ? ` AND DATE(to_timestamp(inbox.timestamp)) <= '${endDate}'`
-      : additionnalWhereClause
+      : additionnalWhereClause;
 
     const query = this.inboxesRepository
       .createQueryBuilder('inbox')
       .select('COUNT(inbox.id)', 'countFeedback')
       .where(
-        `inbox.feedback_status = '${feedbackStatus}' ${additionnalWhereClause}`
-      )
+        `inbox.feedback_status = '${feedbackStatus}' ${additionnalWhereClause}`,
+      );
     if (startDate) {
-      query.andWhere(`DATE(to_timestamp(inbox.timestamp)) >= '${startDate}'`)
+      query.andWhere(`DATE(to_timestamp(inbox.timestamp)) >= '${startDate}'`);
     }
     if (endDate) {
-      query.andWhere(`DATE(to_timestamp(inbox.timestamp)) <= '${endDate}'`)
+      query.andWhere(`DATE(to_timestamp(inbox.timestamp)) <= '${endDate}'`);
     }
 
-    return query.getRawOne()
+    return query.getRawOne();
   }
 
   /**
@@ -552,38 +552,38 @@ export default class InboxService {
    * @param filters
    * @param feedbackStatus
    */
-  async findRatioFeedback (
+  async findRatioFeedback(
     filters: StatsFilterDto,
-    feedbackStatus: FeedbackStatus
+    feedbackStatus: FeedbackStatus,
   ) {
     const startDate = filters.startDate
       ? moment(filters.startDate, 'DD/MM/YYYY').format('YYYY-MM-DD')
-      : null
+      : null;
     const endDate = filters.endDate
       ? moment(filters.endDate, 'DD/MM/YYYY').format('YYYY-MM-DD')
-      : null
+      : null;
 
     let additionnalWhereClause = startDate
       ? `AND DATE(to_timestamp(inbox.timestamp)) >= '${startDate}'`
-      : ''
+      : '';
     additionnalWhereClause += endDate
       ? ` AND DATE(to_timestamp(inbox.timestamp)) <= '${endDate}'`
-      : additionnalWhereClause
+      : additionnalWhereClause;
 
     const query = this.inboxesRepository
       .createQueryBuilder('inbox')
       .select(
         `100 * (SELECT COUNT(inbox.id) from inbox WHERE inbox.feedback_status = '${feedbackStatus}' ${additionnalWhereClause})/COUNT(inbox.id)`,
-        'ratioFeedback'
-      )
+        'ratioFeedback',
+      );
     if (startDate) {
-      query.where(`DATE(to_timestamp(inbox.timestamp)) >= '${startDate}'`)
+      query.where(`DATE(to_timestamp(inbox.timestamp)) >= '${startDate}'`);
     }
     if (endDate) {
-      query.andWhere(`DATE(to_timestamp(inbox.timestamp)) <= '${endDate}'`)
+      query.andWhere(`DATE(to_timestamp(inbox.timestamp)) <= '${endDate}'`);
     }
 
-    return query.getRawOne()
+    return query.getRawOne();
   }
 
   /**
@@ -591,39 +591,38 @@ export default class InboxService {
    * Retourne true si une requête a été trouvée, false sinon
    * @param feedback
    */
-  public async updateInboxWithFeedback (feedback: Feedback): Promise<boolean> {
-    const tenMinutes = 10 * 60
+  public async updateInboxWithFeedback(feedback: Feedback): Promise<boolean> {
+    const tenMinutes = 10 * 60;
     // We search the right inbox +- 10 minutes
     const inbox: Inbox = await this.inboxesRepository
       .createQueryBuilder('inbox')
       .where({
         timestamp: Between(
           feedback.timestamp - tenMinutes,
-          feedback.timestamp + tenMinutes
+          feedback.timestamp + tenMinutes,
         ),
-        sender_id: feedback.sender_id
+        sender_id: feedback.sender_id,
       })
       .andWhere(
         escape(
           'upper(%I) like %L',
           'question',
-          feedback.user_question.toUpperCase()
-        )
+          feedback.user_question.toUpperCase(),
+        ),
       )
-      .getOne()
+      .getOne();
 
     if (!inbox) {
-      return false
+      return false;
     }
 
-    
     await this.inboxesRepository.update(inbox.id, {
-      // @ts-expect-error
+      // @ts-expect-error Type 'FeedbackStatus' is not assignable to type '(() => string)
       status: feedback.status,
       feedback_status: feedback.status,
-      feedback_timestamp: parseFloat(moment(feedback.created_at).format('x'))
-    })
-    return true
+      feedback_timestamp: parseFloat(moment(feedback.created_at).format('x')),
+    });
+    return true;
   }
 
   /**
@@ -631,26 +630,26 @@ export default class InboxService {
    * @param options
    * @param filters
    */
-  async exportXls (
+  async exportXls(
     options: PaginationQueryDto,
-    filters: InboxFilterDto
+    filters: InboxFilterDto,
   ): Promise<fs.ReadStream> {
-    return new Promise<fs.ReadStream>(async (resolve) => {
-      const workbook = await this.generateWorkbook(options, filters)
+    return new Promise<fs.ReadStream>((resolve) => {
+      const workbook = this.generateWorkbook(options, filters);
 
-      const guidForClient = uuid.v1()
-      const pathNameWithGuid = `${guidForClient}_result.xlsx`
-      XLSX.writeFile(workbook, pathNameWithGuid)
-      const stream = fs.createReadStream(pathNameWithGuid)
+      const guidForClient = uuid.v1();
+      const pathNameWithGuid = `${guidForClient}_result.xlsx`;
+      XLSX.writeFile(workbook, pathNameWithGuid);
+      const stream = fs.createReadStream(pathNameWithGuid);
       stream.on('close', () => {
         fs.unlink(pathNameWithGuid, (error) => {
           if (error) {
-            throw error
+            throw error;
           }
-        })
-      })
-      resolve(stream)
-    })
+        });
+      });
+      resolve(stream);
+    });
   }
 
   /**
@@ -659,15 +658,15 @@ export default class InboxService {
    * @param filters
    * @private
    */
-  private async generateWorkbook (
+  private async generateWorkbook(
     options: PaginationQueryDto,
-    filters: InboxFilterDto
+    filters: InboxFilterDto,
   ): Promise<WorkBook> {
-    const workbook = XLSX.utils.book_new()
-    const worksheetData = await this.generateWorksheet(options, filters)
-    const worksheet = XLSX.utils.aoa_to_sheet(worksheetData)
-    XLSX.utils.book_append_sheet(workbook, worksheet)
-    return workbook
+    const workbook = XLSX.utils.book_new();
+    const worksheetData = await this.generateWorksheet(options, filters);
+    const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+    XLSX.utils.book_append_sheet(workbook, worksheet);
+    return workbook;
   }
 
   /**
@@ -676,27 +675,27 @@ export default class InboxService {
    * @param filters
    * @private
    */
-  private async generateWorksheet (
+  private async generateWorksheet(
     options: PaginationQueryDto,
-    filters: InboxFilterDto
+    filters: InboxFilterDto,
   ) {
     const inboxes = await this.getInboxQueryBuilder(
       PaginationUtils.setQuery(options, Inbox.getAttributesToSearch()),
-      filters
-    ).getMany()
+      filters,
+    ).getMany();
     const rows = [
       [
         'Question',
         'Catégorie',
         'Statut',
         '% de pertinence',
-        'Date de la question'
-      ]
-    ]
+        'Date de la question',
+      ],
+    ];
     inboxes.forEach((inbox: Inbox) => {
-      rows.push(this.generateRow(inbox))
-    })
-    return rows
+      rows.push(this.generateRow(inbox));
+    });
+    return rows;
   }
 
   /**
@@ -705,14 +704,14 @@ export default class InboxService {
    * @param idx
    * @private
    */
-  private generateRow (inbox: Inbox) {
+  private generateRow(inbox: Inbox) {
     return [
       inbox.question,
       inbox.intent?.category,
       InboxStatus_Fr[inbox.status],
       inbox.confidence ? Math.round(inbox.confidence * 100).toString(10) : '0',
-      moment(inbox.created_at).format('DD/MM/YYYY hh:mm:ss')
-    ]
+      moment(inbox.created_at).format('DD/MM/YYYY hh:mm:ss'),
+    ];
   }
 
   /**
@@ -720,13 +719,13 @@ export default class InboxService {
    * @param timestamp
    * @private
    */
-  private async clearInboxes (timestamp: number) {
+  private async clearInboxes(timestamp: number) {
     await this.inboxesRepository.update(
       {
-        timestamp: LessThan(timestamp)
+        timestamp: LessThan(timestamp),
       },
-      { question: null, response: null }
-    )
+      { question: null, response: null },
+    );
   }
 
   /**
@@ -734,13 +733,13 @@ export default class InboxService {
    * @param timestamp
    * @private
    */
-  private async clearEvents (timestamp: number) {
+  private async clearEvents(timestamp: number) {
     await this.eventsRepository.update(
       {
         timestamp: LessThan(timestamp),
-        type_name: 'user'
+        type_name: 'user',
       },
-      { data: null }
-    )
+      { data: null },
+    );
   }
 }
