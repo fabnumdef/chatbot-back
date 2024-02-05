@@ -525,6 +525,7 @@ export default class IntentService {
         't1.intentid = intent.id',
       )
       .where("intent.id NOT LIKE 'st\\_%' ESCAPE '\\'")
+      .andWhere("intent.status = 'active'")
       .groupBy('intent.main_question')
       .having('COUNT(t1.intentid) < 2')
       .orderBy('intent.main_question', 'ASC');

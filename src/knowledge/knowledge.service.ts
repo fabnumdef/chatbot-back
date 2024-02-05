@@ -81,6 +81,25 @@ export default class KnowledgeService {
         knowledgesToSave.push(k);
       }
     });
+
+    // Gerer les connaissances en suppression.
+    const knowledgesToDelete = [];
+    knowledgesExisting.forEach((k) => {
+      if (
+        knowledges.findIndex(
+          (ke) => ke.intent.id === k.intent.id && ke.question === k.question,
+        ) < 0
+      ) {
+        knowledgesToDelete.push(k);
+      }
+    });
+
+    // Suppression de tous ceux qui ne sont plus présent.
+    await knowledgesToDelete.forEach((k) => {
+      this.remove(k);
+    });
+
+
     // On ne sait pas si le knowledge existe, pour éviter de faire péter la constraint unique
     let knowledgesEntity: Knowledge[] = [];
     const promises = [];
