@@ -430,6 +430,10 @@ export default class IntentService {
       { id: intentId },
       { status: IntentStatus.to_archive },
     );
+    await Promise.all([
+      this.knowledgeService.deleteByIntents([{ id: intentId }]),
+      this.responseService.deleteByIntents([{ id: intentId }]),
+    ]);
     await this.updateNeedTraining();
     return intentDeleted;
   }
