@@ -2,20 +2,20 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { Intent } from '@core/entities/intent.entity';
-import { IntentModel } from '@core/models/intent.model';
-import { UpdateResult } from 'typeorm/query-builder/result/UpdateResult';
+import { type IntentModel } from '@core/models/intent.model';
+import { type UpdateResult } from 'typeorm/query-builder/result/UpdateResult';
 import { IntentStatus } from '@core/enums/intent-status.enum';
-import { PaginationQueryDto } from '@core/dto/pagination-query.dto';
+import { type PaginationQueryDto } from '@core/dto/pagination-query.dto';
 import { paginate, Pagination } from 'nestjs-typeorm-paginate';
 import PaginationUtils from '@core/pagination-utils';
-import { IntentFilterDto } from '@core/dto/intent-filter.dto';
-import { ChatbotConfig } from '@core/entities/chatbot-config.entity';
-import { StatsFilterDto } from '@core/dto/stats-filter.dto';
+import { type IntentFilterDto } from '@core/dto/intent-filter.dto';
+import { type ChatbotConfig } from '@core/entities/chatbot-config.entity';
+import { type StatsFilterDto } from '@core/dto/stats-filter.dto';
 import * as moment from 'moment';
 import { AppConstants } from '@core/constant';
-import { Response } from '@core/entities/response.entity';
+import { type Response } from '@core/entities/response.entity';
 import { ResponseType } from '@core/enums/response-type.enum';
-import { SelectQueryBuilder } from 'typeorm/query-builder/SelectQueryBuilder';
+import { type SelectQueryBuilder } from 'typeorm/query-builder/SelectQueryBuilder';
 import ChatbotConfigService from '../chatbot-config/chatbot-config.service';
 import ResponseService from '../response/response.service';
 import KnowledgeService from '../knowledge/knowledge.service';
@@ -35,7 +35,9 @@ export default class IntentService {
    * Par défaut celles au statut Actif
    * @param params
    */
-  findAll(params: any = { status: IntentStatus.active }): Promise<Intent[]> {
+  async findAll(
+    params: any = { status: IntentStatus.active },
+  ): Promise<Intent[]> {
     return this.intentsRepository.find(params);
   }
 
@@ -47,7 +49,7 @@ export default class IntentService {
    * @param getResponses
    * @param getKnowledges
    */
-  findFullIntents(
+  async findFullIntents(
     options: PaginationQueryDto = null,
     filters: IntentFilterDto = null,
     getHidden = true,
@@ -72,7 +74,7 @@ export default class IntentService {
    * Récupération des connaissances par catégorie
    * @param category
    */
-  findByCategory(category: string): Promise<Intent[]> {
+  async findByCategory(category: string): Promise<Intent[]> {
     return this.getIntentAndResponseQueryBuilder()
       .andWhere(`category = '${category}'`)
       .andWhere("intent.id NOT LIKE 'st\\_%' ESCAPE '\\'")
@@ -105,7 +107,6 @@ export default class IntentService {
 
     // Quand il y a des left join obligé de récupérer les join à part sinon le nombre d'items retournés pas la pagination bug
     return new Pagination(
-      // @ts-ignore
       await Promise.all(
         results.items.map(async (item: IntentModel) => {
           const [knowledges, responses, previousIntents, nextIntents] =
@@ -115,13 +116,13 @@ export default class IntentService {
               this.findPreviousIntents(item),
               this.findNextIntents(item),
             ]);
-          // @ts-ignore
+          // @ts-expect-error
           item.knowledges = knowledges;
-          // @ts-ignore
+          // @ts-expect-error
           item.responses = responses;
-          // @ts-ignore
+          // @ts-expect-error
           item.previousIntents = previousIntents;
-          // @ts-ignore
+          // @ts-expect-error
           item.nextIntents = nextIntents;
 
           return item;
@@ -153,7 +154,7 @@ export default class IntentService {
           IntentStatus.in_training,
         ],
       })
-      .andWhere(whereClause ? whereClause.toString() : `'1'`);
+      .andWhere(whereClause ? whereClause.toString() : "'1'");
 
     if (!getResponses) {
       query
@@ -168,7 +169,7 @@ export default class IntentService {
           end`,
         )
         .addOrderBy(
-          `case when intent.expires_at::date >= now() - interval '1 month' then intent.expires_at end`,
+          "case when intent.expires_at::date >= now() - interval '1 month' then intent.expires_at end",
         )
         .addOrderBy('intent.updated_at', 'DESC')
         .addOrderBy('intent.main_question', 'ASC', 'NULLS LAST');
@@ -205,9 +206,9 @@ export default class IntentService {
           IntentStatus.in_training,
         ],
       })
-      .andWhere(whereClause ? whereClause.toString() : `'1'`)
-      .andWhere(id ? `intent.id = '${id}'` : `'1'`)
-      .andWhere(getHidden ? `'1'` : `hidden = false`)
+      .andWhere(whereClause ? whereClause.toString() : "'1'")
+      .andWhere(id ? `intent.id = '${id}'` : "'1'")
+      .andWhere(getHidden ? "'1'" : 'hidden = false')
       .orderBy({
         'intent.id': 'ASC',
       });
@@ -246,7 +247,7 @@ export default class IntentService {
           IntentStatus.in_training,
         ],
       })
-      .andWhere(`hidden = false`)
+      .andWhere('hidden = false')
       .orderBy({
         'intent.main_question': 'ASC',
         'responses.id': 'ASC',
@@ -298,14 +299,13 @@ export default class IntentService {
       return;
     }
     const [previousIntents, nextIntents] = await Promise.all([
-      // @ts-ignore
       this.findPreviousIntents(intent),
-      // @ts-ignore
+
       this.findNextIntents(intent),
     ]);
-    // @ts-ignore
+
     intent.previousIntents = previousIntents;
-    // @ts-ignore
+
     intent.nextIntents = nextIntents;
 
     return intent;
@@ -318,14 +318,14 @@ export default class IntentService {
    * @param getResponses
    * @param excludeSt
    */
-  findIntentsMatching(
+  async findIntentsMatching(
     query: string,
     intentsNumber = 1000,
     getResponses = false,
     excludeSt = false,
   ): Promise<Intent[]> {
     let intentWhereClause = PaginationUtils.setQuery(
-      <PaginationQueryDto>{ query },
+      { query } as PaginationQueryDto,
       Intent.getAttributesToSearch(),
       'intent',
     );
@@ -341,7 +341,7 @@ export default class IntentService {
 
     if (getResponses) {
       const responseWhereClause = PaginationUtils.setQuery(
-        <PaginationQueryDto>{ query },
+        { query } as PaginationQueryDto,
         ['response'],
         'responses',
       );
@@ -354,11 +354,11 @@ export default class IntentService {
           'intent.main_question': 'ASC',
           'responses.id': 'ASC',
         })
-        .andWhere(intentWhereClause ? intentWhereClause.toString() : `'1'`)
+        .andWhere(intentWhereClause ? intentWhereClause.toString() : "'1'")
         .getMany();
     }
     return queryBuilder
-      .andWhere(intentWhereClause ? intentWhereClause.toString() : `'1'`)
+      .andWhere(intentWhereClause ? intentWhereClause.toString() : "'1'")
       .take(intentsNumber)
       .getMany();
   }
@@ -367,7 +367,7 @@ export default class IntentService {
    * Récupération uniquement des ids et des questions principales des connaissances
    * @param intentsId
    */
-  findIntentsMainQuestions(intentsId: string[]): Promise<Intent[]> {
+  async findIntentsMainQuestions(intentsId: string[]): Promise<Intent[]> {
     const status = [
       IntentStatus.to_deploy,
       IntentStatus.active,
@@ -473,7 +473,7 @@ export default class IntentService {
    * Possibilité de filtrer par dates
    * @param filters
    */
-  findNbIntentByTime(filters: StatsFilterDto): Promise<Array<string>> {
+  async findNbIntentByTime(filters: StatsFilterDto): Promise<string[]> {
     const startDate = filters.startDate
       ? moment(filters.startDate, 'DD/MM/YYYY').format('YYYY-MM-DD')
       : moment().subtract(1, 'month').format('YYYY-MM-DD');
@@ -496,7 +496,7 @@ export default class IntentService {
    * Possibilité de filtrer par dates
    * @param filters
    */
-  findNeverUsedIntent(filters: StatsFilterDto): Promise<Array<string>> {
+  async findNeverUsedIntent(filters: StatsFilterDto): Promise<string[]> {
     const startDate = filters.startDate
       ? moment(filters.startDate, 'DD/MM/YYYY').format('YYYY-MM-DD')
       : null;
@@ -563,7 +563,7 @@ export default class IntentService {
    * @param intent
    * @private
    */
-  private findPreviousIntents(intent: IntentModel): Promise<Intent[]> {
+  private async findPreviousIntents(intent: IntentModel): Promise<Intent[]> {
     const sql = this.intentsRepository
       .createQueryBuilder('intent')
       .select([
@@ -637,9 +637,9 @@ export default class IntentService {
         ]),
       },
     });
-    await this.configService.update(<ChatbotConfig>{
+    await this.configService.update({
       need_training: needTraining > 0,
-    });
+    } as ChatbotConfig);
   }
 
   /**
@@ -658,13 +658,17 @@ export default class IntentService {
           i.responses.find((r) => r.response.includes(intent.id)),
         )
       ) {
-        // @ts-ignore
+        // @ts-expect-error
         intent.previousIntents = null;
         rootIntents.push(intent);
       }
     });
     this.buildIntentBranch(rootIntents, allIntents);
     return rootIntents;
+  }
+
+  async resetData() {
+    await this.intentsRepository.createQueryBuilder().delete().execute();
   }
 
   /**
@@ -695,15 +699,15 @@ export default class IntentService {
       // On exclut les connaissances qui sont déjà des racines pour éviter une boucle infinie ou des branches en doublon
       intentsId = intentsId.filter(
         (id) =>
-          // @ts-ignore
-          id && (!rootIntent.parents || !rootIntent.parents.includes(id)),
+          // @ts-expect-error
+          id && !rootIntent.parents?.includes(id),
       );
       if (intentsId.length < 1) {
-        // @ts-ignore
+        // @ts-expect-error
         rootIntent.nextIntents = [];
         return;
       }
-      // @ts-ignore
+      // @ts-expect-error
       rootIntent.nextIntents = fullIntents.filter((intent) =>
         intentsId.includes(intent.id),
       );

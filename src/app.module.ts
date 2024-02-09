@@ -9,6 +9,7 @@ import TimeoutInterceptor from '@core/interceptors/timeout.interceptor';
 import * as path from 'path';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
+import AdminModule from './admin/admin.module';
 import UserModule from './user/user.module';
 import IntentModule from './intent/intent.module';
 import AuthModule from './auth/auth.module';
@@ -36,6 +37,7 @@ import FaqModule from './faq/faq.module';
     ConfigModule.forRoot({
       isGlobal: true,
     }),
+
     TypeOrmModule.forRoot(ormconfig),
     MailerModule.forRoot({
       transport: {
@@ -78,6 +80,7 @@ import FaqModule from './faq/faq.module';
     UpdateModule,
     LoggerModule,
     FaqModule,
+    AdminModule,
   ],
   controllers: [RefDataController, HealthController, PublicController],
   providers: [

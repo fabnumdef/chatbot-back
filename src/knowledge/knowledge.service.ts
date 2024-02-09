@@ -2,8 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { Knowledge } from '@core/entities/knowledge.entity';
-import { KnowledgeModel } from '@core/models/knowledge.model';
-import { IntentModel } from '@core/models/intent.model';
+import { type KnowledgeModel } from '@core/models/knowledge.model';
+import { type IntentModel } from '@core/models/intent.model';
 
 @Injectable()
 export default class KnowledgeService {
@@ -34,7 +34,7 @@ export default class KnowledgeService {
    * Création d'une question similaire
    * @param knowledge
    */
-  create(knowledge: KnowledgeModel): Promise<Knowledge> {
+  async create(knowledge: KnowledgeModel): Promise<Knowledge> {
     return this.knowledgesRepository.save(knowledge);
   }
 
@@ -97,5 +97,9 @@ export default class KnowledgeService {
    */
   async remove(id: string): Promise<void> {
     await this.knowledgesRepository.delete(id);
+  }
+
+  async resetData() {
+    await this.knowledgesRepository.createQueryBuilder().delete().execute();
   }
 }

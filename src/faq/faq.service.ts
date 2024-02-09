@@ -2,11 +2,11 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { FaqEvents } from '@core/entities/faq-events.entity';
-import { StatsFilterDto } from '@core/dto/stats-filter.dto';
-import { StatsMostAskedQuestionsDto } from '@core/dto/stats-most-asked-questions.dto';
+import { type StatsFilterDto } from '@core/dto/stats-filter.dto';
+import { type StatsMostAskedQuestionsDto } from '@core/dto/stats-most-asked-questions.dto';
 import * as moment from 'moment';
 import { AppConstants } from '@core/constant';
-import { StatsMostAskedCategoriesDto } from '@core/dto/stats-most-asked-categories.dto';
+import { type StatsMostAskedCategoriesDto } from '@core/dto/stats-most-asked-categories.dto';
 
 @Injectable()
 export default class FaqService {
@@ -19,7 +19,7 @@ export default class FaqService {
    * Ajout d'un événement connection
    * @param senderId
    */
-  connectToFaq(senderId: string) {
+  async connectToFaq(senderId: string) {
     return this.createFaqEvent(senderId, 'connection');
   }
 
@@ -28,7 +28,7 @@ export default class FaqService {
    * @param senderId
    * @param category
    */
-  searchCategory(senderId: string, category: string) {
+  async searchCategory(senderId: string, category: string) {
     return this.createFaqEvent(senderId, 'category', category);
   }
 
@@ -37,7 +37,7 @@ export default class FaqService {
    * @param senderId
    * @param intentId
    */
-  clickIntent(senderId: string, intentId: string) {
+  async clickIntent(senderId: string, intentId: string) {
     return this.createFaqEvent(senderId, 'intent', null, intentId);
   }
 
@@ -46,7 +46,7 @@ export default class FaqService {
    * Possibilité de filtrer par dates
    * @param filters
    */
-  findMostAskedQuestions(
+  async findMostAskedQuestions(
     filters: StatsFilterDto,
   ): Promise<StatsMostAskedQuestionsDto[]> {
     const startDate = filters.startDate
@@ -66,7 +66,7 @@ export default class FaqService {
         excludedIds: AppConstants.General.excluded_Ids,
       })
       // On exclut les small talks
-      .andWhere(`int.id NOT LIKE 'st\\_%' ESCAPE '\\'`);
+      .andWhere("int.id NOT LIKE 'st\\_%' ESCAPE '\\'");
     if (startDate) {
       query.andWhere(`DATE(faq_events.timestamp) >= '${startDate}'`);
     }
@@ -85,7 +85,7 @@ export default class FaqService {
    * Possibilité de filtrer par dates
    * @param filters
    */
-  findMostAskedCategories(
+  async findMostAskedCategories(
     filters: StatsFilterDto,
   ): Promise<StatsMostAskedCategoriesDto[]> {
     const startDate = filters.startDate
@@ -105,7 +105,7 @@ export default class FaqService {
         excludedIds: AppConstants.General.excluded_Ids,
       })
       // On exclut les small talks
-      .andWhere(`int.id NOT LIKE 'st\\_%' ESCAPE '\\'`);
+      .andWhere("int.id NOT LIKE 'st\\_%' ESCAPE '\\'");
     if (startDate) {
       query.andWhere(`DATE(faq_events.timestamp) >= '${startDate}'`);
     }
@@ -124,7 +124,7 @@ export default class FaqService {
    * Possibilité de filtrer par dates
    * @param filters
    */
-  findNbUniqueVisitors(filters: StatsFilterDto): Promise<string> {
+  async findNbUniqueVisitors(filters: StatsFilterDto): Promise<string> {
     const startDate = filters.startDate
       ? moment(filters.startDate, 'DD/MM/YYYY').format('YYYY-MM-DD')
       : null;
@@ -150,7 +150,7 @@ export default class FaqService {
    * Possibilité de filtrer par dates
    * @param filters
    */
-  findAvgQuestPerVisitor(filters: StatsFilterDto): Promise<string> {
+  async findAvgQuestPerVisitor(filters: StatsFilterDto): Promise<string> {
     const startDate = filters.startDate
       ? moment(filters.startDate, 'DD/MM/YYYY').format('YYYY-MM-DD')
       : null;
@@ -173,6 +173,10 @@ export default class FaqService {
     return query.getRawOne();
   }
 
+  async resetData() {
+    await this.faqEventsRepository.createQueryBuilder().delete().execute();
+  }
+
   /**
    * Création d'une ligne correspondante à une intéraction avec la FAQ
    * @param senderId
@@ -190,12 +194,12 @@ export default class FaqService {
     if (!senderId) {
       return;
     }
-    const toCreate = <FaqEvents>{
+    const toCreate = {
       sender_id: senderId,
       type_name: type,
       category_name: category || null,
       intent_name: intent || null,
-    };
+    } as FaqEvents;
     return this.faqEventsRepository.save(toCreate);
   }
 }
