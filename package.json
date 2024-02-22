@@ -26,6 +26,8 @@
     "artillery:report": "artillery report test/artillery/report.json -o test/artillery/report.html"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.515.0",
+    "@aws-sdk/lib-storage": "^3.515.0",
     "@nestjs-modules/mailer": "^1.9.1",
     "@nestjs/axios": "^3.0.1",
     "@nestjs/common": "^10.2.10",
@@ -51,6 +53,7 @@
     "js-yaml": "^4.1.0",
     "mkdirp": "^3.0.1",
     "moment": "^2.29.4",
+    "nestjs-s3": "^2.0.1",
     "nestjs-typeorm-paginate": "^4.0.4",
     "nodemailer": "^6.9.7",
     "passport": "^0.6.0",

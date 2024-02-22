@@ -1,7 +1,7 @@
 import { type TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { type TlsOptions } from 'tls';
 
-let sslConfig: boolean | TlsOptions = undefined;
+let sslConfig: boolean | TlsOptions;
 
 if (process.env.INTRADEF !== 'true') {
   sslConfig = {

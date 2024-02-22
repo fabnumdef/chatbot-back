@@ -32,8 +32,8 @@ services:
     ports:
       - ${DATABASE_PORT}:${DATABASE_PORT}
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - pgdata_chatbot:/var/lib/postgresql/data
 networks:
   webnet:
 volumes:
-  pgdata:
+  pgdata_chatbot:

@@ -120,12 +120,12 @@ export default class InboxFillService {
           // Si le bot n'a pas réussi à détecter la question on filtre un peu les données pour le Backoffice
           if (data.parse_data?.intent?.name === 'nlu_fallback') {
             // @ts-ignore
-            data.parse_data?.intent_ranking =
+            data.parse_data.intent_ranking =
               data.parse_data?.intent_ranking?.filter(
                 (i) => i.name !== 'nlu_fallback',
               );
             // @ts-ignore
-            data.parse_data?.intent = data.parse_data?.intent_ranking[0];
+            data.parse_data.intent = data.parse_data?.intent_ranking[0];
           }
           // Question is limited at 2000 char
           inbox.question = truncateString(data.text, 1900);

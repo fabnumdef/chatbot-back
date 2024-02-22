@@ -1,44 +1,35 @@
 import { Injectable } from '@nestjs/common';
 import { Intent } from '@core/entities/intent.entity';
-import { RasaNluModel } from '@core/models/rasa-nlu.model';
-import {
-  RasaButtonModel,
-  RasaDomainModel,
-  RasaUtterResponseModel,
-} from '@core/models/rasa-domain.model';
-import { Response } from '@core/entities/response.entity';
-import { ResponseType } from '@core/enums/response-type.enum';
-import { execShellCommand } from '@core/utils';
-import * as path from 'path';
+import { RasaDomainModel } from '@core/models/rasa-domain.model';
 import { ChatbotConfig } from '@core/entities/chatbot-config.entity';
 import { In } from 'typeorm';
 import { IntentStatus } from '@core/enums/intent-status.enum';
-import { mkdirp } from 'mkdirp';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { RasaRuleModel } from '@core/models/rasa-rule.model';
+// eslint-disable-next-line import/no-extraneous-dependencies
+import { InjectS3, S3 } from 'nestjs-s3';
+// eslint-disable-next-line import/no-extraneous-dependencies
+import { PutObjectCommandInput } from '@aws-sdk/client-s3';
+// eslint-disable-next-line import/no-extraneous-dependencies
+import { Upload } from '@aws-sdk/lib-storage';
+import BotLogger from '../logger/bot.logger';
 import ChatbotConfigService from '../chatbot-config/chatbot-config.service';
 import IntentService from '../intent/intent.service';
-import BotLogger from '../logger/bot.logger';
-
-const fs = require('fs');
-const yaml = require('js-yaml');
 
 @Injectable()
 export default class RasaService {
   private readonly logger = new BotLogger('RasaService');
 
-  private chatbotTemplateDir = path.resolve(
-    __dirname,
-    '../../../chatbot-template',
-  );
+  private rasaApi = process.env.RASA_API;
+
+  private rasaToken = process.env.RASA_TOKEN;
+
+  private rasaCallbackUrl = process.env.RASA_CALLBACK_URL;
 
   constructor(
+    @InjectS3() private readonly s3: S3,
     private readonly intentService: IntentService,
     private readonly configService: ChatbotConfigService,
-  ) {
-    // Création du répertoire si il n'existe pas
-    mkdirp(`${this.chatbotTemplateDir}/data`).then();
-  }
+  ) {}
 
   /**
    * Vérification régulière si RASA a besoin et peut être entraîné
@@ -49,7 +40,6 @@ export default class RasaService {
       return;
     }
     this.logger.log('Updating Rasa');
-    await this.generateFiles();
     await this.trainRasa();
     await this.deleteOldModels();
     this.logger.log('Finish updating Rasa');
@@ -74,94 +64,87 @@ export default class RasaService {
   /**
    * Génération des fichiers pour RASA
    */
-  async generateFiles() {
+  async getTrainingData() {
     const intents: Intent[] = await this.intentService.findFullIntents(
       null,
       null,
       false,
     );
-    this.intentsToRasa(intents);
+
+    const config = await this.configService.getChatbotConfig();
+
+    return RasaDomainModel.fromIntents(intents, config);
   }
 
   /**
    * Entraînement de RASA
    */
   async trainRasa() {
-    // Mise à jour du statut d'entraînement du Chatbot et des connaissances.
-    await this.configService.update(<ChatbotConfig>{ training_rasa: true });
-    await this.intentService.updateManyByCondition(
-      { status: In([IntentStatus.to_deploy, IntentStatus.active_modified]) },
-      { status: IntentStatus.in_training },
-    );
     try {
-      this.logger.log(`TRAINING RASA`);
-      await execShellCommand(
-        `${
-          !process.env.INTRADEF || process.env.INTRADEF === 'false'
-            ? ''
-            : `/opt/chatbot/rasa/bin/python${process.env.PYTHON_VERSION} -m`
-        } rasa train --finetune --epoch-fraction 0.2 --num-threads 8`,
-        this.chatbotTemplateDir,
-      ).then(async (res: string) => {
-        this.logger.log(res);
-        // Si le modèle ne peut pas être finetuné on le ré-entraine complétement
-        if (
-          res.includes('can not be finetuned') ||
-          res.includes('No model for finetuning') ||
-          res.includes('Cannot finetune')
-        ) {
-          await execShellCommand(
-            `${
-              !process.env.INTRADEF || process.env.INTRADEF === 'false'
-                ? ''
-                : `/opt/chatbot/rasa/bin/python${process.env.PYTHON_VERSION} -m`
-            } rasa train --num-threads 8`,
-            this.chatbotTemplateDir,
-          ).then((resBis) => {
-            this.logger.log(resBis);
-          });
-        }
+      this.logger.log('Starting RASA training...');
+      // Mise à jour du statut d'entraînement du Chatbot et des connaissances.
+      await this.configService.update(<ChatbotConfig>{ training_rasa: true });
+      await this.intentService.updateManyByCondition(
+        { status: In([IntentStatus.to_deploy, IntentStatus.active_modified]) },
+        { status: IntentStatus.in_training },
+      );
+
+      this.logger.log('Retrieving training data');
+      const domain = await this.getTrainingData();
+
+      this.logger.log('Train rasa model');
+      const qs = new URLSearchParams();
+      qs.set('num_threads', '16');
+      //  TODO: uncomment this
+      // qs.set('save_to_default_model_directory', 'false');
+
+      qs.set(
+        'callback_url',
+        `${this.rasaCallbackUrl}/api/rasa-actions/evaluations?token=${this.rasaToken}`,
+      );
+      qs.set('token', this.rasaToken);
+
+      const res = await fetch(`${this.rasaApi}/model/train?${qs.toString()}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/yaml',
+        },
+        body: domain.dump(),
       });
-      this.logger.log('DISABLE TELEMETRY');
-      await execShellCommand(
-        `${
-          !process.env.INTRADEF || process.env.INTRADEF === 'false'
-            ? ''
-            : `/opt/chatbot/rasa/bin/python${process.env.PYTHON_VERSION} -m`
-        } rasa telemetry disable`,
-        this.chatbotTemplateDir,
-      ).then((res) => {
-        this.logger.log(res);
-      });
-      if (!process.env.INTRADEF || process.env.INTRADEF === 'false') {
-        this.logger.log('KILLING SCREEN');
-        await execShellCommand(`pkill screen`, this.chatbotTemplateDir).then(
-          (res) => {
-            this.logger.log(res);
-          },
+
+      if (!res.ok) {
+        throw new Error(
+          `Failed to train rasa (${res.status} ${res.statusText})`,
+          { cause: await res.json() },
         );
-        this.logger.log('LAUNCHING SCREEN');
-        await execShellCommand(
-          `screen -S rasa -dmS rasa run -m models --log-file out.log --cors "*" --debug`,
-          this.chatbotTemplateDir,
-        ).then((res) => {
-          this.logger.log(res);
-        });
-        await execShellCommand(
-          `screen -S rasa-action -dmS rasa run actions`,
-          this.chatbotTemplateDir,
-        ).then((res) => {
-          this.logger.log(res);
-        });
-      } else {
-        this.logger.log('RESTART RASA SERVICE');
-        await execShellCommand(
-          `systemctl --user restart rasa-core`,
-          this.chatbotTemplateDir,
-        ).then((res) => {
-          this.logger.log(res);
-        });
       }
+    } catch (err) {
+      this.logger.error('TRAIN RASA', err);
+      if (err instanceof Error) {
+        console.error(err);
+      }
+    }
+  }
+
+  async evaluateModel(model: PutObjectCommandInput['Body'], name: string) {
+    try {
+      this.logger.log(`Evaluating model '${name}'`);
+
+      this.logger.log('Uploading model to S3...');
+      const upload = new Upload({
+        client: this.s3,
+        params: {
+          Bucket: process.env.BUCKET_NAME,
+          Key: name,
+          Body: `${process.env.RASA_MODEL_DIR ?? '/models'}/${model}`,
+        },
+      });
+
+      await upload.done();
+
+      await this.reloadModel(name);
+
+      this.logger.log(`Updating intents and training status`);
       await this.intentService.updateManyByCondition(
         { status: IntentStatus.in_training },
         { status: IntentStatus.active },
@@ -170,13 +153,30 @@ export default class RasaService {
         { status: IntentStatus.to_archive },
         { status: IntentStatus.archived },
       );
-      await this.configService.update(<ChatbotConfig>{
-        last_training_at: new Date(),
-      });
-    } catch (e) {
-      this.logger.error('RASA TRAIN', e);
+      await this.configService.update(<ChatbotConfig>{ training_rasa: false });
+    } catch (err) {
+      this.logger.error('FAILED TO EVALUATE RASA MODEL', err);
+      await this.configService.update(<ChatbotConfig>{ training_rasa: false });
+      throw err;
     }
-    await this.configService.update(<ChatbotConfig>{ training_rasa: false });
+  }
+
+  async reloadModel(model_file: string) {
+    this.logger.log('Reloading RASA model...');
+    const res = await fetch(`${this.rasaApi}/model?token=${this.rasaToken}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model_file,
+        remote_storage: 'aws',
+      }),
+    });
+
+    if (!res.ok) {
+      throw new Error(`Failed to reload model`, { cause: await res.json() });
+    }
   }
 
   /**
@@ -184,165 +184,36 @@ export default class RasaService {
    */
 
   /**
-   * Converti des connaissances dans les 3 fichiers de Rasa
-   * @param intents
-   * @private
-   */
-  private async intentsToRasa(intents: Intent[]) {
-    const domain = new RasaDomainModel();
-    const nlu: RasaNluModel[] = [];
-    // const stories: RasaStoryModel[] = [];
-    const rules: RasaRuleModel[] = [];
-
-    intents = intents.map((i) => {
-      i.id = i.id === 'phrase_hors_sujet' ? 'nlu_fallback' : i.id;
-      return i;
-    });
-    domain.intents = intents.map((i) => i.id);
-    for (const intent of intents) {
-      // Remplissage des NLU (questions similaires)
-      nlu.push(new RasaNluModel(intent.id));
-      let examples = '';
-      if (intent.main_question) {
-        examples += this.cleanStringForYaml(intent.main_question);
-      }
-      intent.knowledges.forEach((knowledge) => {
-        examples += this.cleanStringForYaml(knowledge.question);
-      });
-      nlu[nlu.length - 1].examples = examples;
-
-      // Remplissage DOMAIN
-      const responses = this.generateDomainUtter(intent);
-
-      // Remplissage STORIES
-      // stories.push(new RasaStoryModel(intent.id));
-      // const steps = stories[stories.length - 1].steps;
-      // steps.push({intent: intent.id});
-      // Object.keys(responses).forEach(utter => {
-      //   steps.push({action: utter});
-      // });
-
-      // Remplissage RULES
-      const { id } = intent;
-      rules.push(new RasaRuleModel(id));
-      const { steps } = rules[rules.length - 1];
-      steps.push({ intent: id });
-      Object.keys(responses).forEach((utter) => {
-        steps.push({ action: utter });
-      });
-      if (intent.id === 'nlu_fallback') {
-        const config: ChatbotConfig =
-          await this.configService.getChatbotConfig();
-        domain.slots.return_suggestions.initial_value =
-          config.show_fallback_suggestions;
-        steps.push({ action: 'action_fallback' });
-      }
-
-      domain.responses = Object.assign(responses, domain.responses);
-    }
-
-    // Enregistrement des fichiers RASA
-    fs.writeFileSync(
-      `${this.chatbotTemplateDir}/domain.yml`,
-      yaml.dump(domain),
-      'utf8',
-    );
-    fs.writeFileSync(
-      `${this.chatbotTemplateDir}/data/nlu.yml`,
-      yaml.dump({ version: '3.1', nlu }),
-      'utf8',
-    );
-    fs.writeFileSync(
-      `${this.chatbotTemplateDir}/data/rules.yml`,
-      yaml.dump({
-        version: '3.1',
-        rules,
-      }),
-      'utf8',
-    );
-    // fs.writeFileSync(`${this.chatbotTemplateDir}/data/stories.yml`, yaml.safeDump({version: "2.0", stories: stories}), 'utf8');
-  }
-
-  /**
-   * Génération des réponses (utter) pour un intent donné
-   * @param intent
-   */
-  private generateDomainUtter(intent: Intent): {
-    [key: string]: RasaUtterResponseModel[];
-  } {
-    const responses: { [key: string]: RasaUtterResponseModel[] } = {};
-    // On itère sur chaque réponse pour la mettre au bon format
-    intent.responses.forEach((response: Response, index: number) => {
-      switch (response.response_type) {
-        case ResponseType.text:
-          responses[`utter_${intent.id}_${index}`] = [
-            { text: this.cleanStringForYaml(response.response, false) },
-          ];
-          break;
-        case ResponseType.image:
-          responses[`utter_${intent.id}_${index - 1}`]
-            ? (responses[`utter_${intent.id}_${index - 1}`][0].image =
-                response.response)
-            : null;
-          break;
-        case ResponseType.button:
-        case ResponseType.quick_reply:
-          // Pour le cas des réponses bouton ou réponse rapide, on les rattache à la réponse précédente.
-          if (!responses[`utter_${intent.id}_${index - 1}`]) {
-            break;
-          }
-          const buttons: string[] = response.response.split(';');
-          responses[`utter_${intent.id}_${index - 1}`][0].buttons = [];
-          const utter_buttons =
-            responses[`utter_${intent.id}_${index - 1}`][0].buttons;
-          buttons.forEach((button) => {
-            utter_buttons.push(new RasaButtonModel(button));
-          });
-          break;
-      }
-    });
-    return responses;
-  }
-
-  /**
    * Suppression des anciens modèles
    * On en garde 5 par sécurité
    */
   private async deleteOldModels() {
     try {
-      this.logger.log('DELETING OLD MODELS, KEEP 5 FOR SECURITY');
-      await execShellCommand(
-        "rm `ls -t | awk 'NR>5'`",
-        path.resolve(this.chatbotTemplateDir, 'models'),
-      ).then((res) => {
-        this.logger.log(res);
+      const historySize = Number.isNaN(process.env.MODEL_HISTORY_SIZE)
+        ? Number(process.env.MODEL_HISTORY_SIZE)
+        : 5;
+
+      this.logger.log(`DELETING OLD MODELS, KEEP ${historySize} FOR SECURITY`);
+      const objects = await this.s3.listObjectsV2({
+        Bucket: process.env.BUCKET_NAME,
+      });
+
+      const sortedObjects = objects.Contents.sort(
+        (a, b) => b.LastModified.getTime() - a.LastModified.getTime(),
+      );
+
+      sortedObjects.splice(0, historySize);
+
+      await this.s3.deleteObjects({
+        Bucket: process.env.BUCKET_NAME,
+        Delete: {
+          Objects: sortedObjects.map((o) => ({
+            Key: o.Key,
+          })),
+        },
       });
     } catch (e) {
       this.logger.error('DELETE OLD MODELS', e);
     }
-  }
-
-  /**
-   * Nettoyage d'une chaîne de caractère d'emojis et d'espaces en début et fin
-   * @param s
-   * @private
-   */
-  private cleanStringForYaml(s: string, forKnowledge = true): string {
-    let stringToReturn = s?.trim();
-    if (forKnowledge) {
-      stringToReturn = stringToReturn
-        .replace(
-          /([\uE000-\uF8FF]|\uD83C[\uDF00-\uDFFF]|\uD83D[\uDC00-\uDDFF])/g,
-          '',
-        )
-        .replace(/\r?\n|\r|\s/g, ' ')
-        .replace(/[\/\\"'`]/g, '');
-    } else {
-      stringToReturn = stringToReturn.replace(/(\r\n|\r|\n){2,}/g, '\n');
-    }
-    if (!stringToReturn) {
-      return '';
-    }
-    return forKnowledge ? `- ${stringToReturn}\n` : `${stringToReturn}`;
   }
 }

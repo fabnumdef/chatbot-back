@@ -9,6 +9,8 @@ import TimeoutInterceptor from '@core/interceptors/timeout.interceptor';
 import * as path from 'path';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
+// eslint-disable-next-line import/no-extraneous-dependencies
+import { S3Module } from 'nestjs-s3';
 import UserModule from './user/user.module';
 import IntentModule from './intent/intent.module';
 import AuthModule from './auth/auth.module';
@@ -62,6 +64,16 @@ import FaqModule from './faq/faq.module';
         },
       },
     }),
+    S3Module.forRoot({
+      config: {
+        credentials: {
+          accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+          secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+        },
+        region: process.env.AWS_DEFAULT_REGION,
+        endpoint: process.env.AWS_ENDPOINT_URL,
+      },
+    }),
     AuthModule,
     UserModule,
     IntentModule,
@@ -94,4 +106,4 @@ import FaqModule from './faq/faq.module';
     },
   ],
 })
-export class AppModule {}
+export default class AppModule {}

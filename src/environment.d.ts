@@ -12,31 +12,9 @@ declare global {
       DATABASE_SECURE?: 'true' | 'false';
       DATABASE_SSL_CERT?: string;
 
-      /**
-       * Path to the rasa executable.
-       * Only used in the default command values.
-       *
-       * If you use one of the bellow variable to override the default, you must specify the rasa executable path
-       *
-       * @example /usr/bin/python3.8 rasa
-       */
-      RASA_PATH?: string;
-      /**
-       * Override the command to execute when training model
-       */
-      RASA_CMD_TRAIN?: string;
-      /**
-       * Override the command to execute when finetuning model
-       */
-      RASA_CMD_FINETUNE?: string;
-      /**
-       * Override the command to execute in order to disable telemetry
-       */
-      RASA_CMD_DISABLE_TELEMETRY?: string;
-      /**
-       * Override the command to execute in order to restart the rasa service
-       */
-      RASA_CMD_RESTART?: string;
+      RASA_API?: string;
+      RASA_TOKEN?: string;
+      RASA_CALLBACK_URL?: string;
 
       MAIL_HOST?: string;
       MAIL_PORT?: string;
@@ -48,13 +26,22 @@ declare global {
       JWT_SECRET?: string;
 
       INTRADEF?: 'true' | 'false';
-      PYTHON_VERSION?: string;
 
       HOST_URL?: string;
 
       DEBUG?: string;
       HOME?: string;
       PATH?: string;
+
+      RATE_LIMIT?: string;
+
+      AWS_ACCESS_KEY_ID?: string;
+      AWS_SECRET_ACCESS_KEY?: string;
+      BUCKET_NAME?: string;
+      AWS_DEFAULT_REGION?: string;
+      AWS_ENDPOINT_URL?: string;
+
+      MODEL_HISTORY_SIZE?: string;
     }
   }
 }

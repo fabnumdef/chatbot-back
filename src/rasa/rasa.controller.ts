@@ -6,7 +6,9 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ChatbotConfig } from '@core/entities/chatbot-config.entity';
 import JwtGuard from '@core/guards/jwt.guard';
+import ChatbotConfigService from 'src/chatbot-config/chatbot-config.service';
 import RasaService from './rasa.service';
 
 @ApiTags('rasa')
@@ -14,7 +16,10 @@ import RasaService from './rasa.service';
 @ApiBearerAuth()
 @UseGuards(JwtGuard)
 export default class RasaController {
-  constructor(private readonly rasaService: RasaService) {}
+  constructor(
+    private readonly rasaService: RasaService,
+    private readonly configService: ChatbotConfigService,
+  ) {}
 
   @Post('train')
   @ApiOperation({
@@ -22,6 +27,8 @@ export default class RasaController {
       'Converti la base de connaissances en fichiers RASA & entraine le Chatbot',
   })
   async trainRasa(): Promise<void> {
+    await this.configService.update(<ChatbotConfig>{ training_rasa: false });
+
     if (!(await this.rasaService.canTrainRasa())) {
       throw new HttpException(
         `Le chatbot est déjà entrain d'être mis à jour. Merci de patienter quelques minutes.`,
@@ -29,7 +36,6 @@ export default class RasaController {
       );
     }
 
-    await this.rasaService.generateFiles();
     await this.rasaService.trainRasa();
   }
 }

@@ -136,7 +136,7 @@ export default class AuthService {
       (!bcrypt.compareSync(user.password, userToReturn.password) ||
         userToReturn.failed_login_attempts >= this.failedLoginAttempts)
     ) {
-      return await this.wrongPassword(userToReturn);
+      return this.wrongPassword(userToReturn);
     }
     if (userToReturn && userToReturn.disabled) {
       throw new HttpException(
