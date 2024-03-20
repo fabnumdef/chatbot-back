@@ -19,9 +19,9 @@ const config: TypeOrmModuleOptions = {
   // Run migrations automatically,
   // you can disable this if you prefer running migration manually.
   migrationsRun: true,
-  // ssl: {
-  //   rejectUnauthorized: false
-  // }
+  ssl: {
+    rejectUnauthorized: false,
+  },
 };
 
 if (process.env.DATABASE_SSL_CERT) {
