@@ -1,28 +1,28 @@
-import { StatsFilterDto } from '@core/dto/stats-filter.dto';
+import { type StatsFilterDto } from '@core/dto/stats-filter.dto';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LessThan, Repository, Between } from 'typeorm';
 import { Inbox } from '@core/entities/inbox.entity';
 import { InboxStatus, InboxStatus_Fr } from '@core/enums/inbox-status.enum';
-import { PaginationQueryDto } from '@core/dto/pagination-query.dto';
-import { paginate, Pagination } from 'nestjs-typeorm-paginate';
+import { type PaginationQueryDto } from '@core/dto/pagination-query.dto';
+import { paginate, type Pagination } from 'nestjs-typeorm-paginate';
 import PaginationUtils from '@core/pagination-utils';
-import { InboxFilterDto } from '@core/dto/inbox-filter.dto';
-import { UpdateResult } from 'typeorm/query-builder/result/UpdateResult';
-import { Knowledge } from '@core/entities/knowledge.entity';
+import { type InboxFilterDto } from '@core/dto/inbox-filter.dto';
+import { type UpdateResult } from 'typeorm/query-builder/result/UpdateResult';
+import { type Knowledge } from '@core/entities/knowledge.entity';
 import { IntentStatus } from '@core/enums/intent-status.enum';
 import * as moment from 'moment';
-import { StatsMostAskedQuestionsDto } from '@core/dto/stats-most-asked-questions.dto';
-import { Feedback } from '@core/entities/feedback.entity';
+import { type StatsMostAskedQuestionsDto } from '@core/dto/stats-most-asked-questions.dto';
+import { type Feedback } from '@core/entities/feedback.entity';
 import * as escape from 'pg-escape';
 
 import { AppConstants } from '@core/constant';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { Events } from '@core/entities/events.entity';
 import * as fs from 'fs';
-import { WorkBook } from 'xlsx';
-import { StatsMostAskedCategoriesDto } from '@core/dto/stats-most-asked-categories.dto';
-import { FeedbackStatus } from '@core/enums/feedback-status.enum';
+import { type WorkBook } from 'xlsx';
+import { type StatsMostAskedCategoriesDto } from '@core/dto/stats-most-asked-categories.dto';
+import { type FeedbackStatus } from '@core/enums/feedback-status.enum';
 import UserService from '../user/user.service';
 import IntentService from '../intent/intent.service';
 import KnowledgeService from '../knowledge/knowledge.service';
@@ -55,12 +55,16 @@ export default class InboxService {
     this.clearEvents(threeYearsAgo);
   }
 
+  async resetData() {
+    await this.inboxesRepository.createQueryBuilder().delete().execute();
+  }
+
   /**
    * Récupération de toutes les requêtes
    * Par défaut celles au statut A traiter
    * @param params
    */
-  findAll(
+  async findAll(
     params = {
       where: {
         status: InboxStatus.pending,
@@ -74,7 +78,7 @@ export default class InboxService {
    * Récupération d'une requête
    * @param inboxId
    */
-  findOne(inboxId) {
+  async findOne(inboxId) {
     return this.inboxesRepository.findOne({
       where: {
         id: inboxId,
@@ -89,7 +93,7 @@ export default class InboxService {
    * Sauvegarde d'une requête
    * @param inbox
    */
-  save(inbox: Inbox): Promise<Inbox> {
+  async save(inbox: Inbox): Promise<Inbox> {
     return this.inboxesRepository.save(inbox);
   }
 
@@ -127,7 +131,7 @@ export default class InboxService {
         'user.last_name',
         'user.role',
       ])
-      .andWhere(whereClause ? whereClause.toString() : `'1'`)
+      .andWhere(whereClause ? whereClause.toString() : "'1'")
       .orderBy({
         'inbox.timestamp': 'DESC',
       });
@@ -161,7 +165,7 @@ export default class InboxService {
       query.andWhere(`inbox.user.email = '${filters.assignedTo}'`);
     }
     if (filters.assignedToAll) {
-      query.andWhere(`inbox.user.email is not null`);
+      query.andWhere('inbox.user.email is not null');
     }
 
     return query;
@@ -231,7 +235,7 @@ export default class InboxService {
    * Archivation d'une requête
    * @param inboxId
    */
-  delete(inboxId): Promise<UpdateResult> {
+  async delete(inboxId): Promise<UpdateResult> {
     return this.inboxesRepository.update(
       { id: inboxId },
       { status: InboxStatus.archived },
@@ -243,7 +247,7 @@ export default class InboxService {
    * Possibilité de filtrer par dates
    * @param filters
    */
-  findNbInboxByTime(filters: StatsFilterDto): Promise<Array<string>> {
+  async findNbInboxByTime(filters: StatsFilterDto): Promise<string[]> {
     const startDate = filters.startDate
       ? moment(filters.startDate, 'DD/MM/YYYY').format('YYYY-MM-DD')
       : moment().subtract(1, 'month').format('YYYY-MM-DD');
@@ -266,7 +270,7 @@ export default class InboxService {
    * Possibilité de filtrer par dates
    * @param filters
    */
-  findNbVisitorsByTime(filters: StatsFilterDto): Promise<Array<string>> {
+  async findNbVisitorsByTime(filters: StatsFilterDto): Promise<string[]> {
     const startDate = filters.startDate
       ? moment(filters.startDate, 'DD/MM/YYYY').format('YYYY-MM-DD')
       : moment().subtract(1, 'month').format('YYYY-MM-DD');
@@ -290,7 +294,7 @@ export default class InboxService {
    * Possibilité de filtrer par dates
    * @param filters
    */
-  findNbUniqueVisitors(filters: StatsFilterDto): Promise<string> {
+  async findNbUniqueVisitors(filters: StatsFilterDto): Promise<string> {
     const startDate = filters.startDate
       ? moment(filters.startDate, 'DD/MM/YYYY').format('YYYY-MM-DD')
       : null;
@@ -317,7 +321,7 @@ export default class InboxService {
    * @param filters
    * @param feedbackStatus
    */
-  findMostAskedQuestions(
+  async findMostAskedQuestions(
     filters: StatsFilterDto,
     feedbackStatus?: FeedbackStatus,
   ): Promise<StatsMostAskedQuestionsDto[]> {
@@ -338,7 +342,7 @@ export default class InboxService {
         excludedIds: AppConstants.General.excluded_Ids,
       })
       // Remove small talks
-      .andWhere(`int.id NOT LIKE 'st\\_%' ESCAPE '\\'`);
+      .andWhere("int.id NOT LIKE 'st\\_%' ESCAPE '\\'");
     if (startDate) {
       query.andWhere(
         `DATE(to_timestamp(inbox.${
@@ -369,7 +373,7 @@ export default class InboxService {
    * @param filters
    * @param feedbackStatus
    */
-  findMostAskedCategories(
+  async findMostAskedCategories(
     filters: StatsFilterDto,
     feedbackStatus?: FeedbackStatus,
   ): Promise<StatsMostAskedCategoriesDto[]> {
@@ -390,7 +394,7 @@ export default class InboxService {
         excludedIds: AppConstants.General.excluded_Ids,
       })
       // Remove small talks
-      .andWhere(`int.id NOT LIKE 'st\\_%' ESCAPE '\\'`);
+      .andWhere("int.id NOT LIKE 'st\\_%' ESCAPE '\\'");
     if (startDate) {
       query.andWhere(`DATE(to_timestamp(inbox.timestamp)) >= '${startDate}'`);
     }
@@ -412,7 +416,7 @@ export default class InboxService {
    * Possibilité de filtrer par date
    * @param filters
    */
-  findAvgQuestPerVisitor(filters: StatsFilterDto): Promise<string> {
+  async findAvgQuestPerVisitor(filters: StatsFilterDto): Promise<string> {
     const startDate = filters.startDate
       ? moment(filters.startDate, 'DD/MM/YYYY').format('YYYY-MM-DD')
       : null;
@@ -440,7 +444,7 @@ export default class InboxService {
    * Possibilité de filtrer par date
    * @param filters
    */
-  findAvgResponseTime(filters: StatsFilterDto): Promise<string> {
+  async findAvgResponseTime(filters: StatsFilterDto): Promise<string> {
     const startDate = filters.startDate
       ? moment(filters.startDate, 'DD/MM/YYYY').format('YYYY-MM-DD')
       : null;
@@ -528,7 +532,7 @@ export default class InboxService {
 
     const query = this.inboxesRepository
       .createQueryBuilder('inbox')
-      .select(`COUNT(inbox.id)`, 'countFeedback')
+      .select('COUNT(inbox.id)', 'countFeedback')
       .where(
         `inbox.feedback_status = '${feedbackStatus}' ${additionnalWhereClause}`,
       );
@@ -601,7 +605,7 @@ export default class InboxService {
       })
       .andWhere(
         escape(
-          `upper(%I) like %L`,
+          'upper(%I) like %L',
           'question',
           feedback.user_question.toUpperCase(),
         ),
@@ -612,9 +616,8 @@ export default class InboxService {
       return false;
     }
 
-    // @ts-ignore
     await this.inboxesRepository.update(inbox.id, {
-      // @ts-ignore
+      // @ts-expect-error Type 'FeedbackStatus' is not assignable to type '(() => string)
       status: feedback.status,
       feedback_status: feedback.status,
       feedback_timestamp: parseFloat(moment(feedback.created_at).format('x')),
@@ -627,12 +630,12 @@ export default class InboxService {
    * @param options
    * @param filters
    */
-  exportXls(
+  async exportXls(
     options: PaginationQueryDto,
     filters: InboxFilterDto,
   ): Promise<fs.ReadStream> {
-    return new Promise<fs.ReadStream>(async (resolve) => {
-      const workbook = await this.generateWorkbook(options, filters);
+    return new Promise<fs.ReadStream>((resolve) => {
+      const workbook = this.generateWorkbook(options, filters);
 
       const guidForClient = uuid.v1();
       const pathNameWithGuid = `${guidForClient}_result.xlsx`;

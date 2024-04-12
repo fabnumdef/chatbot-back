@@ -1,20 +1,26 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Brackets, DeleteResult, FindOneOptions, Repository } from 'typeorm';
+import {
+  Brackets,
+  type DeleteResult,
+  type FindOneOptions,
+  Repository,
+} from 'typeorm';
 import { Media } from '@core/entities/media.entity';
 import * as path from 'path';
 import * as fs from 'fs';
 import { mkdirp } from 'mkdirp';
-import { PaginationQueryDto } from '@core/dto/pagination-query.dto';
+
+import { type PaginationQueryDto } from '@core/dto/pagination-query.dto';
 import { paginate, Pagination } from 'nestjs-typeorm-paginate';
 import PaginationUtils from '@core/pagination-utils';
-import { User } from '@core/entities/user.entity';
-import { MediaModel } from '@core/models/media.model';
+import { type User } from '@core/entities/user.entity';
+import { type MediaModel } from '@core/models/media.model';
 import { plainToInstance } from 'class-transformer';
 import { IntentModel } from '@core/models/intent.model';
 import { ChatbotConfig } from '@core/entities/chatbot-config.entity';
 // eslint-disable-next-line import/no-extraneous-dependencies
-import { Response } from 'express';
+import { type Response } from 'express';
 import { Intent } from '@core/entities/intent.entity';
 import { IntentStatus } from '@core/enums/intent-status.enum';
 import BotLogger from '../logger/bot.logger';
@@ -25,7 +31,10 @@ const archiver = require('archiver');
 
 @Injectable()
 export default class MediaService {
-  private filesDirectory = path.resolve(__dirname, '../../mediatheque');
+  private readonly filesDirectory = path.resolve(
+    __dirname,
+    '../../mediatheque',
+  );
 
   private readonly logger = new BotLogger('MediaService');
 
@@ -46,7 +55,7 @@ export default class MediaService {
    * Récupération de tous les médias
    * @param params
    */
-  findAll(params = {}): Promise<Media[]> {
+  async findAll(params = {}): Promise<Media[]> {
     return this.mediasRepository.find(params);
   }
 
@@ -84,7 +93,7 @@ export default class MediaService {
   getMediaQueryBuilder(whereClause: string) {
     const query = this.mediasRepository
       .createQueryBuilder('media')
-      .where(whereClause ? whereClause.toString() : `'1'`)
+      .where(whereClause ? whereClause.toString() : "'1'")
       .addOrderBy('media.created_at', 'DESC');
 
     return query;
@@ -94,7 +103,7 @@ export default class MediaService {
    * Récupération d'un média
    * @param id
    */
-  findOne(id: number): Promise<Media> {
+  async findOne(id: number): Promise<Media> {
     return this.mediasRepository.findOne({ where: { id } });
   }
 
@@ -102,7 +111,7 @@ export default class MediaService {
    * Récupération d'un média selon une clause
    * @param param
    */
-  findOneWithParam(param: FindOneOptions): Promise<Media> {
+  async findOneWithParam(param: FindOneOptions): Promise<Media> {
     return this.mediasRepository.findOne(param);
   }
 
@@ -155,7 +164,7 @@ export default class MediaService {
       // Suppression sur le serveur de l'ancien média
       fs.unlinkSync(path.resolve(this.filesDirectory, oldFile.file));
     } catch (e) {
-      this.logger.error(`Error unlinking old file`, e);
+      this.logger.error('Error unlinking old file', e);
     }
     // Ecriture sur le serveur du nouveau média
     fs.writeFileSync(path.resolve(this.filesDirectory, fileName), file.buffer);
@@ -167,7 +176,7 @@ export default class MediaService {
       // size in KB
       size: Math.round(stats.size / 1000),
       added_by: `${user.first_name} ${user.last_name}`,
-      // @ts-ignore
+      // @ts-expect-error
       created_at: new Date(),
     };
     const mediaUpdated = await this.mediasRepository.save(fileToSave);
@@ -283,7 +292,11 @@ export default class MediaService {
    * @param filePath
    */
   async deleteFile(filePath: string) {
-    fs.unlinkSync(path.resolve(this.filesDirectory, filePath));
+    const url = path.resolve(this.filesDirectory, filePath);
+
+    if (url && fs.existsSync(url)) {
+      fs.unlinkSync(url);
+    }
   }
 
   /**
@@ -353,7 +366,7 @@ export default class MediaService {
    * @param media
    * @private
    */
-  private findIntentsByMedia(media: MediaModel): Promise<Intent[]> {
+  private async findIntentsByMedia(media: MediaModel): Promise<Intent[]> {
     return this.intentsRepository
       .createQueryBuilder('intent')
       .select(['intent.id', 'intent.main_question', 'intent.category'])
@@ -361,7 +374,7 @@ export default class MediaService {
       .where(
         new Brackets((qb) => {
           qb.where(
-            `responses.response like '%/${media.file.replaceAll(`'`, `''`)}%'`,
+            `responses.response like '%/${media.file.replaceAll("'", "''")}%'`,
           );
           qb.andWhere('intent.status IN (:...status)', {
             status: [
@@ -374,5 +387,12 @@ export default class MediaService {
         }),
       )
       .getMany();
+  }
+
+  async resetData() {
+    const medias = await this.findAll();
+    const allIds = [];
+    medias.forEach((media) => allIds.push(media.id));
+    await this.deleteMultiples(allIds);
   }
 }

@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DeleteResult, In, Repository } from 'typeorm';
+import { type DeleteResult, In, Repository } from 'typeorm';
 import { Response } from '@core/entities/response.entity';
-import { ResponseModel } from '@core/models/response.model';
-import { Intent } from '@core/entities/intent.entity';
-import { IntentModel } from '@core/models/intent.model';
-import { UpdateResult } from 'typeorm/query-builder/result/UpdateResult';
+import { type ResponseModel } from '@core/models/response.model';
+import { type Intent } from '@core/entities/intent.entity';
+import { type IntentModel } from '@core/models/intent.model';
+import { type UpdateResult } from 'typeorm/query-builder/result/UpdateResult';
 import { ChatbotConfig } from '@core/entities/chatbot-config.entity';
 
 @Injectable()
@@ -21,7 +21,7 @@ export default class ResponseService {
    * Récupération des réponses par rapport à une connaissance passée en argument
    * @param intent
    */
-  findByIntent(intent: IntentModel): Promise<Response[]> {
+  async findByIntent(intent: IntentModel): Promise<Response[]> {
     return this.responsesRepository.find({
       where: { intent: { id: intent.id } },
       order: { id: 'ASC' },
@@ -31,7 +31,7 @@ export default class ResponseService {
   /**
    * Récupération de toutes les réponses
    */
-  findAll(): Promise<Response[]> {
+  async findAll(): Promise<Response[]> {
     return this.responsesRepository.find();
   }
 
@@ -39,7 +39,7 @@ export default class ResponseService {
    * Création d'une réponse
    * @param response
    */
-  create(response: ResponseModel): Promise<Response> {
+  async create(response: ResponseModel): Promise<Response> {
     return this.responsesRepository.save(response);
   }
 
@@ -47,7 +47,7 @@ export default class ResponseService {
    * Edition d'une réponse
    * @param response
    */
-  update(response: ResponseModel): Promise<UpdateResult> {
+  async update(response: ResponseModel): Promise<UpdateResult> {
     return this.responsesRepository.update({ id: response.id }, response);
   }
 
@@ -55,7 +55,7 @@ export default class ResponseService {
    * Sauvegarde de plusieurs réponses
    * @param responses
    */
-  saveMany(responses: Response[]): Promise<Response[]> {
+  async saveMany(responses: Response[]): Promise<Response[]> {
     return this.responsesRepository.save(responses);
   }
 
@@ -98,7 +98,7 @@ export default class ResponseService {
    * Suppression des réponses d'une connaissance passée en argument
    * @param intents
    */
-  deleteByIntents(intents: Intent[]): Promise<DeleteResult> {
+  async deleteByIntents(intents: Intent[]): Promise<DeleteResult> {
     return this.responsesRepository.delete({
       intent: In(intents.map((i) => i.id)),
     });
@@ -110,5 +110,9 @@ export default class ResponseService {
    */
   async remove(id: string): Promise<void> {
     await this.responsesRepository.delete(id);
+  }
+
+  async resetData() {
+    await this.responsesRepository.createQueryBuilder().delete().execute();
   }
 }
