@@ -1,5 +1,4 @@
 import LoggerInterceptor from '@core/interceptors/logger.interceptor';
-import TimeoutInterceptor from '@core/interceptors/timeout.interceptor';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
 import { Module } from '@nestjs/common';
@@ -98,10 +97,6 @@ import UserModule from './user/user.module';
     {
       provide: APP_INTERCEPTOR,
       useClass: LoggerInterceptor,
-    },
-    {
-      provide: APP_INTERCEPTOR,
-      useClass: TimeoutInterceptor,
     },
   ],
 })
