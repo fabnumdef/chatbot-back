@@ -1,37 +1,36 @@
-import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { ConfigModule } from '@nestjs/config';
-import { APP_INTERCEPTOR } from '@nestjs/core';
 import LoggerInterceptor from '@core/interceptors/logger.interceptor';
-import { ScheduleModule } from '@nestjs/schedule';
-import { TerminusModule } from '@nestjs/terminus';
 import TimeoutInterceptor from '@core/interceptors/timeout.interceptor';
-import * as path from 'path';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
-// eslint-disable-next-line import/no-extraneous-dependencies
+import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
+import { APP_INTERCEPTOR } from '@nestjs/core';
+import { ScheduleModule } from '@nestjs/schedule';
+import { TerminusModule } from '@nestjs/terminus';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { S3Module } from 'nestjs-s3';
-import UserModule from './user/user.module';
-import IntentModule from './intent/intent.module';
+import * as path from 'path';
 import AuthModule from './auth/auth.module';
-import KnowledgeModule from './knowledge/knowledge.module';
-import ResponseModule from './response/response.module';
-import FileModule from './file/file.module';
-import MediaModule from './media/media.module';
-import InboxModule from './inbox/inbox.module';
-import StatsModule from './stats/stats.module';
-import RasaModule from './rasa/rasa.module';
-import RefDataController from './ref-data/ref-data.controller';
 import ChatbotConfigModule from './chatbot-config/chatbot-config.module';
+import FaqModule from './faq/faq.module';
+import FeedbackModule from './feedback/feedback.module';
+import FileModule from './file/file.module';
 import HealthController from './health/health.controller';
+import InboxModule from './inbox/inbox.module';
+import IntentModule from './intent/intent.module';
+import KnowledgeModule from './knowledge/knowledge.module';
+import LoggerModule from './logger/logger.module';
+import MediaModule from './media/media.module';
 import * as ormconfig from './ormconfig';
 import PublicController from './public/public.controller';
 import PublicModule from './public/public.module';
+import RasaModule from './rasa/rasa.module';
+import RefDataController from './ref-data/ref-data.controller';
+import ResponseModule from './response/response.module';
 import SharedModule from './shared/shared.module';
-import FeedbackModule from './feedback/feedback.module';
+import StatsModule from './stats/stats.module';
 import UpdateModule from './update/update.module';
-import LoggerModule from './logger/logger.module';
-import FaqModule from './faq/faq.module';
+import UserModule from './user/user.module';
 
 @Module({
   imports: [

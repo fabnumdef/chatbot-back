@@ -1,4 +1,4 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
 import { EventActionTypeEnum } from '@core/enums/event-action-type.enum';
 import { EventDataModel } from '@core/models/event-data.model';
 
@@ -7,15 +7,18 @@ export class Events {
   @PrimaryGeneratedColumn()
   id: number;
 
+  @Index()
   @Column({ length: '255', nullable: false })
   sender_id: string;
 
   @Column({ length: '255', nullable: false })
   type_name: string;
 
+  @Index()
   @Column({ type: 'double precision', nullable: true })
   timestamp: number;
 
+  @Index()
   @Column({ length: '255', nullable: true })
   intent_name: string;
 

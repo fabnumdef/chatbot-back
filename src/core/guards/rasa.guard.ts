@@ -1,5 +1,4 @@
-import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
-// eslint-disable-next-line import/no-extraneous-dependencies
+import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import type { Request } from 'express';
 
 @Injectable()

@@ -1,16 +1,16 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { FindOneOptions, Repository } from 'typeorm';
 import { ChatbotConfig } from '@core/entities/chatbot-config.entity';
-import { UpdateResult } from 'typeorm/query-builder/result/UpdateResult';
-import * as path from 'path';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { Cron, CronExpression } from '@nestjs/schedule';
+import { InjectRepository } from '@nestjs/typeorm';
+import { plainToInstance } from 'class-transformer';
 import * as fs from 'fs';
 import { mkdirp } from 'mkdirp';
-import { Cron, CronExpression } from '@nestjs/schedule';
-import { plainToInstance } from 'class-transformer';
-import snakecaseKeys = require('snakecase-keys');
-import MediaService from '../media/media.service';
+import * as path from 'path';
+import { FindOneOptions, Repository } from 'typeorm';
+import { UpdateResult } from 'typeorm/query-builder/result/UpdateResult';
 import BotLogger from '../logger/bot.logger';
+import MediaService from '../media/media.service';
+import snakecaseKeys = require('snakecase-keys');
 
 const crypto = require('crypto');
 
@@ -39,7 +39,7 @@ export default class ChatbotConfigService {
    * Mise à jour de la configuration du Chatbot
    * @param config
    */
-  update(config: ChatbotConfig): Promise<UpdateResult> {
+  update(config: Partial<ChatbotConfig>): Promise<UpdateResult> {
     return this.configRepository.update({ id: 1 }, config);
   }
 
@@ -47,7 +47,7 @@ export default class ChatbotConfigService {
    * Sauvegarde de la configuration du Chatbot
    * @param config
    */
-  save(config: ChatbotConfig): Promise<ChatbotConfig> {
+  save(config: Partial<ChatbotConfig>): Promise<ChatbotConfig> {
     return this.configRepository.save(config);
   }
 
@@ -98,8 +98,13 @@ export default class ChatbotConfigService {
    * Mise à jour du manifeste afin d'utiliser le bot comme une application Android / IOS (PWA)
    */
   async updateFrontManifest() {
-    const frontDir = path.resolve(__dirname, '../../../chatbot-front');
-    const webchatDir = path.resolve(__dirname, '../../../webchat');
+    if(process.env.NODE_ENV === 'local') {
+      this.logger.log('Env is LOCAL. Skipping manifest update');
+      return
+    }
+
+    const frontDir = process.env.FRONT_DIR ?? path.resolve(__dirname, '../../../chatbot-front');
+    const webchatDir = process.env.WEBCHAT_DIR ?? path.resolve(__dirname, '../../../webchat');
 
     // Création du dossier si il n'existe pas
     await mkdirp(`${frontDir}/assets/icons`);
@@ -111,13 +116,12 @@ export default class ChatbotConfigService {
     }
     try {
       const manifest = JSON.parse(
-        // @ts-ignore
-        fs.readFileSync(path.resolve(frontDir, 'manifest.webmanifest')),
+        fs.readFileSync(path.resolve(frontDir, 'manifest.webmanifest'), 'utf-8'),
       );
       const manifestWebchat = JSON.parse(
-        // @ts-ignore
-        fs.readFileSync(path.resolve(webchatDir, 'manifest.webmanifest')),
+        fs.readFileSync(path.resolve(webchatDir, 'manifest.webmanifest'), 'utf-8'),
       );
+
       manifest.name = `BACKOFFICE - ${botConfig.name}`;
       manifest.short_name = `BACKOFFICE - ${botConfig.name}`;
       manifestWebchat.name = botConfig.name;
@@ -131,12 +135,14 @@ export default class ChatbotConfigService {
         JSON.stringify(manifestWebchat),
       );
       if (botConfig.icon) {
+        const filesDirectory = process.env.MEDIA_DIR ?? path.resolve(__dirname, '../../mediatheque');
+
         fs.copyFileSync(
-          path.resolve(__dirname, '../../mediatheque', botConfig.icon),
+          path.resolve(filesDirectory, botConfig.icon),
           path.resolve(frontDir, 'assets/icons/icon.png'),
         );
         fs.copyFileSync(
-          path.resolve(__dirname, '../../mediatheque', botConfig.icon),
+          path.resolve(filesDirectory, botConfig.icon),
           path.resolve(webchatDir, 'assets/icons/icon.png'),
         );
       }

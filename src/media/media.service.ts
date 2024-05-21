@@ -1,31 +1,32 @@
+import { PaginationQueryDto } from '@core/dto/pagination-query.dto';
+import { ChatbotConfig } from '@core/entities/chatbot-config.entity';
+import { Intent } from '@core/entities/intent.entity';
+import { Media } from '@core/entities/media.entity';
+import { User } from '@core/entities/user.entity';
+import { IntentStatus } from '@core/enums/intent-status.enum';
+import { IntentModel } from '@core/models/intent.model';
+import { MediaModel } from '@core/models/media.model';
+import PaginationUtils from '@core/pagination-utils';
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Brackets, DeleteResult, FindOneOptions, Repository } from 'typeorm';
-import { Media } from '@core/entities/media.entity';
-import * as path from 'path';
+import { plainToInstance } from 'class-transformer';
+import { Response } from 'express';
 import * as fs from 'fs';
 import { mkdirp } from 'mkdirp';
-import { PaginationQueryDto } from '@core/dto/pagination-query.dto';
 import { paginate, Pagination } from 'nestjs-typeorm-paginate';
-import PaginationUtils from '@core/pagination-utils';
-import { User } from '@core/entities/user.entity';
-import { MediaModel } from '@core/models/media.model';
-import { plainToInstance } from 'class-transformer';
-import { IntentModel } from '@core/models/intent.model';
-import { ChatbotConfig } from '@core/entities/chatbot-config.entity';
-// eslint-disable-next-line import/no-extraneous-dependencies
-import { Response } from 'express';
-import { Intent } from '@core/entities/intent.entity';
-import { IntentStatus } from '@core/enums/intent-status.enum';
+import * as path from 'path';
+import { Brackets, DeleteResult, FindOneOptions, Repository } from 'typeorm';
 import BotLogger from '../logger/bot.logger';
 import ResponseService from '../response/response.service';
 
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 const getSize = require('get-folder-size');
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 const archiver = require('archiver');
 
 @Injectable()
 export default class MediaService {
-  private filesDirectory = path.resolve(__dirname, '../../mediatheque');
+  private filesDirectory = process.env.MEDIA_DIR ?? path.resolve(__dirname, '../../mediatheque');
 
   private readonly logger = new BotLogger('MediaService');
 
@@ -67,6 +68,7 @@ export default class MediaService {
       await Promise.all(
         results.items.map(async (item: MediaModel) => {
           const intents = await this.findIntentsByMedia(item);
+          // eslint-disable-next-line no-param-reassign
           item.intents = plainToInstance(IntentModel, intents);
 
           return item;
@@ -167,7 +169,8 @@ export default class MediaService {
       // size in KB
       size: Math.round(stats.size / 1000),
       added_by: `${user.first_name} ${user.last_name}`,
-      // @ts-ignore
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-expect-error
       created_at: new Date(),
     };
     const mediaUpdated = await this.mediasRepository.save(fileToSave);

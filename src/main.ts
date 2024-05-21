@@ -1,31 +1,25 @@
+import 'dotenv/config';
+
+import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { ValidationPipe } from '@nestjs/common';
 import * as compression from 'compression';
-import rateLimit from 'express-rate-limit';
-// eslint-disable-next-line import/no-extraneous-dependencies
-import { urlencoded, json, raw, type NextFunction } from 'express';
-import type { IncomingMessage, ServerResponse } from 'http';
-import AppModule from './app.module.js';
-import BotLogger from './logger/bot.logger.js';
+import { json, raw, urlencoded } from 'express';
 
 async function bootstrap() {
+  const { default: AppModule } = await import('./app.module.js');
+  
   const app = await NestFactory.create(AppModule, {
     bufferLogs: true,
     bodyParser: false,
     rawBody: true,
   });
-  // app.use(
-  //   '/rasa-actions/evaluations',
-  //   (req: IncomingMessage, res: ServerResponse, next: NextFunction) => {
-  //     console.log(req);
-  //     next();
-  //   },
-  // );
-
+  
+  const { default: BotLogger } = await import('./logger/bot.logger.js');
   app.useLogger(app.get(BotLogger));
   app.use(compression());
   if (process.env.RATE_LIMIT !== '-1') {
+    const { rateLimit } = await import('express-rate-limit')
     app.use(
       rateLimit({
         windowMs: 15 * 60 * 1000, // 15 minutes
@@ -35,6 +29,7 @@ async function bootstrap() {
       }),
     );
   }
+  
 
   app.use(json({ limit: '100mb', type: 'application/json' }));
   app.use(
@@ -73,4 +68,8 @@ async function bootstrap() {
   await app.listen(3000);
 }
 
-bootstrap();
+bootstrap().catch((e) => {
+  // eslint-disable-next-line no-console
+  console.error(new Error('Application exited', { cause: e }));
+  process.exit(1);
+});

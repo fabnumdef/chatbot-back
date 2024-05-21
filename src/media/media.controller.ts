@@ -1,3 +1,10 @@
+import { FileUploadDto } from '@core/dto/file-upload.dto';
+import { MediaDto } from '@core/dto/media.dto';
+import { PaginationQueryDto } from '@core/dto/pagination-query.dto';
+import { Media } from '@core/entities/media.entity';
+import { User } from '@core/entities/user.entity';
+import JwtGuard from '@core/guards/jwt.guard';
+import { MediaModel } from '@core/models/media.model';
 import {
   Body,
   Controller,
@@ -14,6 +21,7 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import {
   ApiBearerAuth,
   ApiBody,
@@ -21,20 +29,12 @@ import {
   ApiOperation,
   ApiTags,
 } from '@nestjs/swagger';
-import JwtGuard from '@core/guards/jwt.guard';
-import { Media } from '@core/entities/media.entity';
-import { MediaDto } from '@core/dto/media.dto';
 import { plainToInstance } from 'class-transformer';
-import camelcaseKeys = require('camelcase-keys');
-import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
-import { FileUploadDto } from '@core/dto/file-upload.dto';
-import { PaginationQueryDto } from '@core/dto/pagination-query.dto';
-import { Pagination } from 'nestjs-typeorm-paginate';
-import { User } from '@core/entities/user.entity';
-import { MediaModel } from '@core/models/media.model';
-// eslint-disable-next-line import/no-extraneous-dependencies
 import { Response } from 'express';
+import { Pagination } from 'nestjs-typeorm-paginate';
+import camelcaseKeys = require('camelcase-keys');
 import MediaService from './media.service';
+
 
 @ApiTags('media')
 @Controller('media')

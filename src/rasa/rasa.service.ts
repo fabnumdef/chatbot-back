@@ -1,19 +1,16 @@
-import { Injectable } from '@nestjs/common';
-import { Intent } from '@core/entities/intent.entity';
-import { RasaDomainModel } from '@core/models/rasa-domain.model';
-import { ChatbotConfig } from '@core/entities/chatbot-config.entity';
-import { In } from 'typeorm';
-import { IntentStatus } from '@core/enums/intent-status.enum';
-import { Cron, CronExpression } from '@nestjs/schedule';
-// eslint-disable-next-line import/no-extraneous-dependencies
-import { InjectS3, S3 } from 'nestjs-s3';
-// eslint-disable-next-line import/no-extraneous-dependencies
 import { PutObjectCommandInput } from '@aws-sdk/client-s3';
-// eslint-disable-next-line import/no-extraneous-dependencies
 import { Upload } from '@aws-sdk/lib-storage';
-import BotLogger from '../logger/bot.logger';
+import { ChatbotConfig } from '@core/entities/chatbot-config.entity';
+import { Intent } from '@core/entities/intent.entity';
+import { IntentStatus } from '@core/enums/intent-status.enum';
+import { RasaDomainModel } from '@core/models/rasa-domain.model';
+import { Injectable } from '@nestjs/common';
+import { Cron, CronExpression } from '@nestjs/schedule';
+import { InjectS3, S3 } from 'nestjs-s3';
+import { In } from 'typeorm';
 import ChatbotConfigService from '../chatbot-config/chatbot-config.service';
 import IntentService from '../intent/intent.service';
+import BotLogger from '../logger/bot.logger';
 
 @Injectable()
 export default class RasaService {
@@ -41,7 +38,6 @@ export default class RasaService {
     }
     this.logger.log('Updating Rasa');
     await this.trainRasa();
-    await this.deleteOldModels();
     this.logger.log('Finish updating Rasa');
   }
 
@@ -95,8 +91,7 @@ export default class RasaService {
       this.logger.log('Train rasa model');
       const qs = new URLSearchParams();
       qs.set('num_threads', '16');
-      //  TODO: uncomment this
-      // qs.set('save_to_default_model_directory', 'false');
+      qs.set('save_to_default_model_directory', 'false');
 
       qs.set(
         'callback_url',
@@ -120,9 +115,6 @@ export default class RasaService {
       }
     } catch (err) {
       this.logger.error('TRAIN RASA', err);
-      if (err instanceof Error) {
-        console.error(err);
-      }
     }
   }
 
@@ -135,14 +127,22 @@ export default class RasaService {
         client: this.s3,
         params: {
           Bucket: process.env.BUCKET_NAME,
-          Key: name,
-          Body: `${process.env.RASA_MODEL_DIR ?? '/models'}/${model}`,
+          Key: `${process.env.RASA_MODEL_DIR ?? 'models'}/${name}`,
+          Body: model,
         },
       });
 
-      await upload.done();
+      const { Key } = await upload.done();
 
-      await this.reloadModel(name);
+      await this.s3.copyObject({
+        Bucket: process.env.BUCKET_NAME,
+        CopySource: `${process.env.BUCKET_NAME}/${Key}`,
+        Key: 'models.tar.gz'
+      })
+
+      await this.deleteOldModels();
+
+      await this.reloadModel(Key);
 
       this.logger.log(`Updating intents and training status`);
       await this.intentService.updateManyByCondition(
@@ -163,19 +163,30 @@ export default class RasaService {
 
   async reloadModel(model_file: string) {
     this.logger.log('Reloading RASA model...');
-    const res = await fetch(`${this.rasaApi}/model?token=${this.rasaToken}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model_file,
-        remote_storage: 'aws',
-      }),
-    });
 
-    if (!res.ok) {
-      throw new Error(`Failed to reload model`, { cause: await res.json() });
+    try {
+      const res = await fetch(`${this.rasaApi}/model?token=${this.rasaToken}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model_file,
+          remote_storage: 'aws',
+        }),
+      });
+  
+      if (!res.ok) {
+        let cause;
+        try {
+          cause = await res.json()
+        } catch {
+          cause = await res.text()
+        }
+        throw new Error(`Rasa responded with a non 200 status`, { cause });
+      }
+    } catch(e) {
+      throw new Error(`Failed to reload model`, { cause: e });
     }
   }
 

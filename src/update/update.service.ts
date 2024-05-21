@@ -1,15 +1,15 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import {
   UpdateChatbotDto,
   UpdateDomainNameDto,
 } from '@core/dto/update-chatbot.dto';
-import { AnsiblePlaybook, Options } from 'ansible-playbook-cli-js';
-import * as fs from 'fs';
 import { ChatbotConfig } from '@core/entities/chatbot-config.entity';
 import { dotenvToJson, jsonToDotenv } from '@core/utils';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { AnsiblePlaybook, Options } from 'ansible-playbook-cli-js';
+import * as fs from 'fs';
 import * as path from 'path';
-import BotLogger from '../logger/bot.logger';
 import ChatbotConfigService from '../chatbot-config/chatbot-config.service';
+import BotLogger from '../logger/bot.logger';
 
 @Injectable()
 export default class UpdateService {

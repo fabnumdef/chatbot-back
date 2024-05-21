@@ -1,3 +1,4 @@
+import RasaGuard from '@core/guards/rasa.guard';
 import {
   Controller,
   HttpCode,
@@ -5,13 +6,11 @@ import {
   HttpStatus,
   Post,
   Req,
-  UseGuards,
+  UseGuards
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import RasaGuard from '@core/guards/rasa.guard';
-import { v4 as uuid } from 'uuid';
-// eslint-disable-next-line import/no-extraneous-dependencies
 import { Request } from 'express';
+import { v4 as uuid } from 'uuid';
 import RasaService from './rasa.service';
 
 @ApiTags('rasa-actions')
@@ -30,8 +29,13 @@ export default class RasaActionsController {
       );
     }
 
-    console.log(req.headers);
-
-    this.rasaService.evaluateModel(req.body, `${Date.now()}-${uuid()}.tar.gz`);
+    try {
+      await this.rasaService.evaluateModel(req.body, `${Date.now()}-${uuid()}.tar.gz`);
+    } catch {
+      throw new HttpException(
+        "Failed to evaluate rasa model",
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 }
