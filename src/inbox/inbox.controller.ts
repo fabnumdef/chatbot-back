@@ -1,3 +1,9 @@
+import { InboxFilterDto } from '@core/dto/inbox-filter.dto';
+import { InboxUpdateDto } from '@core/dto/inbox-update.dto';
+import { InboxDto } from '@core/dto/inbox.dto';
+import { PaginationQueryDto } from '@core/dto/pagination-query.dto';
+import { Inbox } from '@core/entities/inbox.entity';
+import JwtGuard from '@core/guards/jwt.guard';
 import {
   Body,
   Controller,
@@ -13,18 +19,12 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
-import JwtGuard from '@core/guards/jwt.guard';
 import { plainToInstance } from 'class-transformer';
-import { Inbox } from '@core/entities/inbox.entity';
-import camelcaseKeys = require('camelcase-keys');
-import { InboxDto } from '@core/dto/inbox.dto';
-import { PaginationQueryDto } from '@core/dto/pagination-query.dto';
 import { Pagination } from 'nestjs-typeorm-paginate';
-import { InboxFilterDto } from '@core/dto/inbox-filter.dto';
 import { UpdateResult } from 'typeorm/query-builder/result/UpdateResult';
-import { InboxUpdateDto } from '@core/dto/inbox-update.dto';
-import InboxService from './inbox.service';
+import camelcaseKeys = require('camelcase-keys');
 import BotLogger from '../logger/bot.logger';
+import InboxService from './inbox.service';
 
 @ApiTags('inbox')
 @Controller('inbox')
@@ -76,7 +76,9 @@ export default class InboxController {
       filters,
     );
     inboxes.items.map((i) => {
+      // eslint-disable-next-line no-param-reassign
       i.response = i.response ? JSON.parse(i.response) : i.response;
+      // eslint-disable-next-line no-param-reassign
       i.intent_ranking = i.intent_ranking
         ? JSON.parse(i.intent_ranking)
         : i.intent_ranking;

@@ -1,10 +1,10 @@
-import { Controller, Post, Body, Param } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { AuthResponseDto } from '@core/dto/auth-response.dto';
 import { LoginUserDto } from '@core/dto/login-user.dto';
+import { ResetPasswordDto } from '@core/dto/reset-password.dto';
+import { Body, Controller, Param, Post } from '@nestjs/common';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { plainToInstance } from 'class-transformer';
 import camelcaseKeys = require('camelcase-keys');
-import { AuthResponseDto } from '@core/dto/auth-response.dto';
-import { ResetPasswordDto } from '@core/dto/reset-password.dto';
 import AuthService from './auth.service';
 
 @ApiTags('auth')

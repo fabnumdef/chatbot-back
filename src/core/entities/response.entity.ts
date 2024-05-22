@@ -10,7 +10,7 @@ export class Response {
   @ManyToOne((type) => Intent, (intent) => intent.responses)
   intent: Intent;
 
-  @Column('enum', { name: 'type', enum: ResponseType, nullable: false })
+  @Column({ name: 'type', type: "enum", enum: ResponseType, enumName: "ResponseType", nullable: false })
   response_type: ResponseType;
 
   @Column({ nullable: false, length: 2000 })

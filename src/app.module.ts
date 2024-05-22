@@ -11,6 +11,7 @@ import { S3Module } from 'nestjs-s3';
 import * as path from 'path';
 import AuthModule from './auth/auth.module';
 import ChatbotConfigModule from './chatbot-config/chatbot-config.module';
+import { dataSource } from './data-source';
 import FaqModule from './faq/faq.module';
 import FeedbackModule from './feedback/feedback.module';
 import FileModule from './file/file.module';
@@ -20,7 +21,6 @@ import IntentModule from './intent/intent.module';
 import KnowledgeModule from './knowledge/knowledge.module';
 import LoggerModule from './logger/logger.module';
 import MediaModule from './media/media.module';
-import * as ormconfig from './ormconfig';
 import PublicController from './public/public.controller';
 import PublicModule from './public/public.module';
 import RasaModule from './rasa/rasa.module';
@@ -36,7 +36,7 @@ import UserModule from './user/user.module';
     ConfigModule.forRoot({
       isGlobal: true,
     }),
-    TypeOrmModule.forRoot(ormconfig),
+    TypeOrmModule.forRoot(dataSource.options),
     MailerModule.forRoot({
       transport: {
         host: `${process.env.MAIL_HOST}`,

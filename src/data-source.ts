@@ -1,5 +1,8 @@
-import { type TypeOrmModuleOptions } from '@nestjs/typeorm';
+import 'dotenv/config';
+
+import { resolve } from 'path';
 import { type TlsOptions } from 'tls';
+import { type DataSourceOptions, DataSource } from 'typeorm';
 
 let sslConfig: boolean | TlsOptions;
 
@@ -22,7 +25,12 @@ if (process.env.DATABASE_SECURE === 'false') {
   // Else keep the config that could have been set prior to this. And only if the sslConfig is not yes configured, enable it.
   sslConfig = true;
 
-const config: TypeOrmModuleOptions = {
+// Allow both start:prod and start:dev to use migrations
+// __dirname is either dist or src folder, meaning either
+// the compiled js in prod or the ts in dev.
+const migrations = resolve(`${__dirname}/migrations/**/*{.ts,.js}`)
+
+export const dataSourceOptions: DataSourceOptions = {
   type: 'postgres',
   url: `postgres://${process.env.DATABASE_USER}:${
     process.env.DATABASE_PASSWORD
@@ -33,10 +41,7 @@ const config: TypeOrmModuleOptions = {
   synchronize: true,
   // synchronize: !(process.env.NODE_ENV === 'prod'),
 
-  // Allow both start:prod and start:dev to use migrations
-  // __dirname is either dist or src folder, meaning either
-  // the compiled js in prod or the ts in dev.
-  migrations: [`${__dirname}/migrations/**/*{.ts,.js}`],
+  migrations: [migrations],
 
   // Run migrations automatically,
   // you can disable this if you prefer running migration manually.
@@ -45,6 +50,6 @@ const config: TypeOrmModuleOptions = {
   ssl: sslConfig,
 
   logging: process.env.DEBUG ? true : undefined,
-};
+}
 
-export = config;
+export const dataSource = new DataSource(dataSourceOptions)

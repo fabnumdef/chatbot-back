@@ -22,7 +22,7 @@ export class Events {
   @Column({ length: '255', nullable: true })
   intent_name: string;
 
-  @Column({ length: '255', nullable: true })
+  @Column({ type: "enum", enum: EventActionTypeEnum, enumName: "EventActionTypeEnum", nullable: true })
   action_name: EventActionTypeEnum;
 
   @Column({ type: 'text', nullable: true })

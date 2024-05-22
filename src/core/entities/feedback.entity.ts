@@ -23,7 +23,7 @@ export class Feedback {
   @Column({ type: 'double precision' })
   timestamp: number;
 
-  @Column()
+  @Column({ type: "enum", enum: FeedbackStatus, enumName:"FeedbackStatus", nullable: true })
   status: FeedbackStatus;
 
   @CreateDateColumn({ type: 'timestamp' })

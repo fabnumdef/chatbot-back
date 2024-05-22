@@ -1,32 +1,36 @@
+import { Inbox } from '@core/entities/inbox.entity';
+import { Knowledge } from '@core/entities/knowledge.entity';
+import { Response } from '@core/entities/response.entity';
+import { User } from '@core/entities/user.entity';
+import { IntentStatus } from '@core/enums/intent-status.enum';
 import {
   Column,
   CreateDateColumn,
   Entity,
+  Index,
   ManyToOne,
   OneToMany,
   PrimaryColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { Knowledge } from '@core/entities/knowledge.entity';
-import { Response } from '@core/entities/response.entity';
-import { IntentStatus } from '@core/enums/intent-status.enum';
-import { Inbox } from '@core/entities/inbox.entity';
-import { User } from '@core/entities/user.entity';
 
 @Entity('intent')
 export class Intent {
   @PrimaryColumn()
   id: string;
 
+  @Index()
   @Column({ nullable: true, length: 255 })
   category?: string;
 
   @Column({ nullable: true, length: 255 })
   main_question?: string;
 
-  @Column({ default: IntentStatus.to_deploy })
+  @Index()
+  @Column({ type:"enum", enum: IntentStatus, enumName: "IntentStatus", default: IntentStatus.to_deploy })
   status: IntentStatus;
 
+  @Index()
   @Column({ nullable: false, default: false })
   hidden: boolean;
 

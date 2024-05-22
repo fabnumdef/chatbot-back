@@ -32,8 +32,10 @@ export class User {
   @Column({ nullable: true, length: 50 })
   function: string;
 
-  @Column('enum', {
+  @Column({
     name: 'role',
+    type: 'enum',
+    enumName: 'UserRole',
     enum: UserRole,
     default: UserRole.reader,
     nullable: false,
