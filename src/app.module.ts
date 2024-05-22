@@ -9,6 +9,7 @@ import { TerminusModule } from '@nestjs/terminus';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { S3Module } from 'nestjs-s3';
 import * as path from 'path';
+import {CacheModule} from "@nestjs/cache-manager";
 import AuthModule from './auth/auth.module';
 import ChatbotConfigModule from './chatbot-config/chatbot-config.module';
 import { dataSource } from './data-source';
@@ -36,6 +37,7 @@ import UserModule from './user/user.module';
     ConfigModule.forRoot({
       isGlobal: true,
     }),
+    CacheModule.register(),
     TypeOrmModule.forRoot(dataSource.options),
     MailerModule.forRoot({
       transport: {
@@ -92,7 +94,7 @@ import UserModule from './user/user.module';
     LoggerModule,
     FaqModule,
   ],
-  controllers: [RefDataController, HealthController, PublicController],
+  controllers: [RefDataController, HealthController],
   providers: [
     {
       provide: APP_INTERCEPTOR,

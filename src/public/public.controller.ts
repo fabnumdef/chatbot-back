@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
+import {Body, Controller, Get, Header, Inject, Param, Post, Query, UseInterceptors} from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ChatbotConfig } from '@core/entities/chatbot-config.entity';
 import { plainToInstance } from 'class-transformer';
@@ -9,6 +9,7 @@ import { FeedbackDto } from '@core/dto/feedback.dto';
 import camelcaseKeys = require('camelcase-keys');
 import snakecaseKeys = require('snakecase-keys/index');
 import { Feedback } from '@core/entities/feedback.entity';
+import {Cache, CACHE_MANAGER, CacheInterceptor, CacheTTL} from "@nestjs/cache-manager";
 import FeedbackService from '../feedback/feedback.service';
 import IntentService from '../intent/intent.service';
 import ChatbotConfigService from '../chatbot-config/chatbot-config.service';
@@ -18,6 +19,7 @@ import FaqService from '../faq/faq.service';
 @Controller('public')
 export default class PublicController {
   constructor(
+      @Inject(CACHE_MANAGER) private cacheManager: Cache,
     private readonly configService: ChatbotConfigService,
     private readonly intentService: IntentService,
     private readonly faqService: FaqService,
@@ -25,10 +27,17 @@ export default class PublicController {
   ) {}
 
   @Get('')
+  @Header('Cache-Control', 'max-age=3600')
+  @UseInterceptors(CacheInterceptor)
+  @CacheTTL(60)
   @ApiOperation({
     summary: 'Retourne les données publiques de la configuration du Chatbot',
   })
   async getChabotConfig(): Promise<PublicConfigDto> {
+    const cache = await this.cacheManager.get<PublicConfigDto>('chatbotConfig')
+
+    if(cache) return cache;
+
     const config: ChatbotConfig = await this.configService.getChatbotConfig({
       select: [
         'name',
@@ -55,12 +64,18 @@ export default class PublicController {
         'faq_btn',
       ],
     });
-    return config
+    const data = config
       ? plainToInstance(
           PublicConfigDto,
           camelcaseKeys(<any>config, { deep: true }),
         )
       : null;
+
+    if(data) {
+      this.cacheManager.set('chatbotConfig', data,  30 * 1000).catch()
+    }
+
+    return data;
   }
 
   @Get('/intents')
