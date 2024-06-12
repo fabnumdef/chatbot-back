@@ -426,10 +426,15 @@ export default class IntentService {
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
-    const intentDeleted = await this.intentsRepository.update(
-      { id: intentId },
-      { status: IntentStatus.to_archive },
-    );
+    const intent = { id: intentId } as Intent;
+
+    const intentDeleted = await this.intentsRepository.update(intent, {
+      status: IntentStatus.to_archive,
+    });
+    await Promise.all([
+      this.knowledgeService.deleteByIntents([intent]),
+      this.responseService.deleteByIntents([intent]),
+    ]);
     await this.updateNeedTraining();
     return intentDeleted;
   }
@@ -525,6 +530,9 @@ export default class IntentService {
         't1.intentid = intent.id',
       )
       .where("intent.id NOT LIKE 'st\\_%' ESCAPE '\\'")
+      .andWhere(
+        `intent.status IN ('${IntentStatus.active}', '${IntentStatus.active_modified}', '${IntentStatus.in_training}')`,
+      )
       .groupBy('intent.main_question')
       .having('COUNT(t1.intentid) < 2')
       .orderBy('intent.main_question', 'ASC');
