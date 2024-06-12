@@ -96,7 +96,7 @@ export default class ResponseService {
 
   /**
    * Suppression des réponses d'une connaissance passée en argument
-   * @param intents
+   * @param intents[]
    */
   deleteByIntents(intents: Intent[]): Promise<DeleteResult> {
     return this.responsesRepository.delete({
@@ -110,5 +110,12 @@ export default class ResponseService {
    */
   async remove(id: string): Promise<void> {
     await this.responsesRepository.delete(id);
+  }
+
+  /**
+   * Suppression de toutes les réponses
+   */
+  deleteAll(): Promise<DeleteResult> {
+    return this.responsesRepository.delete(1);
   }
 }

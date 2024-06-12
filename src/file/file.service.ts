@@ -405,27 +405,31 @@ export default class FileService {
         });
       }
     });
+    // Option pour reset les connaissances lors de l'import d'un fichier
+    if (importFileDto.deleteIntents) {
+      await Promise.all([
+        this.intentService.updateManyByCondition(
+          {
+            id: Not(
+              In([
+                ...intentsSaved.map((i) => i.id),
+                ...AppConstants.General.excluded_Ids,
+              ]),
+            ),
+          },
+          { status: IntentStatus.to_archive },
+        ),
+        this.knowledgeService.deleteAll(),
+        this.responseService.deleteAll(),
+      ]);
+    }
+
     // Sauvegarde des questions similaires
     const knowledgesSaved = await this.knowledgeService.findOrSave(knowledges);
 
     // Suppressions des anciennes réponses puis sauvegarde des nouvelles réponses
     await this.responseService.deleteByIntents(intentsSaved);
     const responsesSaved = await this.responseService.saveMany(responses);
-
-    // Option pour supprimer les anciennes connaissances lors de l'import d'un fichier
-    if (importFileDto.deleteIntents) {
-      await this.intentService.updateManyByCondition(
-        {
-          id: Not(
-            In([
-              ...intentsSaved.map((i) => i.id),
-              ...AppConstants.General.excluded_Ids,
-            ]),
-          ),
-        },
-        { status: IntentStatus.to_archive },
-      );
-    }
     await this.intentService.updateManyByCondition(
       { id: In([...intents.map((i) => i.id)]) },
       { status: IntentStatus.to_deploy },

@@ -1,9 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
+import { DeleteResult, In, Repository } from 'typeorm';
 import { Knowledge } from '@core/entities/knowledge.entity';
 import { KnowledgeModel } from '@core/models/knowledge.model';
 import { IntentModel } from '@core/models/intent.model';
+import { Intent } from '@core/entities/intent.entity';
 
 @Injectable()
 export default class KnowledgeService {
@@ -97,5 +98,22 @@ export default class KnowledgeService {
    */
   async remove(id: string): Promise<void> {
     await this.knowledgesRepository.delete(id);
+  }
+
+  /**
+   * Suppression des questions similaire d'une connaissance passée en argument
+   * @param intents[]
+   */
+  deleteByIntents(intents: Intent[]): Promise<DeleteResult> {
+    return this.knowledgesRepository.delete({
+      intent: In(intents.map((i) => i.id)),
+    });
+  }
+
+  /**
+   * Suppression de toutes les questions similaire
+   */
+  deleteAll(): Promise<DeleteResult> {
+    return this.knowledgesRepository.delete(1);
   }
 }
