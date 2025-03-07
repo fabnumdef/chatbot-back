@@ -6,7 +6,7 @@ const config: TypeOrmModuleOptions = {
     process.env.DATABASE_PASSWORD
   }@${process.env.DATABASE_HOST}:${process.env.DATABASE_PORT}/${
     process.env.DATABASE_NAME
-  }?${process.env.DATABASE_SSL_CERT ? 'sslmode=require' : ''}`,
+  }?${process.env.DATABASE_SSL_ENABLED === 'true' ? 'sslmode=require' : 'sslmode=disable'}`,
   entities: [`${__dirname}/core/entities/**/*.entity{.ts,.js}`],
   synchronize: true,
   // synchronize: !(process.env.NODE_ENV === 'prod'),
