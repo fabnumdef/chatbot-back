@@ -96,11 +96,7 @@ export default class RasaService {
     try {
       this.logger.log(`TRAINING RASA`);
       await execShellCommand(
-        `${
-          !process.env.INTRADEF || process.env.INTRADEF === 'false'
-            ? ''
-            : `/opt/chatbot/rasa/bin/python${process.env.PYTHON_VERSION} -m`
-        } rasa train --finetune --epoch-fraction 0.2 --num-threads 8`,
+        `rasa train --finetune --epoch-fraction 0.2 --num-threads 8`,
         this.chatbotTemplateDir,
       ).then(async (res: string) => {
         this.logger.log(res);
@@ -111,11 +107,7 @@ export default class RasaService {
           res.includes('Cannot finetune')
         ) {
           await execShellCommand(
-            `${
-              !process.env.INTRADEF || process.env.INTRADEF === 'false'
-                ? ''
-                : `/opt/chatbot/rasa/bin/python${process.env.PYTHON_VERSION} -m`
-            } rasa train --num-threads 8`,
+            `rasa train --num-threads 8`,
             this.chatbotTemplateDir,
           ).then((resBis) => {
             this.logger.log(resBis);
@@ -124,11 +116,7 @@ export default class RasaService {
       });
       this.logger.log('DISABLE TELEMETRY');
       await execShellCommand(
-        `${
-          !process.env.INTRADEF || process.env.INTRADEF === 'false'
-            ? ''
-            : `/opt/chatbot/rasa/bin/python${process.env.PYTHON_VERSION} -m`
-        } rasa telemetry disable`,
+        `rasa telemetry disable`,
         this.chatbotTemplateDir,
       ).then((res) => {
         this.logger.log(res);
