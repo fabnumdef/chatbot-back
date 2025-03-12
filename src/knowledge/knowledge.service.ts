@@ -4,9 +4,13 @@ import { In, Repository } from 'typeorm';
 import { Knowledge } from '@core/entities/knowledge.entity';
 import { KnowledgeModel } from '@core/models/knowledge.model';
 import { IntentModel } from '@core/models/intent.model';
+import BotLogger from '../logger/bot.logger';
 
 @Injectable()
 export default class KnowledgeService {
+
+  private readonly logger = new BotLogger('KnowledgeService');
+
   constructor(
     @InjectRepository(Knowledge)
     private readonly knowledgesRepository: Repository<Knowledge>,
@@ -87,7 +91,20 @@ export default class KnowledgeService {
     await knowledgesToSave.forEach((k) => {
       promises.push(this.create(k));
     });
-    knowledgesEntity = await Promise.all(promises);
+
+    knowledgesEntity = await Promise.allSettled(promises).then(results => {
+      return results.map(result => {
+        if (result.status === 'fulfilled') {
+          return result.value;
+        } else {
+          this.logger.warn('Erreur lors de la sauvegarde d\'un knowledge', result.reason);
+          return null;
+        }
+      });
+    }).then(resultsWithNulls => {
+      return resultsWithNulls.filter(item => item !== null);
+    });
+
     return knowledgesEntity;
   }
 
